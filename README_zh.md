@@ -11,17 +11,23 @@
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue"></a>
   <a href="#"><img src="https://img.shields.io/badge/python-3.9%2B-green"></a>
-  <a href="#"><img src="https://img.shields.io/badge/MCP-18%20tools-purple"></a>
+  <a href="#"><img src="https://img.shields.io/badge/MCP-19%20tools-purple"></a>
   <a href="README.md"><img src="https://img.shields.io/badge/lang-EN-blue"></a>
 </p>
+
+> **一个具备自我纠错与记忆质量治理能力的 AI 记忆引擎。**
+
+---
+
+**目录** [多模态能力](#minta-能处理什么) · [快速开始](#️-30-秒上手) · [记忆健康](#差异不只有记忆更有记忆健康) · [部署指南](#保持连接所有-agent-通用) · [基准测试](#-基准测试) · [架构](#️-架构) · [对比竞品](#-vs-竞品) · [研究](#-研究基础) · [愿景](#-我们在往哪走) · [协议](#-协议)
 
 ---
 
 ## 你遇到过。
 
-你告诉 AI 助手："我把认证从 NextAuth 换成了 Clerk。"两周后，它自信地给你推荐 NextAuth 的配置方案。
+你告诉 AI 助手"我把认证从 NextAuth 换成了 Clerk"。两周后，它自信地给你推荐 NextAuth 的配置方案。
 
-你说过团队从 3 人扩到了 7 人。AI 还在问："你的 3 人小团队最近怎么样？"
+你说过团队从 3 人扩到了 7 人。AI 还在问"你的 3 人小团队最近怎么样？"
 
 你和它一起做了 3 个月的项目。但当你问"我现在用的什么框架？"，它在 10,000 条散落的记忆里翻找、猜测、答错。
 
@@ -58,9 +64,7 @@ D_V  完整率       "这条记忆没有来源。能信吗？"
 
 Alex 是位创业者。他的 AI 编程助手陪他工作了 3 个月。但有些东西正在记忆里腐烂……
 
-→ **[看 Alex 的故事，看 Minta 如何发现问题](http://localhost:8772/story)**
-
-*(先 `minta start`，再打开链接。内置 25 条演示数据 + 6 个预设问题。)*
+→ **安装后：** 运行 `minta start`，打开 `http://localhost:8772/story`。内置 25 条演示数据 + 6 个预设问题，看 Minta 如何在 1 秒内全部检测出来。
 
 ---
 
@@ -68,17 +72,111 @@ Alex 是位创业者。他的 AI 编程助手陪他工作了 3 个月。但有�
   <video src="assets/demo.mp4" autoplay muted loop playsinline width="800"></video>
 </p>
 
+## Minta 能处理什么
+
+Minta 接收你日常使用的所有内容。上线即稳定，路线图透明。
+
+| | 状态 | 说明 |
+|---|:---:|---|
+| **文字 & 聊天** | ✅ 已上线 | 对话、文档、笔记——核心场景。一切变成可检索的记忆 |
+| **图片 & 截图** | ✅ 已上线 | OCR + 图片描述。搜白板照片跟搜文字一样 |
+| **邮件** | ✅ 已上线 | 解析 .eml 文件。你的收件箱成为记忆的一部分 |
+| **语音** | 🔜 即将上线 | 会议录音、语音笔记——集成轻量，迭代快 |
+| **视频** | 📋 规划中 | 视频抽帧 + 转写 + 场景识别——面向企业会议、培训 |
+
+全程本地运行。不上传、不联网、三秒安装。
+
 ## ⚡ 30 秒上手
 
 ```bash
-git clone https://github.com/xinchen03/minta.git
-cd minta
-pip install -r requirements.txt
-minta start       # 启动后台服务
-minta connect     # 自动配置 Claude Code / Cursor MCP
+pip install minta
+minta init                  # 首次配置（只做一次）
+minta launch                # 启动服务 + 配置 AI
 ```
 
 打开 http://localhost:8772 —— 你的记忆仪表盘已上线。
+
+### 支持哪些 AI？
+
+`minta launch` 自动为所有支持的编辑器配置 MCP。你的记忆跨平台跟随你。
+
+| 命令 | AI 编辑器 | 做了什么 |
+|------|----------|---------|
+| `minta launch` | Claude Code（默认） | 写入 `~/.claude/settings.json` |
+| `minta launch --cursor` | Cursor IDE | 写入 `~/.cursor/mcp.json` |
+| `minta launch --codex` | Codex CLI | 写入 `~/.codex/mcp.json` |
+| `minta launch --vscode` | VS Code / Copilot | 写入 `~/.vscode/mcp.json` |
+| `minta launch --all` | 所有以上 | 一次性全部配置 |
+
+### 日常使用
+
+```bash
+minta status               # 服务健康吗？
+minta stop                 # 关闭后台服务
+minta start                # 重新启动
+```
+
+### 保持连接（所有 Agent 通用）
+
+MCP 是协议，不是启动器——每个 AI 在启动时读取 MCP 配置并尝试连接。你只需要让 Minta 先跑起来。
+
+| 方法 | 操作 | 适用 |
+|------|------|------|
+| 一键桌面图标 | `Setup-Desktop-Shortcut.ps1`（Win）/ `.command`（Mac）/ Linux 用 `Start-Minta.sh` | 所有 Agent |
+| 双击启动器 | `Start-Minta.vbs`（Win）/ `Start-Minta.sh`（Mac/Linux） | 所有 Agent |
+| 开机自启 | Win: 启动文件夹 · Mac: LaunchAgent · Linux: autostart | 所有 Agent |
+| Claude Code hooks | 复制 `hooks/` 到 Claude Code hooks 目录 | 仅 Claude Code |
+
+<details>
+<summary><b>macOS / Linux 详细设置</b></summary>
+
+```bash
+chmod +x Start-Minta.sh
+
+# 开机自启 (macOS):
+cp scripts/com.minta.starter.plist ~/Library/LaunchAgents/
+# 然后编辑 plist 文件，把路径改成 minta-start-silent.sh 的完整路径
+
+# 开机自启 (Linux):
+cp scripts/minta-start-silent.sh ~/.config/autostart/
+```
+</details>
+
+> **桌面端 / Web 端用户：** 静默启动器就是为你准备的。双击即跑，不用终端，Minta 在后台静默运行。然后打开你的 AI（Claude Desktop、Cursor、VS Code）——只要跑过一次 `minta launch --all`，就自动连接了。
+
+### Docker
+
+```bash
+git clone https://github.com/xinchen03/minta.git && cd minta
+docker compose up -d       # 启动 (http://localhost:8772)
+docker compose down        # 停止
+```
+
+数据持久化在 Docker 卷中。MCP 运行在 `http://localhost:18721/mcp`。
+
+---
+
+## 🔌 MCP 工具
+
+19 个工具，通过标准 MCP 协议可用：
+
+| 类别 | 工具 |
+|------|------|
+| 上下文 CRUD | `minta_read_context`、`minta_write_context`、`minta_search_context`、`minta_get_pack`、`minta_get_slot`、`minta_update_slot` |
+| 收件箱 | `minta_list_inbox`、`minta_append_inbox`、`minta_confirm_inbox`、`minta_discard_inbox` |
+| 专家系统 | `minta_expert_infer`、`minta_expert_list`、`minta_expert_consult`、`minta_expert_trust`、`minta_expert_feedback` |
+| 自动驾驶 | `minta_autopilot_preflight`、`minta_autopilot_postflight` |
+| 认证 | `minta_login` |
+| 对话 | `minta_chat` |
+
+```bash
+# 为你的 AI 编辑器自动配置：
+minta connect           # Claude Code
+minta connect --cursor  # Cursor IDE
+minta connect --codex   # Codex CLI
+minta connect --vscode  # VS Code / Copilot
+minta connect --all     # 全部
+```
 
 ---
 
@@ -106,8 +204,6 @@ Minta 检测到你纠正 AI → 自动捕获教训 → 永不再犯。
 
 ## 📊 基准测试
 
-![效能对比图](assets/benchmark_comparison.png)
-
 ### 记忆质量（Minta 独有的指标分类——竞争对手没有）
 
 | 检测维度 | 指标 | 得分 | Mem0 | Hindsight |
@@ -116,7 +212,6 @@ Minta 检测到你纠正 AI → 自动捕获教训 → 永不再犯。
 | 过时检测 | UFA | 0.86（12 对事实模板） | 无 | 无 |
 | 冗余压缩 | RR | 0.67（25 个聚类） | 无 | 无 |
 | 碎片整合 | MCR | 0.746（15 个碎片集，中位 115d） | 无 | 无 |
-| 证据召回 | R@20 | 82.6%（7 通道混合检索） | 66.9% | 89.6% |
 
 > 所有指标在互斥评估集上测量，与标定数据无交叠。完整论文准备中。
 
@@ -132,14 +227,85 @@ Minta 检测到你纠正 AI → 自动捕获教训 → 永不再犯。
 
 > 这是检索管线的常规测试。Minta 真正的贡献是上面的记忆质量四个指标——没人做过。
 
-### 行业对标
-| Memobase | 75.8% | SaaS | ❌ |
-| Zep | 75.1% | Neo4j + Docker | ✅ |
-| **Minta** | **独特赛道** | **pip install** | **✅ MIT** |
-| Mem0 | 66.9% | SDK | ✅ |
-| LangMem | 58.1% | pip | ✅ MIT |
+![效能对比图](assets/benchmark_comparison.png)
 
-> Minta 不和其他系统比检索——我们测量的是一个全新的维度：**记忆质量**。
+---
+
+## 🏗️ 架构
+
+```
+┌──────────────────────────────────────────────────┐
+│  Claude Code / Cursor / 任何 AI                   │
+│         │  MCP（19 个工具）                       │
+├─────────┼────────────────────────────────────────┤
+│  Minta API 服务器 (:8772)                         │
+│  ├── Context Objects（类型化记忆存储）             │
+│  ├── Lifecycle Scanner（4 种检测机制）             │
+│  ├── Autopilot（起飞前 / 降落后）                  │
+│  └── Context Pack Builder（上下文包构建）           │
+├──────────────────────────────────────────────────┤
+│  存储层                                          │
+│  ├── SQLite（结构化数据 + FTS5 全文搜索）          │
+│  └── ChromaDB（向量嵌入，768 维）                  │
+└──────────────────────────────────────────────────┘
+```
+
+**记忆分层：**
+- **L0 工作记忆**（RAM）：7 个固定槽位，最近上下文（<1ms）
+- **L1 近期记忆**（RAM 缓存 + 磁盘）：ChromaDB LRU + SQLite 页缓存（~5ms）
+- **L2 长期记忆**（磁盘）：全量向量 + 文本存储（无限容量）
+
+**零外部依赖。** 无需 Docker、无需 Redis、无需 API 密钥。
+
+---
+
+## 🆚 vs 竞品
+
+### 功能矩阵
+
+| | **Minta** | Mem0 | Letta | Zep | LangMem | Hindsight | MemoryLake |
+|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| **开源** | ✅ MIT | ✅ Apache 2.0 | ✅ Apache 2.0 | ✅ Community | ✅ MIT | ✅ MIT | ❌ |
+| **本地优先** | ✅ pip install | ✅ SDK | ✅ pip | ❌ Neo4j+Docker | ✅ pip | ❌ Docker | ❌ Cloud |
+| **结构化记忆类型** | ✅ 5 种 | ❌ 扁平 | ✅ Agent内 | ✅ 图 | ❌ 缓冲 | ❌ | ✅ 6 种 |
+| **冲突检测** | ✅ F₁=0.81 | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **过时检测** | ✅ 分类型 | ❌ | ❌ | ⚠️ 时间边 | ❌ | ❌ | ❌ |
+| **冗余检测** | ✅ 余弦+Jaccard | ⚠️ 基础去重 | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **碎片检测** | ✅ DBSCAN | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **反例学习** | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **人机协作（Inbox）** | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **Git 式版本** | ✅ Inbox审计 | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
+| **跨平台 Context Pack** | ✅ MCP | ❌ 仅API | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **多 Agent 共享** | ✅ | ❌ | ❌ 绑定Agent | ✅ | ❌ | ❌ | ✅ |
+| **零 LLM 成本（生命周期）** | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **MCP 协议** | ✅ 19 工具 | ❌ | ❌ | ❌ | ✅ SDK | ❌ | ❌ |
+
+### LoCoMo 基准
+
+| 系统 | 分数 | 备注 |
+|------|:----:|------|
+| MemoryLake | 94.03% | 闭源，纯云端 |
+| Backboard | 90.1% | |
+| Hindsight | 89.6% | 需 Docker |
+| Memobase | 75.8% | |
+| Zep | 75.1% | 需 Neo4j |
+| Mem0 | 66.9% | 高级功能需付费 |
+| LangMem | 58.1% | |
+| **Minta** | **独特赛道** | 记忆质量四个指标——没人做过 |
+
+> 来源：[Backboard.io LoCoMo 基准](https://github.com/Backboard-io/Backboard-Locomo-Benchmark)、Vectorize.io、ACL 2024。分数为各系统自报。Minta 不和其他系统比检索——我们测量的是一个全新的维度：**记忆质量**。
+
+### 为什么 Minta 不一样
+
+其他记忆系统帮 AI **记住更多**。Minta 帮 AI **记住对的**。
+
+| | 其他记忆系统 | Minta |
+|---|------------|-------|
+| **冲突** | "这是你的 10 条相关记忆" | "3 条互相矛盾。这条是对的。" |
+| **过时** | "我存了你的偏好" | "你的偏好 2 周前变了。现在更新。" |
+| **纠正** | 反复犯同样的错误 | 从纠正中学习，永不再犯 |
+| **质量** | 10,000 条记忆，15% 过期 | 10,000 条记忆，<1% 过期（自动维护） |
+| **可迁移** | 锁定在一个 AI 里 | Context Pack 可给任何 AI 用 |
 
 ---
 
@@ -164,24 +330,26 @@ Minta 的记忆质量机制基于 **Context Debt 理论**——一个描述 AI �
 
 **愿景：**
 
-> 每个 AI 都将拥有记忆。问题不再是"它能记住吗？"——而是"它的记忆可信吗？"Minta 正在构建 AI 记忆的信任层。先检测哪里错了。再理解记忆之间的关联。然后预测什么会改变。
+> 每个 AI 都将拥有记忆。问题不再是"它能记住吗？"——而是"它的记忆可信吗？"Minta 正在构建 AI 记忆的信任层。
 
-**我们在往哪走：**
+**路线图：**
 
 ```
-现在       记忆健康      检测过时、冲突、冗余、碎片。
-                         五个没人测量的指标。零 API 调用。
+现在       记忆健康      过时、冲突、冗余、碎片。
+                         四项没人测量的指标。零 API 调用。
+                         文字、图片、邮件——全部离线解析。
 
 下一步     记忆结构      从孤立的事实到活的知识图谱。
-                         自动发现依赖，级联更新，信念随证据演化。
+                         依赖自动发现，级联更新，
+                         语音输入。信念随证据演化。
 
-然后       记忆预测      一个能预测记忆如何变化的世界模型。
+然后       记忆推理      一个能预测记忆如何变化的世界模型。
                          跨领域推理的专家系统。
-                         记忆不只是存储——它理解。
+                         视频处理——面向企业会议、培训。
 
-未来       记忆生态      多模态、联邦化、企业级。
-                         记忆正确性的行业标准。
-                         开源内核。Pro 版服务团队。
+未来       记忆平台      多模态、多租户、企业级。
+                         面向领域专家的可视化规则编辑器。
+                         MIT 开源内核。Pro 服务团队与垂直行业。
 ```
 
 ---
@@ -206,8 +374,9 @@ Minta 的记忆质量机制基于 **Context Debt 理论**——一个描述 AI �
 
 ## 📜 协议
 
-核心引擎：**MIT** —— 自由使用、修改、分发。
+**开源范围：** 核心记忆引擎、全部四种质量检测机制、混合检索管线、MCP 工具、CLI、基准测试与评估脚本——完全开源（MIT）。企业级功能——多租户、可视化规则编辑器、领域专家模块与标定规则包——将在后续版本中分开发布。
 
+核心引擎：**MIT** —— 自由使用、修改、分发。  
 专家规则与标定数据：**BSL** —— 个人使用免费，商业使用需授权。
 
 详见 [LICENSE](LICENSE)。
