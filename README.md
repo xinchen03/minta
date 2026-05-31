@@ -143,7 +143,9 @@ docker compose down        # Stop
 
 Data persists in a Docker volume. MCP runs at `http://localhost:18721/mcp`.
 
-> **How connections work:** `minta launch` starts three background services (Data API, Autopilot, MCP server) and writes the MCP config your AI reads on startup. If your AI is already open, restart it to pick up the connection. Nothing leaves your machine.
+> **How connections work:** `minta launch` starts three background services and writes the MCP config your AI reads on startup. If your AI is already open, restart it to pick up the connection.
+>
+> **Don't want to think about order?** Copy the hooks from `hooks/` to your Claude Code hooks directory. They auto-start Minta whenever you open Claude Code — so it never matters which one starts first.
 
 ---
 
