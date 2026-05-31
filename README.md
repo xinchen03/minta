@@ -105,6 +105,8 @@ Close and reopen Claude Code (or Cursor / Codex / VS Code). It auto-connects to 
 
 Ask your AI: *"What does Minta remember about me?"* — or visit http://localhost:8772 for the dashboard.
 
+> **Python 3.10–3.11 recommended.** 3.12+ may have slow package builds. SQLite is the default database — no config needed. To use MySQL: `pip install mysql-connector-python` and set `MINTA_DATABASE_URL`.
+
 ---
 
 ### Which AI Can I Use?
