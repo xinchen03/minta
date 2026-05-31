@@ -64,9 +64,7 @@ Every dimension is computed locally, with zero API calls. Your data never leaves
 
 Alex is a startup founder. Their AI coding assistant has been learning for 3 months. But something is rotting in its memory...
 
-→ **[Read Alex's story & see Minta find the issues](http://localhost:8772/story)**
-
-*(Or `minta start` then open that link. Seeds 25 demo memories with 6 built-in problems.)*
+→ **After installing:** run `minta start` and open `http://localhost:8772/story`. Seeds 25 demo memories with 6 built-in problems. Watch Minta detect them all in under a second.
 
 ---
 
