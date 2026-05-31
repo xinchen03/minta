@@ -1,0 +1,215 @@
+{
+  "version": "1.1",
+  "domain": "clinical_diagnosis",
+  "description": "Cognitive operation ontology mapping surface clinical behaviors to domain-independent operations. Based on clinical reasoning literature (Elstein 1978, Schmidt 1990, Crandall 2006) and ACT-R base-level productions (Anderson 2004). v1.1 adds expanded Chinese surface forms for CPG term coverage.",
+
+  "categories": {
+    "PHYSICAL_EXAMINATION": "体格检查 — physical examination procedures",
+    "FUNCTIONAL_ASSESSMENT": "功能评估 — functional ability assessment",
+    "INFORMATION_GATHERING": "信息收集 — gathering patient history and context",
+    "CLINICAL_DECISION": "临床决策 — clinical decision and referral",
+    "CLINICAL_REASONING": "临床推理 — diagnostic reasoning processes",
+    "PATIENT_EDUCATION": "患者教育 — patient education and guidance"
+  },
+
+  "operations": {
+    "PHYSICAL_EXAM_PALPATION": {
+      "category": "PHYSICAL_EXAMINATION",
+      "description": "触诊检查骨性标志 — palpation of bony landmarks for tenderness",
+      "surface_forms": [
+        "踝骨压痛", "踝骨后缘压痛", "内踝触痛", "外踝压痛",
+        "内外踝压痛", "内踝压痛", "外踝触痛",
+        "外踝后缘压痛", "外踝尖端压痛", "内踝后缘压痛", "内踝尖端压痛",
+        "第五跖骨基底压痛", "跖骨基底压痛", "足舟骨压痛", "足舟骨触痛",
+        "髌骨压痛", "髌骨孤立压痛", "腓骨头压痛", "腓骨小头压痛",
+        "颈椎中线压痛", "颈椎正中压痛", "颈部中线压痛",
+        "point tenderness at posterior edge or tip lateral malleolus",
+        "point tenderness at posterior edge or tip medial malleolus",
+        "point tenderness at the base of the fifth metatarsal",
+        "point tenderness at the navicular",
+        "isolated tenderness of the patella",
+        "tenderness at the head of the fibula",
+        "absence of midline cervical-spine tenderness",
+        "midline cervical tenderness",
+        "malleolar tenderness", "medial malleolus tenderness",
+        "lateral malleolus tenderness", "navicular tenderness",
+        "base of fifth metatarsal tenderness",
+        "bone tenderness", "bony tenderness at",
+        "触痛", "压痛", "按压痛", "叩击痛", "骨压痛"
+      ]
+    },
+    "PHYSICAL_EXAM_SWELLING": {
+      "category": "PHYSICAL_EXAMINATION",
+      "description": "检查肿胀程度 — assessment of swelling/edema",
+      "surface_forms": [
+        "肿胀", "淤血", "发红", "红肿", "出血点", "皮下出血",
+        "瘀斑", "血肿", "水肿", "关节积液",
+        "swelling", "edema", "ecchymosis", "hematoma",
+        "bruising", "redness", "erythema", "effusion"
+      ]
+    },
+    "PHYSICAL_EXAM_RANGE_OF_MOTION": {
+      "category": "PHYSICAL_EXAMINATION",
+      "description": "关节活动度检查 — range of motion assessment",
+      "surface_forms": [
+        "活动范围", "关节活动", "能动吗", "弯不了", "伸不直",
+        "屈膝不到90度", "不能屈膝到90度", "膝关节屈曲受限",
+        "无法旋转颈部", "颈部旋转", "颈部左右旋转45度",
+        "主动旋转颈部", "不能转头",
+        "range of motion", "ROM", "can move", "cannot flex",
+        "inability to flex the knee to 90 degrees",
+        "able to actively rotate neck 45 degrees",
+        "unable to rotate", "able to rotate",
+        "limited movement", "stiffness", "neck rotation"
+      ]
+    },
+    "WEIGHT_BEARING_TEST": {
+      "category": "FUNCTIONAL_ASSESSMENT",
+      "description": "评估负重能力 — assess ability to bear weight",
+      "surface_forms": [
+        "不能负重4步", "不能负重", "不能走4步", "无法承重行走",
+        "能不能走", "走不了", "不敢踩地",
+        "无法负重四步", "受伤后不能走", "急诊室内不能走",
+        "受伤后立即无法负重", "急诊室内无法负重",
+        "inability to weight bear",
+        "inability to bear weight",
+        "inability to weight bear (four steps)",
+        "inability to bear weight (four steps)",
+        "inability to weight bear both immediately and in ED",
+        "inability to take four steps",
+        "take four steps", "four steps",
+        "weight bear", "weight bearing", "unable to bear weight", "cannot walk",
+        "unable to walk 4 steps", "non-weight bearing",
+        "limited weight bearing", "weight bearing status",
+        "ambulatory", "ambulatory at any time"
+      ]
+    },
+    "TEMPORAL_ANALYSIS": {
+      "category": "INFORMATION_GATHERING",
+      "description": "建立时间线 — establish timeline of injury/symptoms",
+      "surface_forms": [
+        "多久了", "什么时候开始", "持续时间", "发病时间",
+        "受伤时间", "发生多久", "第几天",
+        "迟发性疼痛", "延迟出现的疼痛", "受伤后立即",
+        "immediately after the injury",
+        "delayed onset of neck pain", "delayed onset",
+        "sitting position in the emergency department",
+        "when did it start", "how long", "duration",
+        "time of injury", "onset", "acute vs chronic"
+      ]
+    },
+    "MECHANISM_OF_INJURY": {
+      "category": "INFORMATION_GATHERING",
+      "description": "追溯损伤机制 — trace mechanism of injury",
+      "surface_forms": [
+        "怎么受伤的", "什么动作", "诱因", "受伤机制",
+        "怎么扭的", "怎么摔的", "什么姿势",
+        "跌倒超过3英尺", "高处坠落", "轴向负荷",
+        "高速机动车碰撞", "自行车碰撞", "追尾碰撞",
+        "危险损伤机制", "简单追尾车祸",
+        "dangerous mechanism of injury",
+        "fall from elevation >3 feet", "axial load to head",
+        "high-speed MVC", "motor vehicle collision",
+        "bicycle struck or collision",
+        "simple rear-end motor vehicle collision",
+        "mechanism of injury", "how did it happen",
+        "what movement", "inversion", "eversion",
+        "plantar flexion", "dorsiflexion"
+      ]
+    },
+    "SEVERITY_ASSESSMENT": {
+      "category": "INFORMATION_GATHERING",
+      "description": "评估严重度 — assess severity",
+      "surface_forms": [
+        "严重程度", "影响范围", "肿胀程度", "淤血面积",
+        "疼的厉害吗", "几级疼痛", "VAS评分",
+        "GCS评分", "GCS=15", "意识清楚",
+        "四肢感觉异常", "四肢麻木", "感觉异常",
+        "paresthesias in extremities", "paresthesias",
+        "GCS=15", "alert and stable",
+        "severity", "pain level", "how bad",
+        "mild", "moderate", "severe", "pain scale"
+      ]
+    },
+    "IMAGING_REFERRAL": {
+      "category": "CLINICAL_DECISION",
+      "description": "建议影像学检查 — refer for imaging",
+      "surface_forms": [
+        "拍X光", "拍片子", "X光检查", "需影像学", "做CT", "做MRI",
+        "建议拍片", "影像学检查", "放射检查",
+        "需要拍踝关节X光", "需要拍膝关节X光", "需要拍颈椎X光",
+        "request an x-ray", "request ankle x-ray",
+        "request knee x-ray", "request foot x-ray",
+        "imaging required", "cervical spine imaging required",
+        "radiograph indicated", "refer for radiography",
+        "x-ray", "imaging", "CT scan", "MRI",
+        "need an x-ray", "get an x-ray"
+      ]
+    },
+    "NO_IMAGING_NEEDED": {
+      "category": "CLINICAL_DECISION",
+      "description": "无需影像学检查 — imaging not indicated",
+      "surface_forms": [
+        "不需要拍X光", "不用拍片", "无需影像学",
+        "没必要拍", "观察即可",
+        "不需要拍片", "排除", "rule cleared",
+        "no imaging needed", "rule cleared",
+        "no x-ray needed", "imaging not indicated",
+        "conservative management", "observation"
+      ]
+    },
+    "AGE_THRESHOLD_CHECK": {
+      "category": "INFORMATION_GATHERING",
+      "description": "年龄阈值筛查 — age-based risk stratification",
+      "surface_forms": [
+        "年龄55岁以上", "55岁以上", "大于55岁",
+        "年龄65岁以上", "65岁以上", "大于65岁",
+        "年龄≥55", "年龄≥65",
+        "age 55 years or older", "age 65 years or older",
+        "Age 55 or older", "Age 65 or older",
+        "age threshold", "older than 55", "over 65"
+      ]
+    },
+    "DIFFERENTIAL_DIAGNOSIS": {
+      "category": "CLINICAL_REASONING",
+      "description": "鉴别诊断 — rule out alternative diagnoses",
+      "surface_forms": [
+        "排除", "不是XX", "鉴别", "区别", "考虑YY和ZZ的区别",
+        "排除骨折", "排除韧带损伤",
+        "rule out", "differential diagnosis",
+        "consider", "distinguish between"
+      ]
+    },
+    "TREATMENT_PLAN": {
+      "category": "CLINICAL_DECISION",
+      "description": "制定治疗方案 — formulate treatment plan",
+      "surface_forms": [
+        "治疗方案", "怎么治疗", "保守治疗", "手术",
+        "冰敷", "抬高", "加压", "固定", "制动",
+        "RICE", "PRICE", "POLICE",
+        "treatment", "management", "conservative",
+        "surgical", "immobilization", "rehabilitation"
+      ]
+    },
+    "REASSESSMENT_INDICATOR": {
+      "category": "CLINICAL_DECISION",
+      "description": "标记需要重新评估的条件 — conditions requiring reassessment",
+      "surface_forms": [
+        "复查", "随访", "不缓解再来看", "加重就回来",
+        "观察几天", "如果没有好转",
+        "follow up", "return if", "reassess",
+        "if no improvement", "if worsens", "recheck"
+      ]
+    },
+    "PATIENT_COUNSELING": {
+      "category": "PATIENT_EDUCATION",
+      "description": "患者教育与咨询 — educate and counsel patient",
+      "surface_forms": [
+        "告知", "解释", "建议", "注意", "避免",
+        "嘱咐", "交代", "健康教育",
+        "counsel", "educate", "advise", "instruct",
+        "explain", "inform", "recommend"
+      ]
+    }
+  }
+}

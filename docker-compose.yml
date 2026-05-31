@@ -1,0 +1,29 @@
+# Minta — single-machine deployment
+version: "3.8"
+
+services:
+  minta:
+    build: .
+    container_name: minta
+    ports:
+      - "8772:8772"   # Data API + Dashboard
+      - "18721:18721"  # MCP HTTP Server
+    volumes:
+      - minta_data:/data
+    environment:
+      - MINTA_DATABASE_URL=sqlite:////data/minta.db
+      - MINTA_ENV=production
+      - MINTA_EXPERT_ENABLED=true
+      - MINTA_AUTOPILOT_ENABLED=true
+      - MINTA_JWT_SECRET=${MINTA_JWT_SECRET:-change-me-in-production}
+      - MINTA_API_KEY=${MINTA_API_KEY:-}
+      - MINTA_CORS_ORIGINS=http://localhost:8772
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8772/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  minta_data:

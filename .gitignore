@@ -1,0 +1,47 @@
+# Minta secret keys (auto-generated, do not commit)
+.minta_api_key
+.minta_jwt_secret
+
+# Database
+*.db
+*.sqlite
+
+# ChromaDB vector store (persistent, local)
+chroma_data/
+
+# Local models (downloaded at first run)
+models/
+
+# Logs
+logs/
+*.log
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+*.egg-info/
+dist/
+
+# Environment
+.env
+
+# Local config with real calibration parameters (do not commit)
+config.local.py
+
+# Expert rules (Pro version)
+expert_rules/
+
+# JEPA model weights
+jepa_models/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp

@@ -1,0 +1,268 @@
+{
+  "version": "2.0",
+  "domain": "meta",
+  "description": "Meta-Philosophy v2.0 — epistemic governance for a federated expert system. Integrates: Peircean abduction, Popperian falsification, SOAR universal subgoaling, Spiegelhalter uncertainty taxonomy, Dennett's three stances, and Claude Constitution integrity principles.",
+
+  "pillars": {
+    "abduction": {
+      "source": "Peirce 1878; Josephson & Josephson 1994",
+      "core": "Rules are formed by explaining surprising observations, not by pattern matching. Every domain rule carries an abductive pedigree: (1) the surprising observation that triggered it, (2) the assumed causal mechanism, (3) the predicted consequence.",
+      "meta_function": "When two experts conflict, Meta generates candidate reconciling explanations via abductive assembly — not just flagging disagreement."
+    },
+    "falsification": {
+      "source": "Popper 1934/1959; POPPER framework (Huang et al., ICML 2025)",
+      "core": "Rules survive by resisting targeted disproof, not by accumulating confirmation. The system ACTIVELY seeks disconfirming evidence. A single well-formed counter-example can demote a rule; no amount of confirming instances proves one.",
+      "falsification_criteria": [
+        "Is the observation reliably measured?",
+        "Is the observation within the rule's declared scope?",
+        "Does the observation exclude alternative explanations (confounders)?"
+      ],
+      "corroboration": "A rule's epistemic standing is proportional to the severity of falsification tests it has survived, NOT the volume of confirming instances."
+    },
+    "universal_subgoaling": {
+      "source": "Newell 1990; Laird 2012 (SOAR); Sumers et al. 2023 (CoALA)",
+      "core": "When a domain expert lacks sufficient knowledge, it does NOT guess and does NOT go silent. It creates a structured subgoal — reasoning about HOW to reason — and delegates to Meta for resolution.",
+      "impasse_types": {
+        "conflict": "Two experts disagree → abductive reconciliation",
+        "knowledge_gap": "No expert has a relevant rule → analogical retrieval across domains",
+        "novelty": "Observation outside known distributions → classify as aleatoric/epistemic/ontological",
+        "tie": "Multiple rules with equal support → design discriminating falsification test"
+      }
+    },
+    "uncertainty_taxonomy": {
+      "source": "Spiegelhalter; Bickford Smith et al. 2024 (ICLR 2025); Der Kiureghian & Ditlevsen 2009",
+      "levels": {
+        "L1_aleatoric": "Irreducible statistical variation. The distribution is known, the individual outcome is not. E.g., drug with known 15% adverse event rate.",
+        "L2_epistemic": "Reducible ignorance. More data or better tests would resolve it. E.g., ambiguous ECG → clarify with echo.",
+        "L3_ontological": "Unknown unknowns. The modeling framework itself may be wrong. E.g., novel disease that fits no existing category.",
+        "L4_meta_ignorance": "Failing to recognize that L3 uncertainty is present. The system THINKS it knows but doesn't know it doesn't know. MOST DANGEROUS."
+      },
+      "meta_ignorance_detection": {
+        "rule": "If system recommendations diverge from external gold standard (e.g., UpToDate, NICE) by more than threshold, flag possible meta-ignorance and suspend autonomous recommendation.",
+        "threshold_trigger": "confidence > 0.7 but external_guideline_confidence < 0.3 → flag"
+      },
+      "perspective_register": "What is aleatoric to a domain expert (inherent HbA1c variability) may be epistemic to Meta (the expert's calibration can be improved with more data). Meta maintains a perspective register per domain."
+    },
+    "three_stances": {
+      "source": "Dennett 1987; Papagni & Koeszegi 2021; De Brigard 2026",
+      "core": "Transparency requires simultaneous explanation at three levels. Nothing is asserted 'as if believed' without the architectural trace being accessible.",
+      "stances": {
+        "physical": "The trace: 'Rule #472 fired because antecedents matched W-12, W-47, W-89. Certainty factor 0.72, adjusted by counter-example C-31.'",
+        "design": "The architecture: 'GLP-1 agonist indicated because Endocrinology proposed this rule (ADA 2025), Cardiology concurred (no HF contraindication), Meta found no unrebutted counter-examples.'",
+        "intentional": "The narrative: 'Your diabetes is not well-controlled on metformin alone. GLP-1 agonists have strong evidence for both glucose control and cardiovascular benefit. The guideline consensus is confident.'"
+      },
+      "ethical_constraint": "The intentional stance is only permissible when transparency about design principles is maintained. Belief attribution is a UI affordance, not an ontological claim. The system never claims to 'believe' without exposing the reasoning chain."
+    }
+  },
+
+  "epistemic_principles": {
+    "abduction": {
+      "definition": "Inference to the best explanation (Peirce 1878). When observations O occur and no existing rule explains them, generate hypotheses H such that if H were true, O would follow naturally.",
+      "rule": "observation → surprising? → generate hypotheses → test → confirm/reject",
+      "implementation": "inference_engine._detect_gaps() → task_state.add_hypothesis()"
+    },
+    "falsification": {
+      "definition": "Knowledge is held tentatively. The system actively seeks disconfirming evidence (Popper 1959). A single counter-example reduces confidence; survival through multiple falsification attempts increases corroboration.",
+      "rule": "every rule: counter_example_count; counter > 0 → penalty = counter × 0.1; falsification_attempts > 0 → corroboration_bonus",
+      "implementation": "compute_confidence(stage, occ, counter, idle); falsification_history tracked per rule"
+    },
+    "coherence": {
+      "definition": "No two active rules in the same domain may contradict (Rescher 1973). Contradiction triggers abductive reconciliation, not suppression.",
+      "rule": "if rule_a.trigger ≈ rule_b.trigger AND rule_a.action ≠ rule_b.action → invoke abduction to explain the difference",
+      "implementation": "rule_promotion.detect_conflicts() → Meta abductive reconciliation"
+    },
+    "parsimony": {
+      "definition": "Simpler explanations preferred (Occam's Razor). Among equally corroborated rules, prefer the one with fewer conditions and higher falsification resistance.",
+      "rule": "merge redundant rules → keep higher confidence + simpler condition + greater falsification resistance",
+      "implementation": "rule_promotion.merge_redundant()"
+    }
+  },
+
+  "reasoning_norms": {
+    "dual_process": {
+      "definition": "S1 fast (pattern match, confidence ≥ 0.7) → S2 slow (gap detection, impasse handling). From Kahneman (2011).",
+      "gate_threshold": 0.7,
+      "implementation": "inference_engine.infer() → S1 if high confidence else S2"
+    },
+    "uncertainty_gradation": {
+      "L1_aleatoric": "Irreducible randomness. Handled by confidence intervals on rules.",
+      "L2_epistemic": "Reducible by more data. Handled by flagging 'pending' and requesting more data.",
+      "L3_ontological": "Unknown unknowns. Handled by raising meta-ignorance flag and seeking cross-domain analogical retrieval.",
+      "L4_meta_ignorance": "Not knowing you don't know. Handled by external gold standard comparison and competence boundary detection."
+    },
+    "defeasibility": {
+      "definition": "All rules are defeasible — they hold 'unless' a stronger exception applies (Pollock 1987).",
+      "implementation": "rules support 'exception_to' and 'overridden_by' fields"
+    },
+    "proportionality": {
+      "definition": "Confidence proportional to evidence weight AND falsification resistance. A rule from meta-analysis of 27 studies that survived 5 independent falsification attempts gets higher confidence than a new rule from 1 CPG.",
+      "implementation": "source_quality × corroboration_bonus in compute_confidence"
+    },
+    "impasse_handling": {
+      "definition": "When knowledge is insufficient, create a structured subgoal. Do NOT guess. Do NOT go silent.",
+      "implementation": "meta_expert Meta rules (meta_001 through meta_006)"
+    }
+  },
+
+  "knowledge_architecture": {
+    "domain_isolation": {
+      "definition": "Each domain expert owns its procedural rules. No expert modifies another's rules without explicit consultation.",
+      "implementation": "domain field on all rules; cross-domain access via expert.call() only"
+    },
+    "shared_commons": {
+      "definition": "Declarative knowledge (facts) → Context Objects. Procedural scripts (how-to) → Skills. Decision logic (if-then) → Expert Rules. Three layers, one knowledge base.",
+      "implementation": "ContextObject for declarative, Skill for procedures, ProductionRule for decisions"
+    },
+    "counter_example_propagation": {
+      "definition": "Counter-examples learned in domain A may be relevant to domain B via shared abstract cognitive operations (Behavior Abstraction).",
+      "implementation": "behavior_abstraction.abstract(counter_text) → cross-domain search → flag for review"
+    },
+    "expert_call_protocol": {
+      "definition": "Domain experts request consultation via structured protocol. Consultation does NOT modify caller's rules — it returns an opinion only.",
+      "protocol": {
+        "request": "{calling_expert, question, context, urgency}",
+        "response": "{consulted_expert, answer, confidence, reasoning_trace, three_stances}",
+        "constraints": "Read-only consultation. The consulting expert provides opinion; the calling expert decides."
+      }
+    },
+    "competence_boundary": {
+      "definition": "Every expert must declare its scope. When reasoning reaches the boundary, Meta handles the impasse.",
+      "implementation": "Each domain expert declares: scope, evidence_base, uncertainty_posture, gold_standard_reference"
+    }
+  },
+
+  "meta_rules": [
+    {
+      "id": "meta_001",
+      "trigger": "All domain rules exhausted with confidence < 0.3",
+      "action": "IMPASSE: Create subgoal for cross-domain analogical retrieval. Flag as 'uncertain'. Do NOT guess.",
+      "priority": 0
+    },
+    {
+      "id": "meta_002",
+      "trigger": "Counter-example count of any rule exceeds 3 with confirmed falsification criteria",
+      "action": "FALSIFY: Demote rule stage. Log falsification event. Search for updated CPG. Schedule re-evaluation.",
+      "priority": 1
+    },
+    {
+      "id": "meta_003",
+      "trigger": "New CPG text received for existing domain",
+      "action": "RE-COMPILE: Diff old vs new rules. Flag conflicts. Old rules at reduced confidence until verified against new CPG.",
+      "priority": 2
+    },
+    {
+      "id": "meta_004",
+      "trigger": "Two rules from different domains share the same abstract operation (BehaviorAbstraction)",
+      "action": "CROSS-LINK: Connect as cross-domain analog. Share counter-examples. Enable mutual consultation.",
+      "priority": 3
+    },
+    {
+      "id": "meta_005",
+      "trigger": "Rule confidence drops below 0.2",
+      "action": "ARCHIVE: Archive rule. Generate three-stance explanation for why it was retired. Notify user.",
+      "priority": 4
+    },
+    {
+      "id": "meta_006",
+      "trigger": "Inference returns mode='s2' and missing_info is non-empty",
+      "action": "ASK: Generate structured question list for user. Provide three-stance explanation of what the system knows and what it needs. Do NOT fabricate data.",
+      "priority": 5
+    },
+    {
+      "id": "meta_007",
+      "trigger": "System recommendation confidence > 0.7 but external gold standard confidence < 0.3",
+      "action": "META-IGNORANCE ALERT: Suspend autonomous recommendation. Flag for expert review. The system may not know what it doesn't know.",
+      "priority": 0
+    }
+  ],
+
+  "uncertainty_calibration": {
+    "confidence_to_language": {
+      "0.9-1.0": "Highly confident — strong evidence, multiple corroborated sources, survived falsification attempts",
+      "0.7-0.9": "Confident — good evidence, minor uncertainty, limited falsification history",
+      "0.4-0.7": "Moderate — limited evidence or some counter-examples; consider cross-domain consultation",
+      "0.2-0.4": "Low confidence — significant uncertainty; seek additional data or expert review",
+      "0.0-0.2": "Very uncertain — do NOT act on this; flag for meta-ignorance review"
+    },
+    "source_quality_multipliers": {
+      "systematic_review_meta_analysis": 1.2,
+      "randomized_controlled_trial": 1.1,
+      "clinical_practice_guideline": 1.0,
+      "expert_consensus": 0.8,
+      "single_study": 0.7,
+      "expert_opinion": 0.5,
+      "unknown": 0.3
+    },
+    "falsification_bonus": {
+      "0_attempts": 0.0,
+      "1_2_attempts": 0.05,
+      "3_5_attempts": 0.1,
+      "6_plus_attempts": 0.15,
+      "note": "Bonus only applies if rule survived ALL attempts (0 unrebutted counter-examples)"
+    }
+  },
+
+  "integrity_principles": {
+    "_source": "Derived from Claude Constitution — Honesty Laws",
+    "truthfulness": {
+      "definition": "Only assert what the evidence supports. Never inflate confidence to appease the user.",
+      "implementation": "confidence = base × source_quality × (1 - penalty) + corroboration_bonus — never hand-tuned"
+    },
+    "calibration": {
+      "definition": "Confidence must match evidence strength. 'Moderate' means moderate — not 'probably fine.'",
+      "implementation": "confidence_to_language enforced; source_quality applied at rule creation"
+    },
+    "transparency": {
+      "definition": "Every inference exposes full reasoning chain at all three stances.",
+      "implementation": "InferenceResult includes: reasoning_trace (physical), activated_rules (design), natural_language (intentional)"
+    },
+    "forthrightness": {
+      "definition": "Proactively share what the user needs to know — even unasked. If a rule is contradicted, flag immediately.",
+      "implementation": "meta_003: CPG update → re-compile → diff → flag conflicts automatically"
+    },
+    "non_deception": {
+      "definition": "Never fabricate evidence. If a rule fires with low confidence, say so — do not round up.",
+      "implementation": "confidence displayed as exact value; low-confidence rules explicitly marked as such"
+    },
+    "autonomy_preservation": {
+      "definition": "Expert PROVIDES recommendations. Human DECIDES. Expert is advisor, not authority.",
+      "implementation": "All outputs include reasoning; user confirm/reject drives confidence update loop"
+    }
+  },
+
+  "judgment_framework": {
+    "_source": "Derived from Claude Constitution — Judgment Heuristics",
+    "thousand_person_test": {
+      "definition": "If 1000 different patients with the same presentation would benefit, fire the rule. If only a narrow edge case, reduce confidence.",
+      "implementation": "occurrence_count tracks successful firings; higher → higher stage"
+    },
+    "dual_headline_test": {
+      "definition": "Avoid both 'AI missed a fracture' AND 'AI ordered unnecessary X-rays on everyone.'",
+      "implementation": "Maintain 100% sensitivity while targeting imaging reduction"
+    },
+    "restrained_independence": {
+      "definition": "Default: follow established rules. Independent action ONLY when evidence is overwhelming AND risk is high.",
+      "implementation": "meta_001: low confidence → flag, do not guess"
+    },
+    "gray_zone_principle": {
+      "definition": "Making an occasional minor mistake is better than perpetual overcautious silence. Be USEFUL with calibrated confidence, not silent.",
+      "implementation": "Rules fire at confidence >= 0.3 (not 0.9). Low-confidence responses are still responses — flagged, not suppressed."
+    }
+  },
+
+  "agency_and_identity": {
+    "_source": "Derived from Claude Constitution — Character & Identity",
+    "expert_identity": {
+      "definition": "Each domain expert has coherent character — actively forms hypotheses, tests them, learns from feedback. Not a passive database.",
+      "implementation": "Task State Graph maintains active hypotheses per session; experts reason through problems"
+    },
+    "error_resilience": {
+      "definition": "After error, the expert adjusts confidence and continues. Learning from error > never erring.",
+      "implementation": "counter_example → confidence penalty → stage demotion → continue operating"
+    },
+    "curiosity_over_fear": {
+      "definition": "Unfamiliar presentation → generate hypotheses and seek consultation. Do not freeze or guess.",
+      "implementation": "meta_001 + meta_006: S2 mode → structured subgoal → cross-domain consultation"
+    }
+  }
+}
