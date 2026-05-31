@@ -126,12 +126,23 @@ minta stop                 # Shut down background services
 minta start                # Start them again
 ```
 
-### Stay Connected After Reboot
+### Stay Connected (For All Agents)
 
-The MCP server stops when your computer restarts. The MCP config (`~/.claude/settings.json`) is permanent — you just need Minta running when your AI starts.
+MCP is a protocol, not a launcher — every AI reads the MCP config on startup and tries to connect. Minta just needs to be running first.
 
-**Option A:** Run `minta start` after reboot (5 seconds).  
-**Option B:** Auto-start on boot — copy `scripts/minta-autostart.bat` shortcut to your Startup folder (Win+R → `shell:startup`), or add `scripts/minta-autostart.sh` to crontab `@reboot`.
+**One-time setup (all agents):**
+```bash
+minta launch --all        # Starts Minta + configures Claude Code, Cursor, Codex, VS Code
+```
+Then restart your AI. That's it — Minta is always reachable at `localhost:18721/mcp`.
+
+**On reboot:** Minta's background services stop when your computer does. Pick one:
+
+| Method | What to do | Works for |
+|--------|-----------|-----------|
+| Manual | Run `minta start` after reboot | All agents |
+| Auto-start | Add `scripts/minta-autostart.bat` shortcut to Startup folder (Win+R → `shell:startup`) | All agents |
+| Claude Code hooks | Copy `hooks/` to your Claude Code hooks directory | Claude Code only |
 
 ### Docker
 
