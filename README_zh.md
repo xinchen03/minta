@@ -89,8 +89,9 @@ Minta 接收你日常使用的所有内容。上线即稳定，路线图透明�
 ## ⚡ 30 秒上手
 
 ```bash
-pip install minta
-minta init                  # 首次配置（只做一次）
+git clone https://github.com/xinchen03/minta.git
+cd minta
+pip install -r requirements.txt
 minta launch                # 启动服务 + 配置 AI
 ```
 

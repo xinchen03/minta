@@ -91,8 +91,9 @@ Everything runs locally. No uploads. No cloud. Three-second install.
 ### 1. Install & Launch (30 seconds)
 
 ```bash
-pip install minta
-minta init                  # First-time setup (one time)
+git clone https://github.com/xinchen03/minta.git
+cd minta
+pip install -r requirements.txt
 minta launch                # Start services + configure your AI
 ```
 
