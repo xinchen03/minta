@@ -141,11 +141,26 @@ Then restart your AI. That's it — Minta is always reachable at `localhost:1872
 | Method | What to do | Works for |
 |--------|-----------|-----------|
 | Manual | Run `minta start` after reboot | All agents |
-| Double-click | Double-click `scripts/minta-start-silent.vbs` — no terminal needed | All agents |
-| Auto-start | Add `scripts/minta-start-silent.vbs` shortcut to Startup folder (Win+R → `shell:startup`) | All agents |
+| Double-click launcher | `scripts/minta-start-silent.vbs` (Win) / `.sh` (Mac/Linux) | All agents |
+| Auto-start on boot | Win: Startup folder · Mac: LaunchAgent · Linux: autostart | All agents |
 | Claude Code hooks | Copy `hooks/` to your Claude Code hooks directory | Claude Code only |
 
-> **Desktop / web-coding users:** The silent launcher is for you. Double-click, no terminal, Minta runs in the background. Then open your AI (Claude Desktop, Cursor, VS Code, Bolt, Lovable, v0) — it connects automatically if you've run `minta launch --all` once.
+<details>
+<summary><b>macOS / Linux setup</b></summary>
+
+```bash
+chmod +x scripts/minta-start-silent.sh
+
+# Auto-start on login (macOS):
+cp scripts/com.minta.starter.plist ~/Library/LaunchAgents/
+# Then edit the plist to point to the full path of minta-start-silent.sh
+
+# Auto-start on login (Linux):
+cp scripts/minta-start-silent.sh ~/.config/autostart/
+```
+</details>
+
+> **Desktop / web-coding users:** The silent launcher is for you. Double-click, no terminal, Minta runs in the background. Then open your AI — it connects automatically if you've run `minta launch --all` once.
 
 ### Docker
 
