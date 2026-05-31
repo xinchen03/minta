@@ -141,7 +141,7 @@ Then restart your AI. That's it — Minta is always reachable at `localhost:1872
 | Method | What to do | Works for |
 |--------|-----------|-----------|
 | Manual | Run `minta start` after reboot | All agents |
-| Double-click launcher | `scripts/minta-start-silent.vbs` (Win) / `.sh` (Mac/Linux) | All agents |
+| Double-click launcher | `Start-Minta.vbs` (Win) / `Start-Minta.sh` (Mac/Linux) — right in the repo root | All agents |
 | Auto-start on boot | Win: Startup folder · Mac: LaunchAgent · Linux: autostart | All agents |
 | Claude Code hooks | Copy `hooks/` to your Claude Code hooks directory | Claude Code only |
 
