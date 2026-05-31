@@ -65,7 +65,7 @@ Alex 是位创业者。他的 AI 编程助手陪他工作了 3 个月。但有�
 ---
 
 <p align="center">
-  <img src="assets/demo.gif" alt="Minta Demo" width="800">
+  <video src="assets/demo.mp4" autoplay muted loop playsinline width="800"></video>
 </p>
 
 ## ⚡ 30 秒上手
