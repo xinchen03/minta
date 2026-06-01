@@ -48,9 +48,13 @@ class VerifyCodeRequest(BaseModel):
 
 @router.post("/send-code")
 def send_verification_code(req: SendCodeRequest):
-    """Send email verification code."""
+    """Send email verification code — auto-verify when SMTP is not configured."""
     _check_rate_limit(f"send-code:{req.email}", max_attempts=3, window=120)
-    # Generate 6-digit code
+
+    if not SMTP_CONFIGURED:
+        # Auto-verify: no SMTP configured, skip email sending
+        return {"success": True, "message": "验证无需邮件，已自动通过"}
+
     code = "".join(random.choices(string.digits, k=6))
     _verify_codes[req.email] = {"code": code, "expires": time.time() + 300}
 
