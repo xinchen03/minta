@@ -99,12 +99,31 @@ def main():
     mcp_cfg_ok, cfg_editor = check_mcp_configured()
     handshake_ok, tool_count = check_mcp_handshake() if mcp_ok else (False, 0)
 
+    # === Always: brief Minta intro so Claude knows it exists ===
+    MINTA_INTRO = (
+        "\n---\n"
+        "Minta is an AI memory engine running at http://localhost:8772.\n"
+        "When connected via MCP (port 18721), you have access to 19 tools:\n"
+        "minta_read_context, minta_write_context, minta_search_context,\n"
+        "minta_get_pack, minta_append_inbox, minta_list_inbox,\n"
+        "minta_autopilot_preflight, minta_autopilot_postflight, minta_login, and more.\n"
+        "If these tools are NOT in your tool list, tell the user to run:\n"
+        "`python minta_cli.py launch` and restart Claude.\n"
+    )
+
     # === CASE 1: Everything is ready ===
     if api_ok and mcp_ok and handshake_ok and mcp_cfg_ok:
+        # Always inject Minta intro so new users know what it is
+        sys.stdout.buffer.write(MINTA_INTRO.encode("utf-8"))
         pack = fetch_context_pack()
         if pack:
             sys.stdout.buffer.write(pack.encode("utf-8"))
-            sys.stdout.buffer.flush()
+        else:
+            sys.stdout.buffer.write(
+                "\n[Minta Hook] Minta is running and MCP is connected.\n"
+                "If you don't see minta_* tools in your tool list, restart Claude.\n".encode("utf-8")
+            )
+        sys.stdout.buffer.flush()
         return
 
     # === CASE 2: MCP config exists but services are down (user forgot to start) ===
