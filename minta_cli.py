@@ -418,6 +418,46 @@ def cmd_launch(target: str = "all"):
         print("\n[Minta] WARNING: No editors configured.")
         return
 
+    # --- 3. Verify MCP handshake (critical: Claude silently drops tools if init fails) ---
+    print()
+    print("  Verifying MCP handshake...", end=" ", flush=True)
+    mcp_ok = False
+    for attempt in range(10):
+        try:
+            # Full MCP init handshake: initialize -> list tools
+            body = json.dumps({"jsonrpc": "2.0", "id": 1,
+                              "method": "initialize",
+                              "params": {"protocolVersion": "2024-11-05",
+                                         "capabilities": {},
+                                         "clientInfo": {"name": "minta-verify", "version": "1.0.0"}}}).encode()
+            req = urllib.request.Request("http://localhost:18721/mcp",
+                                         data=body,
+                                         headers={"Content-Type": "application/json"})
+            r = urllib.request.urlopen(req, timeout=3)
+            init_resp = json.loads(r.read())
+            if "result" in init_resp:
+                body2 = json.dumps({"jsonrpc": "2.0", "id": 2,
+                                   "method": "tools/list", "params": {}}).encode()
+                req2 = urllib.request.Request("http://localhost:18721/mcp",
+                                              data=body2,
+                                              headers={"Content-Type": "application/json"})
+                r2 = urllib.request.urlopen(req2, timeout=3)
+                tools_resp = json.loads(r2.read())
+                n = len(tools_resp.get("result", {}).get("tools", []))
+                print(f"{n} tools confirmed.")
+                mcp_ok = True
+                break
+        except Exception:
+            time.sleep(1)
+    if not mcp_ok:
+        print("FAILED!")
+        print()
+        print("  WARNING: MCP handshake failed. Your AI may not see Minta tools.")
+        print("  This usually means port 18721 isn't ready yet.")
+        print("  Wait a few seconds and restart your AI.")
+    else:
+        print("  MCP handshake OK - your AI will see all tools on restart.")
+
     # --- Per-editor restart instructions ---
     RESTART_HINTS = {
         "claude":  "Close terminal ->open new terminal ->run 'claude'",
