@@ -11,7 +11,7 @@
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue"></a>
   <a href="#"><img src="https://img.shields.io/badge/python-3.9%2B-green"></a>
-  <a href="#"><img src="https://img.shields.io/badge/MCP-19%20tools-purple"></a>
+  <a href="#"><img src="https://img.shields.io/badge/MCP-11%20tools-purple"></a>
   <a href="README_zh.md"><img src="https://img.shields.io/badge/README-中文-red"></a>
 </p>
 
@@ -264,7 +264,7 @@ Beyond this README, we have detailed guides for every use case:
 
 | Document | What's Inside |
 |----------|---------------|
-| **[User Guide](docs/user-guide.md)** | Step-by-step: dashboard, memory objects, inbox, health scanning, semantic search, context packs, skills, community sharing, expert system, troubleshooting |
+| **[User Guide](docs/user-guide.md)** | Step-by-step: dashboard, memory objects, inbox, health scanning, semantic search, context packs, skills, community sharing, troubleshooting |
 | **[Configuration Guide](docs/configuration.md)** | All env vars, MySQL/PostgreSQL setup, SMTP email verification, CORS, API keys, autopilot, production deployment with Nginx |
 | **[MCP Integration Guide](docs/mcp-integration.md)** | Connect Minta to Claude Code, Cursor, and custom agents via MCP. Full tool reference (19 tools) with Python/JavaScript examples for both stdio and HTTP transports |
 
@@ -274,16 +274,14 @@ Beyond this README, we have detailed guides for every use case:
 
 ## 🔌 MCP Tools
 
-19 tools available via standard MCP protocol:
+11 tools available via standard MCP protocol:
 
 | Category | Tools |
 |----------|-------|
 | Context CRUD | `minta_read_context`, `minta_write_context`, `minta_search_context`, `minta_get_pack`, `minta_get_slot`, `minta_update_slot` |
 | Inbox | `minta_list_inbox`, `minta_append_inbox`, `minta_confirm_inbox`, `minta_discard_inbox` |
-| Expert | `minta_expert_infer`, `minta_expert_list`, `minta_expert_consult`, `minta_expert_trust`, `minta_expert_feedback` |
 | Autopilot | `minta_autopilot_preflight`, `minta_autopilot_postflight` |
 | Auth | `minta_login` |
-| Chat | `minta_chat` |
 
 ```bash
 # Auto-configure for your AI editor:
@@ -393,7 +391,7 @@ On the LoCoMo benchmark (1,986 questions across 10 long conversations, 11,958 fa
 | **Cross-Platform Context Pack** | ✅ MCP | ❌ API-only | ❌ | ❌ | ❌ | ❌ | ❌ |
 | **Multi-Agent Memory Share** | ✅ | ❌ | ❌ Agent-bound | ✅️ | ❌ | ❌ | ✅ |
 | **Zero LLM Cost (lifecycle)** | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **MCP Protocol** | ✅ 19 tools | ❌ | ❌ | ❌ | ✅ SDK | ❌ | ❌ |
+| **MCP Protocol** | ✅ 11 tools | ❌ | ❌ | ❌ | ✅ SDK | ❌ | ❌ |
 
 ![Benchmark Comparison](assets/benchmark_comparison.png)
 

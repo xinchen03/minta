@@ -15,8 +15,7 @@ Everything you can configure in Minta — environment variables, database, email
 5. [CORS Configuration](#cors-configuration)
 6. [API Key Management](#api-key-management)
 7. [Autopilot Settings](#autopilot-settings)
-8. [Expert System Settings](#expert-system-settings)
-9. [Production Checklist](#production-checklist)
+8. [Production Checklist](#production-checklist)
 
 ---
 
@@ -90,7 +89,6 @@ python -c "import secrets; print('minta_' + secrets.token_urlsafe(32))"
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `MINTA_EXPERT_ENABLED` | `true` | Enable/disable the expert inference system |
 | `MINTA_AUTOPILOT_ENABLED` | `true` | Enable/disable the autopilot memory management |
 
 ### Advanced
@@ -305,43 +303,6 @@ MINTA_AUTOPILOT_ENABLED=false  # Disable
 Autopilot decisions are logged for review:
 - `GET /api/autopilot/logs` — View recent decisions
 - `GET /api/autopilot/status` — Check autopilot health
-
----
-
-## Expert System Settings
-
-The expert system compiles clinical decision rules into production rules.
-
-### Enable/Disable
-
-```bash
-MINTA_EXPERT_ENABLED=true   # Enable (default)
-MINTA_EXPERT_ENABLED=false  # Disable
-```
-
-### Default Expert Domains
-
-On first startup with no existing rules, Minta auto-compiles three domains:
-- **Ottawa Ankle Rules** (Stiell 1992, JAMA)
-- **Ottawa Knee Rules** (Stiell 1996, JAMA)
-- **Canadian C-Spine Rule** (Stiell 2001, JAMA)
-
-### Lifecycle Auto-Scan
-
-The auto-scanner checks for memory health issues on a schedule:
-
-```bash
-# Check current settings
-curl http://localhost:8772/api/lifecycle/auto-scan/status
-
-# Change interval (1 hour to 7 days)
-curl -X POST "http://localhost:8772/api/lifecycle/auto-scan/interval?hours=12"
-
-# Toggle on/off
-curl -X POST "http://localhost:8772/api/lifecycle/auto-scan/toggle?enabled=true"
-```
-
-Settings are persisted to `data/auto_scan_config.json`.
 
 ---
 

@@ -420,85 +420,6 @@ Discard an inbox item (false positive or not useful).
 }
 ```
 
-### Expert System Tools
-
-#### `minta_expert_infer`
-
-Run expert inference for a clinical domain.
-
-```json
-{
-  "username": "string (required)",
-  "password": "string (required)",
-  "message": "string (required) - patient case description",
-  "domain": "string (required) - ankle_injury, knee_injury, cervical_spine_injury"
-}
-```
-
-#### `minta_expert_list`
-
-List all available expert domains with rule counts and trust levels.
-
-```json
-{
-  "username": "string (required)",
-  "password": "string (required)"
-}
-```
-
-#### `minta_expert_consult`
-
-Cross-domain expert consultation.
-
-```json
-{
-  "username": "string (required)",
-  "password": "string (required)",
-  "message": "string (required) - case description",
-  "primary_domain": "string (required)",
-  "consult_domain": "string (required)"
-}
-```
-
-#### `minta_expert_trust`
-
-Get trust metrics for a domain expert.
-
-```json
-{
-  "username": "string (required)",
-  "password": "string (required)",
-  "domain": "string (required)"
-}
-```
-
-#### `minta_expert_feedback`
-
-Submit feedback on an expert inference.
-
-```json
-{
-  "username": "string (required)",
-  "password": "string (required)",
-  "log_id": "integer (required)",
-  "signal": "string (required) - positive or negative"
-}
-```
-
-### Chat Tool
-
-#### `minta_chat`
-
-Main chat interface with automatic domain detection.
-
-```json
-{
-  "username": "string (required)",
-  "password": "string (required)",
-  "message": "string (required) - natural language message"
-}
-```
-
 ### Autopilot Tools (No Auth — Uses API Key)
 
 #### `minta_autopilot_preflight`
@@ -570,7 +491,7 @@ Content-Type: application/json
 | Method | Description |
 |--------|-------------|
 | `initialize` | MCP handshake |
-| `tools/list` | List all 19 available tools |
+| `tools/list` | List all 11 available tools |
 | `tools/call` | Call a specific tool |
 
 > ⚠️ **Security note:** The HTTP MCP server binds to `127.0.0.1` when launched via `minta start`. Only the standalone mode binds to `0.0.0.0`. Do not expose the MCP HTTP port to the public internet without authentication.

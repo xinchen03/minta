@@ -15,8 +15,7 @@ Minta 所有可配置项——环境变量、数据库、邮件、CORS 等全覆
 5. [CORS 配置](#cors-配置)
 6. [API 密钥管理](#api-密钥管理)
 7. [Autopilot 设置](#autopilot-设置)
-8. [专家系统设置](#专家系统设置)
-9. [生产环境检查清单](#生产环境检查清单)
+8. [生产环境检查清单](#生产环境检查清单)
 
 ---
 
@@ -90,7 +89,6 @@ python -c "import secrets; print('minta_' + secrets.token_urlsafe(32))"
 
 | 变量 | 默认值 | 说明 |
 |------|--------|------|
-| `MINTA_EXPERT_ENABLED` | `true` | 启用/关闭专家推理系统 |
 | `MINTA_AUTOPILOT_ENABLED` | `true` | 启用/关闭 Autopilot 记忆管理 |
 
 ### 高级选项
@@ -307,24 +305,6 @@ Autopilot 决策可追溯：
 - `GET /api/autopilot/status` — 检查 Autopilot 健康状态
 
 ---
-
-## 专家系统设置
-
-专家系统将临床决策规则编译为生产规则。
-
-### 启用/关闭
-
-```bash
-MINTA_EXPERT_ENABLED=true   # 启用（默认）
-MINTA_EXPERT_ENABLED=false  # 关闭
-```
-
-### 默认专家领域
-
-首次启动且无已有规则时，Minta 自动编译三个领域：
-- **Ottawa 踝关节规则**（Stiell 1992, JAMA）
-- **Ottawa 膝关节规则**（Stiell 1996, JAMA）
-- **加拿大颈椎规则**（Stiell 2001, JAMA）
 
 ### 生命周期自动扫描
 

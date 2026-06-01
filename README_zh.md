@@ -11,7 +11,7 @@
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue"></a>
   <a href="#"><img src="https://img.shields.io/badge/python-3.9%2B-green"></a>
-  <a href="#"><img src="https://img.shields.io/badge/MCP-19%20tools-purple"></a>
+  <a href="#"><img src="https://img.shields.io/badge/MCP-11%20tools-purple"></a>
   <a href="README.md"><img src="https://img.shields.io/badge/lang-EN-blue"></a>
 </p>
 
@@ -272,16 +272,14 @@ Minta 的架构分两块：
 
 ## 🔌 MCP 工具
 
-19 个工具，通过标准 MCP 协议可用：
+11 个工具，通过标准 MCP 协议可用：
 
 | 类别 | 工具 |
 |------|------|
 | 上下文 CRUD | `minta_read_context`、`minta_write_context`、`minta_search_context`、`minta_get_pack`、`minta_get_slot`、`minta_update_slot` |
 | 收件箱 | `minta_list_inbox`、`minta_append_inbox`、`minta_confirm_inbox`、`minta_discard_inbox` |
-| 专家系统 | `minta_expert_infer`、`minta_expert_list`、`minta_expert_consult`、`minta_expert_trust`、`minta_expert_feedback` |
 | 自动驾驶 | `minta_autopilot_preflight`、`minta_autopilot_postflight` |
 | 认证 | `minta_login` |
-| 对话 | `minta_chat` |
 
 ```bash
 # 为你的 AI 编辑器自动配置：
@@ -392,7 +390,7 @@ Minta 检测到你纠正 AI → 自动捕获教训 → 永不再犯。
 | **跨平台 Context Pack** | ✅ MCP | ❌ 仅API | ❌ | ❌ | ❌ | ❌ | ❌ |
 | **多 Agent 共享** | ✅ | ❌ | ❌ 绑定Agent | ✅ | ❌ | ❌ | ✅ |
 | **零 LLM 成本（生命周期）** | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **MCP 协议** | ✅ 19 工具 | ❌ | ❌ | ❌ | ✅ SDK | ❌ | ❌ |
+| **MCP 协议** | ✅ 11 工具 | ❌ | ❌ | ❌ | ✅ SDK | ❌ | ❌ |
 
 ### LoCoMo 基准
 

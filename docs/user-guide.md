@@ -19,9 +19,8 @@ A step-by-step guide to using Minta as your personal memory layer for AI agents.
 7. [Context Packs (AI Injection)](#context-packs-ai-injection)
 8. [Skills Library](#skills-library)
 9. [Community Sharing](#community-sharing)
-10. [Expert System (Clinical Decision Support)](#expert-system-clinical-decision-support)
-11. [Account & Privacy](#account--privacy)
-12. [Troubleshooting](#troubleshooting)
+10. [Account & Privacy](#account--privacy)
+11. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -317,41 +316,6 @@ You can mark any memory object as **Public** to share it with the Minta communit
 ### Content Moderation
 
 Comments are moderated with automatic content filtering. Rate limiting applies (5 comments per 60 seconds per user).
-
----
-
-## Expert System (Clinical Decision Support)
-
-Minta includes a built-in expert system with domain-specific inference engines. Currently supports clinical decision rules.
-
-### Available Domains
-
-| Domain | Rules Based On | What It Evaluates |
-|--------|---------------|-------------------|
-| `ankle_injury` | Ottawa Ankle Rules (Stiell 1992, JAMA) | Whether an ankle X-ray is needed |
-| `knee_injury` | Ottawa Knee Rules (Stiell 1996, JAMA) | Whether a knee X-ray is needed |
-| `cervical_spine_injury` | Canadian C-Spine Rule (Stiell 2001, JAMA) | Whether cervical spine imaging is needed |
-
-### Using the Expert System
-
-1. Go to **Expert** tab or open Chat
-2. Select a domain (e.g., `ankle_injury`)
-3. Describe the patient's symptoms
-4. The system applies the clinical decision rules
-5. You get a recommendation with confidence score
-
-### Chat Interface
-
-The `/api/chat` endpoint auto-detects the domain from your message:
-
-```
-You: "Patient with ankle pain after twisting foot, tender at lateral malleolus"
-Minta: "Domain: ankle_injury. Applying Ottawa Ankle Rules...
-       Rule A (lateral malleolus tenderness): POSITIVE
-       → Recommendation: X-ray indicated. Confidence: 0.92"
-```
-
-> ⚠️ **Disclaimer:** The expert system is for educational and decision-support purposes only. It does not replace clinical judgment.
 
 ---
 
