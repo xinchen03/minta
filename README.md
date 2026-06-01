@@ -19,7 +19,7 @@
 
 ---
 
-**Contents** &nbsp; [What Minta Handles](#what-minta-handles) · [Quick Start](#️-quick-start-30-seconds) · [Memory Health](#the-difference-memory-health-not-just-memory) · [Architecture](#️-architecture) · [Benchmarks](#-benchmarks) · [vs Competitors](#-vs-competitors) · [Research](#-research-foundation) · [Vision](#-where-this-is-going) · [License](#-license)
+**Contents** &nbsp; [What Minta Handles](#what-minta-handles) · [Quick Start](#️-quick-start-30-seconds) · [Docs](#-documentation) · [Memory Health](#the-difference-memory-health-not-just-memory) · [Architecture](#️-architecture) · [Benchmarks](#-benchmarks) · [vs Competitors](#-vs-competitors) · [Research](#-research-foundation) · [Vision](#-where-this-is-going) · [License](#-license)
 
 ---
 
@@ -255,6 +255,20 @@ Minta has two components:
 
 The flow is: **Register on web → get API Key → AI uses the key to connect.** Same idea as registering on GitHub before setting up an SSH key. Set `MINTA_API_KEY` in `.env`, or find it in the web dashboard Settings page after starting.
 </details>
+
+---
+
+## 📖 Documentation
+
+Beyond this README, we have detailed guides for every use case:
+
+| Document | What's Inside |
+|----------|---------------|
+| **[User Guide](docs/user-guide.md)** | Step-by-step: dashboard, memory objects, inbox, health scanning, semantic search, context packs, skills, community sharing, expert system, troubleshooting |
+| **[Configuration Guide](docs/configuration.md)** | All env vars, MySQL/PostgreSQL setup, SMTP email verification, CORS, API keys, autopilot, production deployment with Nginx |
+| **[MCP Integration Guide](docs/mcp-integration.md)** | Connect Minta to Claude Code, Cursor, and custom agents via MCP. Full tool reference (19 tools) with Python/JavaScript examples for both stdio and HTTP transports |
+
+> 💡 **New to Minta?** Start with the [User Guide](docs/user-guide.md). **Setting up for a team?** Check the [Configuration Guide](docs/configuration.md). **Want your AI to use Minta?** See [MCP Integration](docs/mcp-integration.md).
 
 ---
 
