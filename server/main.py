@@ -12,9 +12,7 @@ from fastapi.responses import FileResponse
 from sqlalchemy import text
 from routers import inbox, context_objects, upload, skills, auth, api_keys, verification, comments, admin, user_data, slots, session as session_router
 from routers.autopilot import router as autopilot_router
-from routers.chat import router as chat_router
 from routers.experiment import router as experiment_router
-from routers.expert import router as expert_router
 from routers.lifecycle import router as lifecycle_router
 from routers.debt import router as debt_router
 import models.bandit_state
@@ -75,56 +73,8 @@ def _start_auto_scanner():
 
 
 def _ensure_default_experts():
-    """Compile default CPG rules (Ottawa/Canadian) if none exist."""
-    print("[Minta] Expert auto-init check...", file=sys.stderr)
-    try:
-        from config import SessionLocal
-        from services.domain_compiler import DomainCompiler
-        from services.production_store import compile_from_cpg
-
-        DEFAULT_CPGS = [
-            ("ankle_injury", "Ottawa Ankle Rules (Stiell 1992 JAMA)",
-             "Request an x-ray for a patient with traumatic ankle pain if they have any of the following: "
-             "(A) point tenderness at posterior edge or tip lateral malleolus; "
-             "(B) point tenderness at posterior edge or tip medial malleolus; "
-             "inability to weight bear (four steps) immediately after the injury and in the emergency department. "
-             "Request an x-ray for a patient with traumatic midfoot pain if they have any of the following: "
-             "(C) point tenderness at the base of the fifth metatarsal; "
-             "(D) point tenderness at the navicular; "
-             "inability to weight bear (four steps) immediately after the injury and in the emergency department."),
-            ("knee_injury", "Ottawa Knee Rules (Stiell 1996 JAMA)",
-             "Request a knee x-ray for a patient with acute knee injury if they have any of the following: "
-             "(A) Age 55 years or older; (B) Isolated tenderness of the patella; "
-             "(C) Tenderness at the head of the fibula; (D) Inability to flex the knee to 90 degrees; "
-             "(E) Inability to bear weight (four steps) both immediately after the injury and in the emergency department."),
-            ("cervical_spine_injury", "Canadian C-Spine Rule (Stiell 2001 JAMA)",
-             "The Canadian C-Spine Rule for alert (GCS=15) and stable trauma patients: "
-             "Step 1 High Risk Factors (any YES -> imaging required): "
-             "(A) Age 65 years or older; (B) Dangerous mechanism of injury; (C) Paresthesias in extremities. "
-             "Step 2 Low Risk Factors (if NO to all -> imaging required): "
-             "(A) Simple rear-end motor vehicle collision; (B) Sitting position in the emergency department; "
-             "(C) Ambulatory at any time since injury; (D) Delayed onset of neck pain; "
-             "(E) Absence of midline cervical-spine tenderness. "
-             "Step 3 Neck Rotation: If unable to actively rotate neck 45 degrees -> imaging required."),
-        ]
-
-        db = SessionLocal()
-        try:
-            count = db.execute(text(
-                "SELECT COUNT(*) FROM context_objects WHERE tags LIKE '%production_rule%'"
-            )).fetchone()[0]
-            if count == 0:
-                compiler = DomainCompiler()
-                total = 0
-                for domain, source, cpg_text in DEFAULT_CPGS:
-                    graph = compiler.compile(cpg_text, domain, source)
-                    rules = compile_from_cpg(db, user_id=0, decision_graph=graph, domain=domain)
-                    total += len(rules)
-                logging.info(f"Expert auto-init: {total} rules across {len(DEFAULT_CPGS)} domains")
-        finally:
-            db.close()
-    except Exception as e:
-        print(f"[Minta] Expert auto-init skipped: {e}", file=sys.stderr)
+    """Expert system is a Pro feature — not included in the public release."""
+    logging.info("Expert system: Pro feature, skipped in public version")
 
 # ── Request body size limit (10 MB) ──
 from fastapi import Request as _FRequest
@@ -190,8 +140,6 @@ app.include_router(admin.router)
 app.include_router(user_data.router)
 app.include_router(slots.router)
 app.include_router(session_router.router)
-app.include_router(chat_router)
-app.include_router(expert_router)
 app.include_router(lifecycle_router)
 app.include_router(debt_router)
 
