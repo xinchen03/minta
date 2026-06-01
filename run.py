@@ -16,6 +16,15 @@ import signal
 import subprocess
 from pathlib import Path
 
+# ── Load .env for the launcher process ──
+try:
+    from dotenv import load_dotenv
+    _env_path = Path(__file__).resolve().parent / ".env"
+    if _env_path.exists():
+        load_dotenv(_env_path)
+except ImportError:
+    pass
+
 ROOT = Path(__file__).resolve().parent
 SERVER_DIR = ROOT / "server"
 PROCS = []

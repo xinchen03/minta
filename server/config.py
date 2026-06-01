@@ -6,6 +6,16 @@ See .env.example in the project root.
 import os
 import sys
 from pathlib import Path
+
+# ── Load .env BEFORE any os.environ reads ──
+try:
+    from dotenv import load_dotenv
+    _env_path = Path(__file__).resolve().parent.parent / ".env"
+    if _env_path.exists():
+        load_dotenv(_env_path)
+except ImportError:
+    pass  # python-dotenv not installed; env vars must be set externally
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 

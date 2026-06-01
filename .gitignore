@@ -9,8 +9,8 @@
 # ChromaDB vector store (persistent, local)
 chroma_data/
 
-# Local models (downloaded at first run)
-models/
+# Local models (downloaded at first run — root level only)
+/models/
 
 # Logs
 logs/

@@ -88,30 +88,77 @@ Everything runs locally. No uploads. No cloud. Three-second install.
 
 ## ⚡ Get Started
 
-### 1. Install & Launch (30 seconds)
+**Install anywhere — C drive, D drive, desktop, doesn't matter.** Python 3.9–3.11 recommended (3.12+ may fail on some package builds).
+
+### Step 1: Install
 
 ```bash
 git clone https://github.com/xinchen03/minta.git
 cd minta
-pip install -r requirements.txt
-minta launch                # Start services + configure your AI
+pip install -r requirements.txt   # 3-5 min, depending on network
 ```
 
-### 2. Restart Your AI
+### Step 2: Configure Environment
 
-Close and reopen Claude Code (or Cursor / Codex / VS Code). It auto-connects to Minta's MCP server. You'll see 19 new tools in the tool list.
+```bash
+cp .env.example .env              # Copy the template
+```
 
-### 3. Done
+Edit `.env`, at minimum change:
 
-Ask your AI: *"What does Minta remember about me?"* — or visit http://localhost:8772 for the dashboard.
+```ini
+MINTA_JWT_SECRET=change-to-a-random-string
+MINTA_API_KEY=minta_your_key_here  # leave empty to auto-generate
+```
 
-> **Python 3.10–3.11 recommended.** 3.12+ may have slow package builds. SQLite is the default database — no config needed. To use MySQL: `pip install mysql-connector-python` and set `MINTA_DATABASE_URL`.
+> `.env` is loaded automatically via `python-dotenv`. If you skip this step, Minta auto-generates secrets — but explicit config gives you more control.
+
+### Step 3: Start Minta
+
+```bash
+minta start                       # Launch all services in background
+```
+
+Open **http://localhost:8772** in your browser. You should see the login/register page.
+
+### Step 4: Register on the Web
+
+1. Click **Register** at http://localhost:8772 — pick a username, email, and password
+2. Log in and go to the dashboard
+3. Find your **API Key** in Settings (auto-generated if not set in `.env`)
+
+### Step 5: Connect Your AI
+
+```bash
+minta connect --all               # Claude Code + Cursor + VS Code + Codex
+# or just one:
+minta connect                     # Claude Code
+minta connect --cursor            # Cursor IDE
+```
+
+**Restart your AI editor.** You'll see 19 Minta tools in the tool list.
+
+### ✅ Done
+
+Ask your AI: *"What does Minta remember about me?"* If it responds, everything is working.
+
+> **Real-world time: ~5 minutes.** Steps 1–2 take 30 seconds each, install takes 3 min, register takes 1 min, connect takes 10 seconds.
 
 ---
 
-### Which AI Can I Use?
+### One-Click: `minta launch`
 
-`minta launch` auto-configures MCP for any supported editor. Your memories follow you across all of them.
+`minta launch` combines Step 3 + Step 5 — starts services and configures your AI in one command.
+
+```bash
+minta launch                     # Default: Claude Code
+minta launch --all               # All AI editors
+minta launch --cursor            # Cursor only
+```
+
+But first-time users still need Step 1 (install), Step 2 (.env), and Step 4 (register on web).
+
+### Which AI Can I Use?
 
 | Command | AI Editor | What happens |
 |---------|-----------|-------------|
@@ -179,6 +226,35 @@ Data persists in a Docker volume. MCP runs at `http://localhost:18721/mcp`.
 > **How connections work:** `minta launch` starts three background services and writes the MCP config your AI reads on startup. If your AI is already open, restart it to pick up the connection.
 >
 > **Don't want to think about order?** Copy the hooks from `hooks/` to your Claude Code hooks directory. They auto-start Minta whenever you open Claude Code — so it never matters which one starts first.
+
+### FAQ
+
+<details>
+<summary><b>Q: Can I install on D drive? Does location matter?</b></summary>
+
+**No, location doesn't matter.** Minta is fully local — it works from C drive, D drive, desktop, or even an external drive. Just avoid paths with spaces or non-ASCII characters (e.g. prefer `D:/minta` over `D:/My Folder/minta`).
+</details>
+
+<details>
+<summary><b>Q: Does using Conda / venv / system Python make a difference?</b></summary>
+
+- **Version matters more:** Python 3.9–3.11 is most stable. 3.12+ may fail building sentence-transformers.
+- **Speed difference is negligible:** Conda downloads may be slightly slower, but runtime speed is the same.
+- **Recommendation:** Use whatever you're comfortable with. If you have Conda, `conda activate` first. System Python + `pip install` works fine.
+
+**Getting "tokenizers build failed"?** Switch to Python 3.10 or 3.11, or run: `pip install --only-binary :all: sentence-transformers`.
+</details>
+
+<details>
+<summary><b>Q: Why do I need to register on the web first, then configure the API key?</b></summary>
+
+Minta has two components:
+
+1. **Data server (port 8772):** Stores your memories, runs lifecycle scans. Needs user accounts to separate data.
+2. **MCP server (port 18721):** Lets your AI call Minta tools. Needs an API Key for authentication.
+
+The flow is: **Register on web → get API Key → AI uses the key to connect.** Same idea as registering on GitHub before setting up an SSH key. Set `MINTA_API_KEY` in `.env`, or find it in the web dashboard Settings page after starting.
+</details>
 
 ---
 

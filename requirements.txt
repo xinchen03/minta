@@ -22,6 +22,9 @@ sentence-transformers>=2.7.0,<4.0
 # Retrieval
 rank-bm25>=0.2.2
 
+# Environment
+python-dotenv>=1.0.0
+
 # Data
 pydantic>=2.0.0
 numpy>=1.24.0

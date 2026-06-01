@@ -86,28 +86,98 @@ Minta 接收你日常使用的所有内容。上线即稳定，路线图透明�
 
 全程本地运行。不上传、不联网、三秒安装。
 
-## ⚡ 30 秒上手
+## ⚡ 快速开始
+
+**装在哪里都行——C 盘、D 盘、桌面，没有限制。** Python 3.9–3.11 推荐（3.12+ 部分包可能编译失败）。
+
+### 第一步：安装
 
 ```bash
+# 克隆到任意位置（D 盘、桌面、Document 都行）
 git clone https://github.com/xinchen03/minta.git
 cd minta
+
+# 安装依赖（3-5 分钟，取决于网速）
 pip install -r requirements.txt
-minta launch                # 启动服务 + 配置 AI
 ```
 
-打开 http://localhost:8772 —— 你的记忆仪表盘已上线。
+### 第二步：配置环境变量
+
+```bash
+# 复制配置模板
+cp .env.example .env
+```
+
+然后编辑 `.env`，至少改两行：
+
+```ini
+MINTA_JWT_SECRET=改成随机字符串（随便敲都行）
+MINTA_API_KEY=minta_改成你自己的key（留空则自动生成）
+```
+
+> `.env` 文件里的配置会由 `python-dotenv` 自动加载。不配置也能跑——Minta 会自动生成 JWT 密钥和 API Key——但配了更可控。
+
+### 第三步：启动 Minta
+
+```bash
+minta start                 # 后台启动全部服务
+```
+
+打开浏览器访问 **http://localhost:8772** ——你应该看到 Minta 的登录/注册页面。
+
+### 第四步：网页端注册账号
+
+1. 在 http://localhost:8772 点击**注册**，填用户名、邮箱、密码
+2. 注册后登录，进入仪表盘
+3. 在设置/API 页面找到你的 **API Key**（若未在 `.env` 配置则自动生成）
+
+### 第五步：连接你的 AI
+
+拿到 API Key 后，执行一行命令让 AI 编辑器能调用 Minta：
+
+```bash
+minta connect --all          # 一次性配置 Claude Code + Cursor + VS Code + Codex
+```
+
+或者只配一个：
+
+```bash
+minta connect                # Claude Code
+minta connect --cursor       # Cursor IDE
+minta connect --vscode       # VS Code / Copilot
+```
+
+**重启你的 AI 编辑器**——回到对话里，你会看到 19 个 Minta 工具已经可用。
+
+### ✅ 完成！
+
+在 AI 里问一句："Minta 记得我什么？" 如果能正常返回，说明一切就绪。
+
+> **实际上手只需 3 分钟：** 前两步各 30 秒，安装 3 分钟，注册 1 分钟，连接 10 秒。总共不超过 5 分钟。
+
+---
+
+### 一键启动：`minta launch`
+
+如果你不想分步操作，`minta launch` 帮你完成第三步 + 第五步——启动服务 + 自动配置 AI。
+
+```bash
+minta launch                # 默认 Claude Code
+minta launch --all           # 全部 AI 编辑器
+minta launch --cursor        # 仅 Cursor
+```
+
+但第一次用还是要先跑第一步（安装）和第二步（配置 .env）以及第四步（注册账号）。
 
 ### 支持哪些 AI？
 
-`minta launch` 自动为所有支持的编辑器配置 MCP。你的记忆跨平台跟随你。
-
-| 命令 | AI 编辑器 | 做了什么 |
-|------|----------|---------|
+| 命令 | AI 编辑器 | 配置了什么 |
+|------|----------|-----------|
 | `minta launch` | Claude Code（默认） | 写入 `~/.claude/settings.json` |
 | `minta launch --cursor` | Cursor IDE | 写入 `~/.cursor/mcp.json` |
 | `minta launch --codex` | Codex CLI | 写入 `~/.codex/mcp.json` |
 | `minta launch --vscode` | VS Code / Copilot | 写入 `~/.vscode/mcp.json` |
-| `minta launch --all` | 所有以上 | 一次性全部配置 |
+| `minta launch --all` | 全部 | 一次性配置所有平台 |
 
 ### 日常使用
 
@@ -143,8 +213,6 @@ cp scripts/minta-start-silent.sh ~/.config/autostart/
 ```
 </details>
 
-> **桌面端 / Web 端用户：** 静默启动器就是为你准备的。双击即跑，不用终端，Minta 在后台静默运行。然后打开你的 AI（Claude Desktop、Cursor、VS Code）——只要跑过一次 `minta launch --all`，就自动连接了。
-
 ### Docker
 
 ```bash
@@ -154,6 +222,37 @@ docker compose down        # 停止
 ```
 
 数据持久化在 Docker 卷中。MCP 运行在 `http://localhost:18721/mcp`。
+
+---
+
+## ❓ 常见问题
+
+<details>
+<summary><b>Q: 装在 D 盘有没有问题？</b></summary>
+
+**完全没问题。** Minta 是纯本地应用，不依赖特定盘符或路径。C 盘、D 盘、桌面、甚至移动硬盘都可以。唯一注意：路径里不要有中文或空格（比如不要放 `D:/我的文件夹/minta`，放 `D:/minta` 就行）。
+</details>
+
+<details>
+<summary><b>Q: 不同 Python 环境（Conda / venv / 系统 Python）有区别吗？</b></summary>
+
+- **版本更重要：** Python 3.9–3.11 最稳。3.12+ 部分依赖（sentence-transformers）编译可能报错。
+- **速度差别不大：** Conda、venv、系统 Python 在运行速度上基本没区别。安装时 Conda 可能略慢（下载源不同）。
+- **推荐：** 用你熟悉的就行。如果你已经有 Conda 环境，直接 `conda activate` 再用。如果没有，系统 Python + `pip install` 完全够用。
+
+**遇到 "tokenizers build failed" 之类的错误？** 换 Python 3.10 或 3.11，或者 `pip install --only-binary :all: sentence-transformers`。
+</details>
+
+<details>
+<summary><b>Q: 为什么需要先在网页注册，再配置 API Key 连接 Agent？</b></summary>
+
+Minta 的架构分两块：
+
+1. **数据端 (8772 端口)**：负责存储记忆、运行检测。需要账号体系区分不同用户的数据。
+2. **协议端 (18721 端口)**：MCP 服务器，让 AI 调用 Minta。需要 API Key 验证身份。
+
+所以流程是：**网页注册账号 → 拿到 API Key → AI 用 API Key 连接 Minta**。就跟先注册 GitHub 再配 SSH Key 一个道理。API Key 在 `.env` 的 `MINTA_API_KEY` 里配好，或者启动后在网页设置页查看。
+</details>
 
 ---
 
