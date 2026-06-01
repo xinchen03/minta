@@ -6,8 +6,8 @@ from pathlib import Path
 from fastapi import APIRouter, UploadFile, File, Depends, HTTPException
 from routers.auth import get_current_user, User
 
-COVER_DIR = Path(__file__).resolve().parent.parent.parent / "web" / "public" / "assets" / "covers"
-AVATAR_DIR = Path(__file__).resolve().parent.parent.parent / "web" / "public" / "assets" / "avatars"
+COVER_DIR = Path(__file__).resolve().parent.parent.parent / "web" / "dist" / "assets" / "covers"
+AVATAR_DIR = Path(__file__).resolve().parent.parent.parent / "web" / "dist" / "assets" / "avatars"
 ALLOWED_TYPES = {"image/png", "image/jpeg", "image/webp", "image/gif"}
 MAX_SIZE = 5 * 1024 * 1024  # 5 MB
 
