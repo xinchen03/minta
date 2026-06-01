@@ -262,11 +262,11 @@ Minta 的架构分两块：
 
 | 文档 | 内容 |
 |------|------|
-| **[用户指南](docs/user-guide.md)** | 手把手教程：仪表盘、记忆对象、收件箱、健康扫描、语义搜索、上下文包、技能库、社区分享、专家系统、故障排除 |
-| **[配置指南](docs/configuration.md)** | 全部环境变量、MySQL/PostgreSQL 配置、SMTP 邮件验证、CORS、API 密钥、生产环境部署（含 Nginx 示例） |
-| **[MCP 集成指南](docs/mcp-integration.md)** | 将 Minta 接入 Claude Code、Cursor 及自定义 Agent。19 个工具的完整参考，含 Python/JavaScript 的 stdio 和 HTTP 双传输示例 |
+| **[用户指南](docs/user-guide_zh.md)** | 手把手教程：仪表盘、记忆对象、收件箱、健康扫描、语义搜索、上下文包、技能库、社区分享、专家系统、故障排除 |
+| **[配置指南](docs/configuration_zh.md)** | 全部环境变量、MySQL/PostgreSQL 配置、SMTP 邮件验证、CORS、API 密钥、生产环境部署（含 Nginx 示例） |
+| **[MCP 集成指南](docs/mcp-integration_zh.md)** | 将 Minta 接入 Claude Code、Cursor 及自定义 Agent。19 个工具的完整参考，含 Python/JavaScript 的 stdio 和 HTTP 双传输示例 |
 
-> 💡 **刚接触 Minta？** 从 [用户指南](docs/user-guide.md) 开始。**团队部署？** 看 [配置指南](docs/configuration.md)。**想接入 AI？** 看 [MCP 集成指南](docs/mcp-integration.md)。
+> 💡 **刚接触 Minta？** 从 [用户指南](docs/user-guide_zh.md) 开始。**团队部署？** 看 [配置指南](docs/configuration_zh.md)。**想接入 AI？** 看 [MCP 集成指南](docs/mcp-integration_zh.md)。
 
 ---
 

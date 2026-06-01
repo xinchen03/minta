@@ -1,5 +1,7 @@
 # MCP Integration Guide
 
+> 🌐 [中文版](mcp-integration_zh.md) | English
+
 Connect Minta to Claude Code, Cursor, and other AI tools via the Model Context Protocol (MCP).
 
 ---

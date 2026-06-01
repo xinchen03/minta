@@ -1,5 +1,7 @@
 # Minta User Guide
 
+> 🌐 [中文版](user-guide_zh.md) | English
+
 A step-by-step guide to using Minta as your personal memory layer for AI agents.
 
 > **Prerequisite:** [Installation → Quick Start](../../#quick-start) in the README. Make sure `minta start` is running and you can open `http://localhost:8772`.

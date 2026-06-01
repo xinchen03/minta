@@ -1,5 +1,7 @@
 # Configuration Guide
 
+> 🌐 [中文版](configuration_zh.md) | English
+
 Everything you can configure in Minta — environment variables, database, email, CORS, and more.
 
 ---
