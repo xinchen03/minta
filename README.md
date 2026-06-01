@@ -195,8 +195,8 @@ Minta stops when your computer does. Pick one way to restart:
 
 | Method | What to do | Works for |
 |--------|-----------|-----------|
-| Manual | Run `python minta_cli.py launch` | All platforms, all editors |
-| Double-click launcher | `Start-Minta.vbs` (Win) / `Start-Minta.sh` (Mac/Linux) — right in the repo root | All editors |
+| Manual | Run `python minta_cli.py start` (or `minta launch` if you added a new editor) | All platforms |
+| Double-click launcher | `Start-Minta.vbs` (Win) / `Start-Minta.sh` (Mac/Linux) | All editors |
 | Desktop shortcut | Run `Setup-Desktop-Shortcut.ps1` (Win) / `.command` (Mac) once to create an icon | All editors |
 | Auto-start on boot | Win: Startup folder · Mac: LaunchAgent · Linux: autostart | All editors |
 | Claude Code hooks | Copy `hooks/` to your Claude Code hooks directory — auto-starts Minta when Claude opens | Claude Code only |
