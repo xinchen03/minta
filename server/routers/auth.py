@@ -193,7 +193,20 @@ def _seed_starter_context(db: Session, user):
             confidence=5,
             owner_name=user.username,
         ))
-        # Context 2: Autopilot guide
+        # Context 2: Knowledge Base intro
+        db.add(ContextObject(
+            id=str(uuid.uuid4()),
+            user_id=user.id,
+            type="ai_brief",
+            title="你的 AI 记忆工作台",
+            summary="这里就是你的知识库——存放偏好、规则、项目背景、经验教训。",
+            body="Minta 把记忆分成 9 种类型（偏好、工作流、项目上下文、决策标准、经验教训、写作风格、规则、AI 简报、职业档案）。每种类型有不同用途。你可以在这里浏览、搜索、编辑、分享。AI 对话时，Minta 会根据话题自动捡取相关记忆注入上下文。",
+            tags=["onboarding", "starter", "knowledge-base"],
+            source="manual",
+            confidence=5,
+            owner_name=user.username,
+        ))
+        # Context 3: Autopilot guide
         db.add(ContextObject(
             id=str(uuid.uuid4()),
             user_id=user.id,
