@@ -1,207 +1,85 @@
 #!/usr/bin/env python
-"""SessionStart hook — auto-start all Minta services, inject Context Pack + Expert System.
+"""Minta SessionStart Hook — double-insurance MCP connection.
 
-On each session start:
-  1. Ensure API server is running (port 8772)
-  2. Check if expert rules exist; if not, compile 3 default CPGs
-  3. Register Meta experts + build SME graph
-  4. Fetch Context Pack with expert directory injected into Claude's context
+Layer 1 (auto): detect if Minta is running, inject Context Pack if ready
+Layer 2 (guided): if not running, tell Claude to ask the user
 
-Silent fallback if API is unreachable.
+Install: copy hooks/ to ~/.claude/hooks/  (or your editor's hooks directory)
 """
+
 import json
 import os
 import socket
-import subprocess
 import sys
 import time
 import urllib.request
 from pathlib import Path
 
+API_URL = "http://127.0.0.1:8772"
+MCP_URL = "http://127.0.0.1:18721/mcp"
 API_KEY = os.environ.get("MINTA_API_KEY", "")
-API_URL = os.environ.get("MINTA_API_URL", "http://127.0.0.1:8772")
-ROOT = Path(__file__).resolve().parent.parent  # memory/
-SERVER_DIR = ROOT / "server"
+
+# Editor MCP configs to check
+EDITOR_CONFIGS = {
+    "claude": Path.home() / ".claude" / "settings.json",
+    "cursor": Path.home() / ".cursor" / "mcp.json",
+    "codex":  Path.home() / ".codex" / "mcp.json",
+    "vscode": Path.home() / ".vscode" / "mcp.json",
+}
+
+MCP_KEY = "mcpServers"
 
 
-def _port_alive(port):
+def port_alive(port, timeout=2):
     try:
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.settimeout(2)
-        r = sock.connect_ex(("127.0.0.1", port)) == 0
-        sock.close()
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(timeout)
+        r = s.connect_ex(("127.0.0.1", port)) == 0
+        s.close()
         return r
     except Exception:
         return False
 
 
-def _start_process(cmd, cwd, wait_port=None, label=""):
+def check_mcp_configured():
+    """Check if at least one editor has Minta MCP configured."""
+    for name, path in EDITOR_CONFIGS.items():
+        if path.exists():
+            try:
+                cfg = json.loads(path.read_text())
+                if cfg.get(MCP_KEY, {}).get("minta"):
+                    return True, name
+            except Exception:
+                pass
+    return False, None
+
+
+def check_mcp_handshake():
+    """Full MCP handshake: initialize + tools/list."""
     try:
-        subprocess.Popen(
-            cmd,
-            cwd=str(cwd),
-            creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
-        if wait_port:
-            for _ in range(20):
-                time.sleep(0.5)
-                if _port_alive(wait_port):
-                    sys.stderr.write(f"[Minta] {label} auto-started\n")
-                    return True
-            sys.stderr.write(f"[Minta] WARNING: {label} start timed out\n")
-            return False
-        return True
-    except Exception as e:
-        sys.stderr.write(f"[Minta] ERROR starting {label}: {e}\n")
-        return False
+        body = json.dumps({
+            "jsonrpc": "2.0", "id": 1, "method": "initialize",
+            "params": {"protocolVersion": "2024-11-05", "capabilities": {},
+                       "clientInfo": {"name": "minta-hook", "version": "1.0.0"}}
+        }).encode()
+        req = urllib.request.Request(MCP_URL, data=body,
+                                     headers={"Content-Type": "application/json"})
+        r = urllib.request.urlopen(req, timeout=3)
+        if "result" not in json.loads(r.read()):
+            return False, 0
 
-
-def _api_post(path, body, timeout=15):
-    """POST to Minta API with API key auth. Returns parsed response or None."""
-    if not API_KEY:
-        return None
-    try:
-        data = json.dumps(body).encode("utf-8")
-        req = urllib.request.Request(
-            f"{API_URL}{path}",
-            data=data,
-            headers={"Content-Type": "application/json", "X-API-Key": API_KEY},
-            method="POST",
-        )
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
-            return json.loads(resp.read())
-    except Exception as e:
-        sys.stderr.write(f"[Minta] API POST {path} failed: {e}\n")
-        return None
-
-
-def _api_get(path, timeout=10):
-    """GET from Minta API. Returns parsed response or None."""
-    if not API_KEY:
-        return None
-    try:
-        req = urllib.request.Request(
-            f"{API_URL}{path}",
-            headers={"X-API-Key": API_KEY},
-        )
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
-            return json.loads(resp.read())
+        body2 = json.dumps({"jsonrpc": "2.0", "id": 2,
+                           "method": "tools/list", "params": {}}).encode()
+        req2 = urllib.request.Request(MCP_URL, data=body2,
+                                      headers={"Content-Type": "application/json"})
+        r2 = urllib.request.urlopen(req2, timeout=3)
+        tools = json.loads(r2.read()).get("result", {}).get("tools", [])
+        return True, len(tools)
     except Exception:
-        return None
+        return False, 0
 
 
-# ── Default CPGs (Ottawa/Canadian rules) ──
-DEFAULT_CPGS = [
-    ("ankle_injury", "Ottawa Ankle Rules (Stiell 1992 JAMA)",
-     """Request an x-ray for a patient with traumatic ankle pain if they have any of the following:
-(A) point tenderness at posterior edge or tip lateral malleolus
-(B) point tenderness at posterior edge or tip medial malleolus
-inability to weight bear (four steps) immediately after the injury and in the emergency department.
-Request an x-ray for a patient with traumatic midfoot pain if they have any of the following:
-(C) point tenderness at the base of the fifth metatarsal
-(D) point tenderness at the navicular
-inability to weight bear, i.e. inability to take four steps immediately after the injury and in the emergency department."""),
-    ("knee_injury", "Ottawa Knee Rules (Stiell 1996 JAMA)",
-     """Request a knee x-ray for a patient with acute knee injury if they have any of the following:
-(A) Age 55 years or older
-(B) Isolated tenderness of the patella (no bony tenderness of the knee other than the patella)
-(C) Tenderness at the head of the fibula
-(D) Inability to flex the knee to 90 degrees
-(E) Inability to bear weight (four steps) both immediately after the injury and in the emergency department, regardless of limping."""),
-    ("cervical_spine_injury", "Canadian C-Spine Rule (Stiell 2001 JAMA)",
-     """The Canadian C-Spine Rule for alert (GCS=15) and stable trauma patients:
-Step 1 -- High Risk Factors (any YES -> imaging required):
-(A) Age 65 years or older
-(B) Dangerous mechanism of injury: fall from elevation >3 feet, axial load to head, high-speed motor vehicle collision, bicycle collision
-(C) Paresthesias in extremities
-Step 2 -- Low Risk Factors (if NO to all -> imaging required):
-(A) Simple rear-end motor vehicle collision
-(B) Sitting position in the emergency department
-(C) Ambulatory at any time since the injury
-(D) Delayed onset of neck pain (not immediate)
-(E) Absence of midline cervical-spine tenderness
-Step 3 -- Neck Rotation (if any low risk factor present): If unable to actively rotate neck 45 degrees -> imaging required. If able -> rule cleared, no imaging needed."""),
-]
-
-
-def ensure_experts():
-    """Auto-compile default CPGs if expert rules are missing or fewer than 3 domains."""
-    resp = _api_get("/api/expert/productions?limit=1")
-    if resp is None:
-        return
-
-    count = resp.get("count", 0)
-    if count >= 10:
-        # Already has rules — no need to re-compile
-        return
-
-    sys.stderr.write(f"[Minta] Expert rules low ({count}), compiling defaults...\n")
-    for domain, source, cpg_text in DEFAULT_CPGS:
-        # Compile
-        result = _api_post("/api/expert/productions/compile", {
-            "cpg_text": cpg_text, "domain": domain, "source": source,
-        })
-        n = result.get("count", 0) if result else 0
-        sys.stderr.write(f"  {domain}: {n} rules\n")
-
-        # Register expert
-        _api_post("/api/expert/meta/experts/register", {
-            "domain": domain, "title": source, "description": source,
-            "cpg_source": source, "source_quality": "clinical_practice_guideline",
-        })
-
-    # Run SME analogies
-    for src_domain, _, _ in DEFAULT_CPGS:
-        _api_post("/api/expert/meta/analogies", {
-            "source_domain": src_domain,
-            "target_domains": [d for d, _, _ in DEFAULT_CPGS if d != src_domain],
-        })
-
-    sys.stderr.write(f"[Minta] Expert system initialized: {len(DEFAULT_CPGS)} domains\n")
-
-
-def ensure_all():
-    if not _port_alive(8772):
-        _start_process(
-            [sys.executable, "-m", "uvicorn", "main:app", "--host", "127.0.0.1", "--port", "8772"],
-            cwd=SERVER_DIR, wait_port=8772, label="API server (8772)"
-        )
-
-    # Autopilot API server (port 18730) — new API with autopilot routes
-    if not _port_alive(18730):
-        _start_process(
-            [sys.executable, "-m", "uvicorn", "main:app", "--host", "127.0.0.1", "--port", "18730"],
-            cwd=SERVER_DIR, wait_port=18730, label="Autopilot API (18730)"
-        )
-
-    # MCP HTTP server (port 18721) — for Claude Code tool access
-    if not _port_alive(18721):
-        _start_process(
-            [sys.executable, "-m", "uvicorn", "minta_mcp_http:create_mcp_app", "--host", "127.0.0.1", "--port", "18721", "--factory"],
-            cwd=SERVER_DIR, wait_port=18721, label="MCP HTTP (18721)"
-        )
-
-
-def inject_expert_context():
-    """Build a lightweight expert directory snippet (~100 chars) for Context Pack."""
-    resp = _api_get("/api/expert/meta/experts")
-    if not resp or not resp.get("ok"):
-        return ""
-    experts = resp.get("data", [])
-    if not experts:
-        return ""
-    lines = []
-    for exp in experts:
-        d = exp.get("domain", "")
-        t = exp.get("title", d)
-        rc = exp.get("rule_count", 0)
-        lines.append(f"{d} ({t}, {rc} rules)")
-    return "## Expert Domains: " + "; ".join(lines)
-
-
-def fetch_pack():
+def fetch_context_pack():
     if not API_KEY:
         return None
     try:
@@ -210,34 +88,73 @@ def fetch_pack():
             headers={"X-API-Key": API_KEY},
         )
         with urllib.request.urlopen(req, timeout=10) as resp:
-            data = json.loads(resp.read())
-            return data.get("content", "")
+            return json.loads(resp.read()).get("content", "")
     except Exception:
         return None
 
 
 def main():
-    ensure_all()
+    api_ok = port_alive(8772)
+    mcp_ok = port_alive(18721)
+    mcp_cfg_ok, cfg_editor = check_mcp_configured()
+    handshake_ok, tool_count = check_mcp_handshake() if mcp_ok else (False, 0)
 
-    # Upload buffered observations (counter-examples, etc.)
-    try:
-        from buffer import flush
-        uploaded = flush(API_KEY, API_URL)
-        if uploaded > 0:
-            sys.stderr.write(f"[Minta] Uploaded {uploaded} buffered observations\n")
-    except Exception:
-        pass
-
-    # Auto-initialize expert system if needed
-    ensure_experts()
-
-    # Fetch Context Pack with expert context
-    pack = fetch_pack()
-    if not pack:
+    # === CASE 1: Everything is ready ===
+    if api_ok and mcp_ok and handshake_ok and mcp_cfg_ok:
+        pack = fetch_context_pack()
+        if pack:
+            sys.stdout.buffer.write(pack.encode("utf-8"))
+            sys.stdout.buffer.flush()
         return
 
-    pack = pack[:1500]
-    sys.stdout.buffer.write(pack.encode("utf-8"))
+    # === CASE 2: MCP config exists but services are down (user forgot to start) ===
+    if mcp_cfg_ok and not api_ok:
+        msg = (
+            "\n[Minta Hook] Minta is NOT running.\n"
+            "Tell the user:\n"
+            '  "Minta services are stopped. Run `python minta_cli.py launch` and restart Claude."\n'
+            "Then STOP — do NOT proceed with the conversation until Minta is running.\n"
+        )
+        sys.stdout.buffer.write(msg.encode("utf-8"))
+        sys.stdout.buffer.flush()
+        return
+
+    # === CASE 3: Services running but MCP not configured (first-time user) ===
+    if (api_ok or mcp_ok) and not mcp_cfg_ok:
+        msg = (
+            "\n[Minta Hook] Minta is running but MCP is not configured for any AI editor.\n"
+            "Tell the user:\n"
+            '  "Minta is running but your AI editor is not connected yet. '
+            'Run `python minta_cli.py launch` and restart Claude."\n'
+        )
+        sys.stdout.buffer.write(msg.encode("utf-8"))
+        sys.stdout.buffer.flush()
+        return
+
+    # === CASE 4: MCP configured + services running but handshake failed ===
+    if api_ok and mcp_ok and mcp_cfg_ok and not handshake_ok:
+        msg = (
+            "\n[Minta Hook] MCP handshake failed — Minta services may still be starting.\n"
+            "Wait 5 seconds and restart Claude. If this persists, run `python minta_cli.py verify`.\n"
+        )
+        sys.stdout.buffer.write(msg.encode("utf-8"))
+        sys.stdout.buffer.flush()
+        return
+
+    # === CASE 5: Nothing is set up (fresh install) ===
+    msg = (
+        "\n[Minta Hook] Minta not detected. This is likely a first-time setup.\n"
+        "Ask the user:\n"
+        '  "Do you want to use Minta (AI memory engine)? It gives me persistent memory '
+        'of your preferences, project context, and lessons learned."\n'
+        "If the user says YES:\n"
+        '  1. Tell them: "Open a terminal and run: python minta_cli.py launch"\n'
+        '  2. Tell them: "Then restart Claude (close and reopen)."\n'
+        "If the user says NO:\n"
+        "  Proceed with the conversation normally. Minta can be set up later.\n"
+        "\nIMPORTANT: Do NOT try to read Minta files or config. Just ask and follow the user's choice.\n"
+    )
+    sys.stdout.buffer.write(msg.encode("utf-8"))
     sys.stdout.buffer.flush()
 
 

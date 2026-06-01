@@ -199,7 +199,7 @@ Minta stops when your computer does. Pick one way to restart:
 | Double-click launcher | `Start-Minta.vbs` (Win) / `Start-Minta.sh` (Mac/Linux) | All editors |
 | Desktop shortcut | Run `Setup-Desktop-Shortcut.ps1` (Win) / `.command` (Mac) once to create an icon | All editors |
 | Auto-start on boot | Win: Startup folder · Mac: LaunchAgent · Linux: autostart | All editors |
-| Claude Code hooks | Copy `hooks/` to your Claude Code hooks directory — auto-starts Minta when Claude opens | Claude Code only |
+| Claude Code hooks | Copy `hooks/` to `~/.claude/hooks/` — Claude asks if you want Minta when it opens | Claude Code only, but covers most users |
 
 <details>
 <summary><b>macOS / Linux setup</b></summary>
@@ -230,7 +230,31 @@ Data persists in a Docker volume. MCP runs at `http://localhost:18721/mcp`.
 
 > **How connections work:** `minta launch` starts three background services and writes the MCP config your AI reads on startup. If your AI is already open, restart it to pick up the connection.
 >
-> **Don't want to think about order?** Copy the hooks from `hooks/` to your Claude Code hooks directory. They auto-start Minta whenever you open Claude Code — so it never matters which one starts first.
+### Double Insurance: Hooks
+
+Even with the Golden Rule, it's easy to forget. The **SessionStart hook** catches it:
+
+```
+You open Claude → Hook fires → Minta not running?
+  → Claude asks: "Want Minta mode? (y/n)"
+  → Yes: "Run: python minta_cli.py launch → restart me"
+  → No:  Continue without Minta
+
+You open Claude → Hook fires → Minta already running?
+  → Context injected silently → You can use Minta tools
+```
+
+Install once:
+
+```bash
+# Claude Code
+cp -r hooks/* ~/.claude/hooks/
+
+# Other editors: hooks are Claude Code-specific.
+# Use 'minta launch' for Cursor / VS Code / Codex instead.
+```
+
+> The hook never crashes your session. If Minta's API is unreachable, it silently passes — you just don't get context injection that session.
 
 ### FAQ
 
