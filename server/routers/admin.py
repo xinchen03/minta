@@ -11,9 +11,13 @@ from models.inbox import InboxItem
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 
 
+import os
+ADMIN_IDS = {int(x) for x in os.environ.get("MINTA_ADMIN_IDS", "").split(",") if x.strip()}
+
+
 def require_admin(user: User = Depends(get_current_user)):
-    """Simple admin check: only xinChen (id=8) can access admin."""
-    if user.id != 8:
+    """Admin check: set MINTA_ADMIN_IDS=1,2,3 in .env to grant admin."""
+    if not ADMIN_IDS or user.id not in ADMIN_IDS:
         raise HTTPException(status_code=403, detail="Admin access required")
     return user
 
