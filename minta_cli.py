@@ -337,6 +337,23 @@ def cmd_init():
 
 # --- Connect ---
 
+def _install_hooks():
+    """Copy hooks/ to ~/.claude/hooks/ so SessionStart hook auto-detects Minta."""
+    hooks_src = ROOT / "hooks"
+    hooks_dst = Path.home() / ".claude" / "hooks"
+    if not hooks_src.is_dir():
+        return
+    hooks_dst.mkdir(parents=True, exist_ok=True)
+    copied = 0
+    for f in hooks_src.iterdir():
+        if f.suffix == ".py":
+            dst = hooks_dst / f.name
+            dst.write_text(f.read_text(encoding="utf-8"), encoding="utf-8")
+            copied += 1
+    if copied:
+        print(f"  [OK] {copied} hooks installed -> {hooks_dst}")
+
+
 def _setup_editor(editor_key: str) -> bool:
     """Configure MCP for a single editor. Returns True on success."""
     if editor_key not in EDITORS:
@@ -350,6 +367,11 @@ def _setup_editor(editor_key: str) -> bool:
     _write_json(info["config_path"], cfg)
 
     print(f"  [OK] {info['name']} -> {info['config_path']}")
+
+    # Auto-install hooks for Claude Code (session_start detects Minta state)
+    if editor_key == "claude" or editor_key == "all":
+        _install_hooks()
+
     return True
 
 
