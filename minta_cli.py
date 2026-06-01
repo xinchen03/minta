@@ -368,8 +368,13 @@ def _setup_editor(editor_key: str) -> bool:
 
     print(f"  [OK] {info['name']} -> {info['config_path']}")
 
-    # Auto-install hooks for Claude Code (session_start detects Minta state)
+    # Claude Code: also write .mcp.json (newer Claude Code prefers this over settings.json)
     if editor_key == "claude" or editor_key == "all":
+        mcp_json = _read_json(Path.home() / ".mcp.json")
+        mcp_json.setdefault("mcpServers", {})["minta"] = info["entry"]
+        _write_json(Path.home() / ".mcp.json", mcp_json)
+        print(f"  [OK] Claude Code -> {Path.home() / '.mcp.json'}")
+
         _install_hooks()
 
     return True
