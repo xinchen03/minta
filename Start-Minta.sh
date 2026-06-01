@@ -9,5 +9,6 @@
 
 DIR="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$DIR"
-nohup python minta_cli.py start > /dev/null 2>&1 &
+# Start services + auto-configure MCP for all AI editors
+nohup python minta_cli.py launch > /dev/null 2>&1 &
 disown

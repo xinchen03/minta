@@ -9,4 +9,5 @@ Set objFSO = CreateObject("Scripting.FileSystemObject")
 scriptDir = objFSO.GetParentFolderName(WScript.ScriptFullName)
 rootDir = objFSO.GetParentFolderName(scriptDir)
 
-WshShell.Run "pythonw """ & rootDir & "\minta_cli.py"" start", 0, False
+' Start services + auto-configure MCP for all AI editors
+WshShell.Run "pythonw """ & rootDir & "\minta_cli.py"" launch", 0, False

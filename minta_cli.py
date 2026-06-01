@@ -275,11 +275,10 @@ def cmd_connect(target: str = "claude"):
     mcp_url = "http://localhost:18721/mcp"
 
     if target == "all":
-        print(f"[Minta] Configuring all editors for {mcp_url}:\n")
+        print(f"[Minta] Configuring ALL editors for {mcp_url}:\n")
         for key in EDITORS:
             _setup_editor(key)
-        print(f"\n[Minta] All editors configured.")
-        print("  Restart your editor to connect.")
+        print(f"\n[Minta] All editors configured — restart your AI to connect.")
     else:
         print(f"[Minta] Configuring {EDITORS[target]['name']} for {mcp_url}:\n")
         if _setup_editor(target):
@@ -288,11 +287,11 @@ def cmd_connect(target: str = "claude"):
 
 # ── Launch ──
 
-def cmd_launch(target: str = "claude"):
+def cmd_launch(target: str = "all"):
     """Start services + configure MCP + show launch instructions.
 
-    This is the all-in-one command. Use --pack <domain> to generate a
-    Context Pack before launching (future feature).
+    By default, configures ALL supported editors so the user's AI just works.
+    Use --claude / --cursor / --codex / --vscode for a single editor.
     """
     pack_domain = None
     if "--pack" in sys.argv:
@@ -302,14 +301,15 @@ def cmd_launch(target: str = "claude"):
 
     print("=" * 50)
     print("  Minta Launch")
+    print("  AI Memory Engine — https://github.com/xinchen03/minta")
     print("=" * 50)
     print()
 
     # 1. Ensure services are running
     if all_services_ready():
-        print("[1/3] Services already running.\n")
+        print("[1/2] Services already running.\n")
     else:
-        print("[1/3] Starting services...\n")
+        print("[1/2] Starting services...\n")
         cmd_start()
         if not all_services_ready():
             print("\n[Minta] ERROR: Failed to start services.")
@@ -317,38 +317,52 @@ def cmd_launch(target: str = "claude"):
             return
         print()
 
-    # 2. Configure MCP
-    print(f"[2/3] Configuring MCP for {EDITORS[target]['name']}...\n")
-    if target == "all":
-        for key in EDITORS:
-            _setup_editor(key)
-    else:
-        _setup_editor(target)
+    # 2. Configure MCP for target editor(s)
+    editors_to_config = list(EDITORS.keys()) if target == "all" else [target]
+    configured = []
 
-    # 3. Context Pack — ask your AI after connecting
-    if pack_domain:
-        print(f"\n[3/3] Context Pack for '{pack_domain}':")
-        print(f"  Once connected, ask your AI:")
-        print(f"  \"Load the {pack_domain} expert rules and give me a summary.\"")
-        print(f"  The AI will call minta_get_pack to pull domain context automatically.")
-    else:
-        print(f"\n[3/3] Tip: ask your AI \"What expert domains does Minta have?\"")
-        print(f"  It can call minta_expert_list + minta_get_pack on demand.")
+    print(f"[2/2] Configuring MCP...\n")
+    for key in editors_to_config:
+        if _setup_editor(key):
+            configured.append(key)
 
-    # Final instructions
+    if not configured:
+        print("\n[Minta] WARNING: No editors configured.")
+        return
+
+    # ── Per-editor restart instructions ──
+    RESTART_HINTS = {
+        "claude":  "Close terminal → open new terminal → run 'claude'",
+        "cursor":  "Restart Cursor (Cmd+Q / Alt+F4 then reopen)",
+        "codex":   "Close terminal → open new terminal → run 'codex'",
+        "vscode":  "Reload VS Code (Ctrl+Shift+P → 'Developer: Reload Window')",
+    }
+
     print()
     print("-" * 50)
-    print(f"  {EDITORS[target]['name']} MCP configured → {EDITORS[target]['config_path']}")
+    print("  MCP configured. Now restart your AI:")
     print()
+    for key in configured:
+        info = EDITORS[key]
+        print(f"  {info['name']}:")
+        print(f"     {RESTART_HINTS[key]}")
+        print()
+
     print("  ╔══════════════════════════════════════════════╗")
-    print("  ║  IMPORTANT: Restart your AI editor NOW.     ║")
-    print("  ║  MCP loads at startup — if already running, ║")
-    print("  ║  it won't see the new config until restart. ║")
+    print("  ║  CRITICAL: MCP loads at editor startup.     ║")
+    print("  ║  Always run 'minta start' BEFORE opening    ║")
+    print("  ║  your AI editor — or use this 'minta launch'║")
+    print("  ║  which does both for you.                   ║")
     print("  ╚══════════════════════════════════════════════╝")
     print()
-    print(f"  Next session: 'minta start' first, THEN open your AI.")
-    print(f"  Dashboard: http://localhost:8772")
-    print(f"  MCP:       http://localhost:18721/mcp")
+    print("  Dashboard: http://localhost:8772")
+    print("  MCP:       http://localhost:18721/mcp")
+    print()
+    print("  Quick start next time:")
+    if sys.platform == "win32":
+        print("    Double-click Start-Minta.vbs, then open your AI.")
+    else:
+        print("    ./Start-Minta.sh, then open your AI.")
     print("-" * 50)
 
 
@@ -369,24 +383,26 @@ def _print_help():
     print("  minta connect --vscode      Configure VS Code / Copilot MCP")
     print("  minta connect --all         Configure all supported editors")
     print()
-    print("  minta launch                Start services + configure Claude Code")
-    print("  minta launch --cursor       Start services + configure Cursor")
-    print("  minta launch --codex        Start services + configure Codex")
-    print("  minta launch --vscode       Start services + configure VS Code")
-    print("  minta launch --all          Start services + configure all editors")
-    print("  minta launch --pack <domain>  Launch + domain context reminder")
+    print("  minta launch                Start + configure ALL AI editors (recommended)")
+    print("  minta launch --claude       Start + configure Claude Code only")
+    print("  minta launch --cursor       Start + configure Cursor IDE only")
+    print("  minta launch --codex        Start + configure Codex CLI only")
+    print("  minta launch --vscode       Start + configure VS Code only")
+    print()
+    print("Pro tip: run 'minta launch' once → restart your AI → connected forever.")
+    print("         On reboot: double-click Start-Minta, then open your AI.")
     print()
     print("Dashboard: http://localhost:8772")
 
 
-def _parse_target() -> str:
+def _parse_target(default: str = "claude") -> str:
     """Parse --editor flag from command line."""
     editor_flags = {"--claude": "claude", "--cursor": "cursor",
                     "--codex": "codex", "--vscode": "vscode", "--all": "all"}
     for arg in sys.argv[2:]:
         if arg in editor_flags:
             return editor_flags[arg]
-    return "claude"  # default
+    return default
 
 
 def main():
@@ -408,7 +424,7 @@ def main():
         target = _parse_target()
         cmd_connect(target)
     elif cmd == "launch":
-        target = _parse_target()
+        target = _parse_target(default="all")
         cmd_launch(target)
     elif cmd in ("--help", "-h", "help"):
         _print_help()
