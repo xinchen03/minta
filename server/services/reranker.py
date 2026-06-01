@@ -3,10 +3,12 @@
 Distilled from MemPal: ChromaDB does coarse retrieval (top-20),
 Cross-Encoder does fine ranking (→ top-5).
 
-Default: BGE-Reranker-v2-m3 (BAAI, Chinese+English, 568M params).
+Default: ms-marco-MiniLM-L-6-v2 (~80MB, English, fast).
+Override: MINTA_RERANKER_MODEL env var for BAAI/bge-reranker-v2-m3 (CN+EN, 568MB).
 Zero LLM cost. ~50ms per pair on CPU.
 """
 from __future__ import annotations
+import os
 import logging
 from typing import List, Dict, Optional, Tuple
 import numpy as np
@@ -15,17 +17,19 @@ logger = logging.getLogger(__name__)
 
 _RERANKER = None  # lazy load
 
+_RERANKER_MODEL = os.environ.get(
+    "MINTA_RERANKER_MODEL",
+    "cross-encoder/ms-marco-MiniLM-L-6-v2",
+)
+
 
 def _get_reranker():
     global _RERANKER
     if _RERANKER is None:
         try:
             from sentence_transformers import CrossEncoder
-            _RERANKER = CrossEncoder(
-                "all-MiniLM-L6-v2",  # lightweight default, users can override
-                max_length=512,
-            )
-            logger.info("Reranker: loaded bge-reranker-v2-m3")
+            _RERANKER = CrossEncoder(_RERANKER_MODEL, max_length=512)
+            logger.info(f"Reranker: loaded {_RERANKER_MODEL}")
         except Exception as e:
             logger.warning(f"Reranker unavailable: {e}")
             _RERANKER = False
