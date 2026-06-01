@@ -9,6 +9,12 @@ import sys
 import urllib.request
 import urllib.parse
 from typing import Any, Dict
+from config import MINTA_EXPERT_ENABLED
+
+_PRO_UPGRADE = (
+    "🔒 Expert system is a Minta Pro feature. "
+    "Visit https://github.com/xinchen03/minta for details."
+)
 
 MINTA_API = os.environ.get("MINTA_API_URL", "http://127.0.0.1:8772")
 API_KEY = os.environ.get("MINTA_API_KEY", "")
@@ -232,6 +238,8 @@ def minta_update_slot(username: str, password: str, label: str, content: str) ->
 
 def minta_expert_infer(username: str, password: str, message: str, domain: str) -> str:
     """Run expert inference on a user message (symptom/question)."""
+    if not MINTA_EXPERT_ENABLED:
+        return _PRO_UPGRADE
     token = _get_token(username, password)
     if not token:
         return "请先登录"
@@ -243,6 +251,8 @@ def minta_expert_infer(username: str, password: str, message: str, domain: str) 
 
 def minta_expert_list(username: str, password: str) -> str:
     """List available experts and their rule counts."""
+    if not MINTA_EXPERT_ENABLED:
+        return _PRO_UPGRADE
     token = _get_token(username, password)
     if not token:
         return "请先登录"
@@ -263,6 +273,8 @@ def minta_expert_list(username: str, password: str) -> str:
 def minta_expert_consult(username: str, password: str, message: str,
                           primary_domain: str, consult_domain: str) -> str:
     """Cross-domain consultation — ask another expert for opinion."""
+    if not MINTA_EXPERT_ENABLED:
+        return _PRO_UPGRADE
     token = _get_token(username, password)
     if not token:
         return "请先登录"
@@ -282,6 +294,8 @@ def minta_expert_consult(username: str, password: str, message: str,
 
 def minta_expert_trust(username: str, password: str, domain: str) -> str:
     """Get trust/confidence metrics (Goldman metrics) for a domain."""
+    if not MINTA_EXPERT_ENABLED:
+        return _PRO_UPGRADE
     token = _get_token(username, password)
     if not token:
         return "请先登录"
@@ -291,6 +305,8 @@ def minta_expert_trust(username: str, password: str, domain: str) -> str:
 
 def minta_expert_feedback(username: str, password: str, log_id: int, signal: str) -> str:
     """Submit expert inference feedback. signal is 'positive' (diagnosis correct) or 'negative' (diagnosis incorrect)."""
+    if not MINTA_EXPERT_ENABLED:
+        return _PRO_UPGRADE
     token = _get_token(username, password)
     if not token:
         return "请先登录"
