@@ -20,7 +20,9 @@ import os
 import sys
 import time
 import json
+import signal
 import socket
+import urllib.request
 import subprocess
 from pathlib import Path
 
@@ -36,7 +38,7 @@ SERVICES = [
 
 PROCS = []
 
-# ── Editor MCP configs ──
+# --- Editor MCP configs ---
 # Each entry: (name, config_path, needs_type_field)
 EDITORS = {
     "claude": {
@@ -51,7 +53,7 @@ EDITORS = {
         "config_path": Path.home() / ".cursor" / "mcp.json",
         "mcp_key": "mcpServers",
         "entry": {"url": "http://localhost:18721/mcp"},
-        "launch_hint": "Open Cursor and check the MCP panel (Ctrl+Shift+P → 'MCP: List Tools').",
+        "launch_hint": "Open Cursor and check the MCP panel (Ctrl+Shift+P ->'MCP: List Tools').",
     },
     "codex": {
         "name": "Codex CLI",
@@ -73,7 +75,7 @@ EDITORS = {
 }
 
 
-# ── Helpers ──
+# --- Helpers ---
 
 def port_alive(port: int) -> bool:
     try:
@@ -123,7 +125,7 @@ def _write_json(path: Path, data: dict):
     path.write_text(json.dumps(data, indent=2))
 
 
-# ── Commands ──
+# --- Commands ---
 
 def cmd_start():
     """Start all Minta services in background."""
@@ -147,12 +149,15 @@ def cmd_start():
             print(f"  [{name}] :{port} already in use -- skipping")
             continue
         flags = subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0
+        logfile = ROOT / "logs" / f"{name.replace(' ', '_').lower()}.log"
+        logfile.parent.mkdir(exist_ok=True)
+        fh = open(str(logfile), "w")
         proc = subprocess.Popen(
             [python, "-m", "uvicorn"] + args + ["--host", "127.0.0.1", "--port", str(port)],
             cwd=str(SERVER_DIR),
             creationflags=flags,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
+            stdout=fh,
+            stderr=fh,
         )
         PROCS.append((name, proc))
         time.sleep(1)
@@ -165,7 +170,11 @@ def cmd_start():
                 break
             time.sleep(0.5)
         else:
-            print(f"  [{name}] WARNING: did not respond on :{port}")
+            logfile = ROOT / "logs" / f"{name.replace(' ', '_').lower()}.log"
+            print(f"  [{name}] FAILED to start on :{port}")
+            if logfile.exists():
+                tail = logfile.read_text(errors="replace")[-500:]
+                print(f"    Last 500 chars of log:\n{tail}")
 
     save_pids()
     print(f"\n[Minta] All services started. Dashboard: http://localhost:8772")
@@ -216,6 +225,85 @@ def cmd_status():
         print("Some services are down. Run 'minta start' to restart.")
 
 
+def cmd_verify():
+    """End-to-end health check: services, API, MCP, login."""
+    print("[Minta] Running full verification...\n")
+
+    ok = 0
+    total = 0
+
+    # 1. Check ports
+    print("--- Services ---")
+    for name, port, _ in SERVICES:
+        total += 1
+        alive = port_alive(port)
+        if alive:
+            print(f"  [OK] {name} (:{port})")
+            ok += 1
+        else:
+            print(f"  [FAIL] {name} (:{port}) — NOT RUNNING")
+    print()
+
+    # 2. Check API endpoint
+    print("--- API ---")
+    for label, url in [("Ping", "http://localhost:8772/ping"),
+                       ("API Docs", "http://localhost:8772/docs")]:
+        total += 1
+        try:
+            r = urllib.request.urlopen(url, timeout=5)
+            if r.status == 200:
+                print(f"  [OK] {label} ->{url}")
+                ok += 1
+            else:
+                print(f"  [FAIL] {label} ->{url} (HTTP {r.status})")
+        except Exception as e:
+            print(f"  [FAIL] {label} ->{url} ({e})")
+    print()
+
+    # 3. Check MCP endpoint
+    print("--- MCP ---")
+    total += 1
+    try:
+        body = json.dumps({"jsonrpc": "2.0", "id": 1,
+                          "method": "tools/list", "params": {}}).encode()
+        req = urllib.request.Request("http://localhost:18721/mcp",
+                                     data=body,
+                                     headers={"Content-Type": "application/json"})
+        r = urllib.request.urlopen(req, timeout=5)
+        resp = json.loads(r.read())
+        tools = resp.get("result", {}).get("tools", [])
+        tool_names = [t["name"] for t in tools]
+        if tool_names:
+            print(f"  [OK] MCP responding — {len(tools)} tools available")
+            print(f"      Core: {', '.join(t for t in tool_names if not t.startswith('minta_expert_'))}")
+            ok += 1
+        else:
+            print(f"  [FAIL] MCP responding but 0 tools — check config")
+    except Exception as e:
+        print(f"  [FAIL] MCP not reachable ({e})")
+    print()
+
+    # 4. Check MCP configs
+    print("--- Editor Configs ---")
+    for key, info in EDITORS.items():
+        total += 1
+        cfg = _read_json(info["config_path"])
+        minta_entry = cfg.get(info["mcp_key"], {}).get("minta")
+        if minta_entry:
+            print(f"  [OK] {info['name']} ->{info['config_path']}")
+            ok += 1
+        else:
+            print(f"  [FAIL] {info['name']} — no Minta entry in {info['config_path']}")
+    print()
+
+    print(f"--- Result: {ok}/{total} checks passed ---")
+    if ok == total:
+        print("  Minta is fully operational.")
+        print("  Open your AI editor and start using Minta tools.")
+    else:
+        missing = total - ok
+        print(f"  {missing} check(s) failed. Run 'minta launch' to fix.")
+
 def cmd_init():
     """First-time setup wizard."""
     print("=" * 50)
@@ -247,7 +335,7 @@ def cmd_init():
     print("  Dashboard: http://localhost:8772")
 
 
-# ── Connect ──
+# --- Connect ---
 
 def _setup_editor(editor_key: str) -> bool:
     """Configure MCP for a single editor. Returns True on success."""
@@ -285,7 +373,7 @@ def cmd_connect(target: str = "claude"):
             print(f"\n  {EDITORS[target]['launch_hint']}")
 
 
-# ── Launch ──
+# --- Launch ---
 
 def cmd_launch(target: str = "all"):
     """Start services + configure MCP + show launch instructions.
@@ -330,12 +418,12 @@ def cmd_launch(target: str = "all"):
         print("\n[Minta] WARNING: No editors configured.")
         return
 
-    # ── Per-editor restart instructions ──
+    # --- Per-editor restart instructions ---
     RESTART_HINTS = {
-        "claude":  "Close terminal → open new terminal → run 'claude'",
+        "claude":  "Close terminal ->open new terminal ->run 'claude'",
         "cursor":  "Restart Cursor (Cmd+Q / Alt+F4 then reopen)",
-        "codex":   "Close terminal → open new terminal → run 'codex'",
-        "vscode":  "Reload VS Code (Ctrl+Shift+P → 'Developer: Reload Window')",
+        "codex":   "Close terminal ->open new terminal ->run 'codex'",
+        "vscode":  "Reload VS Code (Ctrl+Shift+P ->'Developer: Reload Window')",
     }
 
     print()
@@ -348,12 +436,12 @@ def cmd_launch(target: str = "all"):
         print(f"     {RESTART_HINTS[key]}")
         print()
 
-    print("  ╔══════════════════════════════════════════════╗")
-    print("  ║  CRITICAL: MCP loads at editor startup.     ║")
-    print("  ║  Always run 'minta start' BEFORE opening    ║")
-    print("  ║  your AI editor — or use this 'minta launch'║")
-    print("  ║  which does both for you.                   ║")
-    print("  ╚══════════════════════════════════════════════╝")
+    print("  +--------------------------------------------------+")
+    print("  |  CRITICAL: MCP loads at editor startup.         |")
+    print("  |  Always run 'minta start' BEFORE opening your   |")
+    print("  |  AI editor — or use 'minta launch' which does   |")
+    print("  |  both for you.                                  |")
+    print("  +--------------------------------------------------+")
     print()
     print("  Dashboard: http://localhost:8772")
     print("  MCP:       http://localhost:18721/mcp")
@@ -366,7 +454,7 @@ def cmd_launch(target: str = "all"):
     print("-" * 50)
 
 
-# ── Main ──
+# --- Main ---
 
 def _print_help():
     print("Minta CLI -- Personal Context Layer")
@@ -376,6 +464,7 @@ def _print_help():
     print("  minta start                 Start all services")
     print("  minta stop                  Stop all services")
     print("  minta status                Check service health")
+    print("  minta verify                Full end-to-end check (services + MCP + editors)")
     print()
     print("  minta connect               Configure Claude Code MCP (default)")
     print("  minta connect --cursor      Configure Cursor IDE MCP")
@@ -389,7 +478,7 @@ def _print_help():
     print("  minta launch --codex        Start + configure Codex CLI only")
     print("  minta launch --vscode       Start + configure VS Code only")
     print()
-    print("Pro tip: run 'minta launch' once → restart your AI → connected forever.")
+    print("Pro tip: run 'minta launch' once ->restart your AI ->connected forever.")
     print("         On reboot: double-click Start-Minta, then open your AI.")
     print()
     print("Dashboard: http://localhost:8772")
@@ -420,6 +509,8 @@ def main():
         cmd_stop()
     elif cmd == "status":
         cmd_status()
+    elif cmd == "verify":
+        cmd_verify()
     elif cmd == "connect":
         target = _parse_target()
         cmd_connect(target)
