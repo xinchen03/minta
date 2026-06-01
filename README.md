@@ -113,13 +113,20 @@ MINTA_API_KEY=minta_your_key_here  # leave empty to auto-generate
 
 > `.env` is loaded automatically via `python-dotenv`. If you skip this step, Minta auto-generates secrets — but explicit config gives you more control.
 
-### Step 3: Start Minta
+### Step 3: Launch Minta + Connect Your AI
 
 ```bash
-minta start                       # Launch all services in background
+python minta_cli.py launch       # Starts services + configures ALL AI editors
 ```
 
+This one command does everything:
+- Starts the Minta server (API + Autopilot + MCP)
+- Configures **Claude Code, Cursor, Codex, and VS Code** for MCP
+- Shows per-editor restart instructions
+
 Open **http://localhost:8772** in your browser. You should see the login/register page.
+
+> **CRITICAL:** MCP configs load at editor startup. **Restart your AI editor** after running `minta launch` — otherwise it won't see the new connection.
 
 ### Step 4: Register on the Web
 
@@ -127,74 +134,72 @@ Open **http://localhost:8772** in your browser. You should see the login/registe
 2. Log in and go to the dashboard
 3. Find your **API Key** in Settings (auto-generated if not set in `.env`)
 
-### Step 5: Connect Your AI
+### Step 5: Verify Everything Works
 
 ```bash
-minta connect --all               # Claude Code + Cursor + VS Code + Codex
-# or just one:
-minta connect                     # Claude Code
-minta connect --cursor            # Cursor IDE
+python minta_cli.py verify       # 10-point health check
 ```
 
-**Restart your AI editor.** You'll see 19 Minta tools in the tool list.
+You should see `10/10 checks passed`. If anything fails, the output tells you exactly what's wrong.
 
 ### ✅ Done
 
-Ask your AI: *"What does Minta remember about me?"* If it responds, everything is working.
+**Restart your AI editor.** Ask it: *"What does Minta remember about me?"* If it responds, you're connected.
 
-> **Real-world time: ~5 minutes.** Steps 1–2 take 30 seconds each, install takes 3 min, register takes 1 min, connect takes 10 seconds.
+> **Real-world time: ~5 minutes.** Install 3 min, `.env` 30 sec, `minta launch` 10 sec, register 1 min.
 
 ---
 
-### One-Click: `minta launch`
-
-`minta launch` combines Step 3 + Step 5 — starts services and configures your AI in one command.
-
-```bash
-minta launch                     # Default: Claude Code
-minta launch --all               # All AI editors
-minta launch --cursor            # Cursor only
-```
-
-But first-time users still need Step 1 (install), Step 2 (.env), and Step 4 (register on web).
-
 ### Which AI Can I Use?
 
-| Command | AI Editor | What happens |
-|---------|-----------|-------------|
-| `minta launch` | Claude Code (default) | Writes `~/.claude/settings.json` |
-| `minta launch --cursor` | Cursor IDE | Writes `~/.cursor/mcp.json` |
-| `minta launch --codex` | Codex CLI | Writes `~/.codex/mcp.json` |
-| `minta launch --vscode` | VS Code / Copilot | Writes `~/.vscode/mcp.json` |
-| `minta launch --all` | All of the above | Configures everything at once |
+`minta launch` configures all of these by default. Use a flag to pick just one:
+
+| Command | AI Editor | Config written to |
+|---------|-----------|-------------------|
+| `minta launch` (default) | **All editors** | All four config files below |
+| `minta launch --claude` | Claude Code | `~/.claude/settings.json` |
+| `minta launch --cursor` | Cursor IDE | `~/.cursor/mcp.json` |
+| `minta launch --codex` | Codex CLI | `~/.codex/mcp.json` |
+| `minta launch --vscode` | VS Code / Copilot | `~/.vscode/mcp.json` |
 
 ### Day-to-Day
 
 ```bash
 minta status               # Are services healthy?
-minta stop                 # Shut down background services  
+minta verify               # Full 10-point end-to-end check
+minta stop                 # Shut down background services
 minta start                # Start them again
 ```
 
-### Stay Connected (For All Agents)
+### The Golden Rule: Minta BEFORE AI
 
-MCP is a protocol, not a launcher — every AI reads the MCP config on startup and tries to connect. Minta just needs to be running first.
+**MCP loads at editor startup.** If your AI editor is already open when you start Minta, it won't see the connection. Always:
 
-**One-time setup (all agents):**
-```bash
-minta launch --all        # Starts Minta + configures Claude Code, Cursor, Codex, VS Code
 ```
-Then restart your AI. That's it — Minta is always reachable at `localhost:18721/mcp`.
+1. Start Minta  (minta launch / minta start / double-click launcher)
+2. THEN open your AI editor
+```
 
-**On reboot:** Minta's background services stop when your computer does. Pick one:
+### One-Time Setup
+
+```bash
+python minta_cli.py launch    # Starts services + configures ALL AI editors
+python minta_cli.py verify    # Confirm 10/10 checks pass
+```
+
+Restart your AI. Done — Minta is reachable at `localhost:18721/mcp`.
+
+### After Reboot
+
+Minta stops when your computer does. Pick one way to restart:
 
 | Method | What to do | Works for |
 |--------|-----------|-----------|
-| Manual | Run `minta start` after reboot | All agents |
-| One-click desktop icon | `Setup-Desktop-Shortcut.ps1` (Win) / `.command` (Mac) / both platforms (Linux: use Start-Minta.sh) | All agents |
-| Double-click launcher | `Start-Minta.vbs` (Win) / `Start-Minta.sh` (Mac/Linux) — right in the repo root | All agents |
-| Auto-start on boot | Win: Startup folder · Mac: LaunchAgent · Linux: autostart | All agents |
-| Claude Code hooks | Copy `hooks/` to your Claude Code hooks directory | Claude Code only |
+| Manual | Run `python minta_cli.py launch` | All platforms, all editors |
+| Double-click launcher | `Start-Minta.vbs` (Win) / `Start-Minta.sh` (Mac/Linux) — right in the repo root | All editors |
+| Desktop shortcut | Run `Setup-Desktop-Shortcut.ps1` (Win) / `.command` (Mac) once to create an icon | All editors |
+| Auto-start on boot | Win: Startup folder · Mac: LaunchAgent · Linux: autostart | All editors |
+| Claude Code hooks | Copy `hooks/` to your Claude Code hooks directory — auto-starts Minta when Claude opens | Claude Code only |
 
 <details>
 <summary><b>macOS / Linux setup</b></summary>
