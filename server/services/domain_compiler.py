@@ -108,7 +108,10 @@ NEGATION_RE = re.compile(
 
 # ── Failure Registry ──
 
-FAILURE_REGISTRY_PATH = r'D:\minta-expert-data\compiler_failure_registry.json'
+from pathlib import Path as _Path
+
+_DEFAULT_REGISTRY = str(_Path(__file__).resolve().parent.parent.parent / "data" / "compiler_failure_registry.json")
+FAILURE_REGISTRY_PATH = os.environ.get("MINTA_FAILURE_REGISTRY_PATH", _DEFAULT_REGISTRY)
 
 
 def _load_failure_registry() -> dict:
