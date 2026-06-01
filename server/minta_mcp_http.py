@@ -1,13 +1,13 @@
 """
-Minta MCP HTTP Server — 让远程 agent 通过 HTTP 调用 Minta API。
-兼容标准 MCP Streamable HTTP 传输协议。
+Minta MCP HTTP Server — allows remote agents to call the Minta API via HTTP.
+Compatible with the standard MCP Streamable HTTP transport protocol.
 """
 import json
 import sys
 import os
 from typing import Any, Dict
 
-# 复用核心逻辑
+# Reuse core logic
 sys.path.insert(0, os.path.dirname(__file__))
 from minta_mcp import TOOL_DEFINITIONS, handle_call
 
