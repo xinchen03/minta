@@ -48,7 +48,7 @@ class VerifyCodeRequest(BaseModel):
 
 @router.post("/send-code")
 def send_verification_code(req: SendCodeRequest):
-    """发送邮箱验证码。"""
+    """Send email verification code."""
     _check_rate_limit(f"send-code:{req.email}", max_attempts=3, window=120)
     # Generate 6-digit code
     code = "".join(random.choices(string.digits, k=6))
@@ -62,7 +62,7 @@ def send_verification_code(req: SendCodeRequest):
 
 @router.post("/verify-code")
 def verify_code(req: VerifyCodeRequest, db: Session = Depends(get_db)):
-    """验证邮箱验证码，标记邮箱为已验证。"""
+    """Verify email verification code and mark the email as verified."""
     record = _verify_codes.get(req.email)
     if not record:
         raise HTTPException(status_code=400, detail="请先请求验证码")

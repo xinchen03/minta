@@ -1,6 +1,6 @@
 """
-Minta MCP Server — 让 Claude 通过工具直接读写 Minta API。
-暴露 tools 给 Claude Code，不再写本地 .md 文件。
+Minta MCP Server — lets Claude read/write the Minta API through tools.
+Exposes tools to Claude Code, no longer writing local .md files.
 """
 
 import json
@@ -66,7 +66,7 @@ def _get_token(username: str, password: str) -> str:
 # ── MCP Tool Handlers ──
 
 def minta_login(username: str, password: str) -> str:
-    """登录 Minta 账号，返回登录结果。必须先登录才能用其他工具。"""
+    """Login to Minta account and return the result. Must login before using other tools."""
     token = _get_token(username, password)
     if token:
         return f"✅ 登录成功 ({username})"
@@ -74,7 +74,7 @@ def minta_login(username: str, password: str) -> str:
 
 
 def minta_read_context(username: str, password: str, type_filter: str = "") -> str:
-    """读取用户的 Context Objects 列表。可传入 type_filter 按类型筛选。"""
+    """Read the user's Context Objects list. Pass type_filter to filter by type."""
     token = _get_token(username, password)
     if not token:
         return "❌ 请先登录"
@@ -92,8 +92,8 @@ def minta_read_context(username: str, password: str, type_filter: str = "") -> s
 
 def minta_write_context(username: str, password: str, title: str, type: str,
                         summary: str = "", body: str = "", tags: str = "") -> str:
-    """写入一条 Context Object 到 Minta。
-    type可选值: preference, workflow, project_context, decision_criteria, lesson_learned, writing_style, rule, ai_brief, work_profile"""
+    """Write a Context Object to Minta.
+    Available type values: preference, workflow, project_context, decision_criteria, lesson_learned, writing_style, rule, ai_brief, work_profile"""
     token = _get_token(username, password)
     if not token:
         return "❌ 请先登录"
@@ -115,8 +115,8 @@ def minta_write_context(username: str, password: str, title: str, type: str,
 
 
 def minta_append_inbox(username: str, password: str, text: str, confidence: float = 0.8, tags: str = "") -> str:
-    """写入一条反例/提醒到 Inbox（收件箱）。
-    当用户纠正你的行为、告诉你做错了什么时，立即调用此工具。"""
+    """Write a counter-example/reminder to the Inbox.
+    Call this tool immediately when the user corrects your behavior or tells you something was wrong."""
     token = _get_token(username, password)
     if not token:
         return "❌ 请先登录"
@@ -129,7 +129,7 @@ def minta_append_inbox(username: str, password: str, text: str, confidence: floa
 
 
 def minta_search_context(username: str, password: str, query: str) -> str:
-    """搜索 Context Objects（匹配标题、摘要、标签）。"""
+    """Search Context Objects (matches title, summary, tags)."""
     token = _get_token(username, password)
     if not token:
         return "❌ 请先登录"
@@ -148,10 +148,10 @@ def minta_search_context(username: str, password: str, query: str) -> str:
     return "\n".join(lines)
 
 
-# ── MCP Protocol: 工具定义 ──
+# ── MCP Protocol: Tool Definitions ──
 
 def minta_list_inbox(username: str, password: str, status: str = "pending") -> str:
-    """列出 Inbox 中的条目。"""
+    """List items in the Inbox."""
     token = _get_token(username, password)
     if not token:
         return "请先登录"
@@ -172,7 +172,7 @@ def minta_list_inbox(username: str, password: str, status: str = "pending") -> s
 
 
 def minta_confirm_inbox(username: str, password: str, inbox_id: int, context_type: str = "lesson_learned") -> str:
-    """确认一条 Inbox 条目，转为 Context Object。"""
+    """Confirm an Inbox item and convert it to a Context Object."""
     token = _get_token(username, password)
     if not token:
         return "请先登录"
@@ -184,7 +184,7 @@ def minta_confirm_inbox(username: str, password: str, inbox_id: int, context_typ
 
 
 def minta_discard_inbox(username: str, password: str, inbox_id: int) -> str:
-    """丢弃一条 Inbox 条目。"""
+    """Discard an Inbox item."""
     token = _get_token(username, password)
     if not token:
         return "请先登录"
@@ -195,7 +195,7 @@ def minta_discard_inbox(username: str, password: str, inbox_id: int) -> str:
 
 
 def minta_get_pack(username: str, password: str, scene: str = "auto") -> str:
-    """获取 Context Pack —— 从 7 个槽位自动生成的 AI 上下文注入文本。"""
+    """Get the Context Pack — AI context injection text auto-generated from 7 slots."""
     token = _get_token(username, password)
     if not token:
         return "请先登录"
@@ -206,7 +206,7 @@ def minta_get_pack(username: str, password: str, scene: str = "auto") -> str:
 
 
 def minta_get_slot(username: str, password: str, label: str) -> str:
-    """读取某个槽位的内容。label: persona/preferences/knowledge/counter_examples/skills/pending/rules"""
+    """Read the content of a slot. label: persona/preferences/knowledge/counter_examples/skills/pending/rules"""
     token = _get_token(username, password)
     if not token:
         return "请先登录"
@@ -217,7 +217,7 @@ def minta_get_slot(username: str, password: str, label: str) -> str:
 
 
 def minta_update_slot(username: str, password: str, label: str, content: str) -> str:
-    """更新某个槽位的内容。"""
+    """Update the content of a slot."""
     token = _get_token(username, password)
     if not token:
         return "请先登录"
@@ -290,7 +290,7 @@ def minta_expert_trust(username: str, password: str, domain: str) -> str:
 
 
 def minta_expert_feedback(username: str, password: str, log_id: int, signal: str) -> str:
-    """提交 Expert 推理反馈。signal 为 'positive'（诊断正确）或 'negative'（诊断错误）。"""
+    """Submit expert inference feedback. signal is 'positive' (diagnosis correct) or 'negative' (diagnosis incorrect)."""
     token = _get_token(username, password)
     if not token:
         return "请先登录"

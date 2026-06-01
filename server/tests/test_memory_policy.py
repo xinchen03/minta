@@ -63,7 +63,7 @@ class TestMatchAny:
 
 
 class TestPreTurn:
-    """A: 自动读取测试"""
+    """A: Auto-read test"""
 
     def test_continue_previous_triggers_read(self):
         inp = PolicyInput(
@@ -104,7 +104,7 @@ class TestPreTurn:
         assert len(result.read.payload["queries"]) > 0
 
     def test_casual_chat_no_read(self):
-        """C: 普通问题不触发读取"""
+        """C: Casual questions do not trigger read"""
         inp = PolicyInput(
             user_id="test_u1",
             phase="pre_turn",
@@ -141,7 +141,7 @@ class TestPreTurn:
 
 
 class TestPostTurn:
-    """B: 自动写入测试"""
+    """B: Auto-write test"""
 
     def test_explicit_preference_triggers_write(self):
         inp = PolicyInput(
@@ -193,7 +193,7 @@ class TestPostTurn:
         assert "my-project" in scope
 
     def test_counterexample_detected(self):
-        """B: 自动反例测试"""
+        """B: Auto-counterexample test"""
         inp = PolicyInput(
             user_id="test_u1",
             phase="post_turn",
@@ -220,7 +220,7 @@ class TestPostTurn:
         assert "my-project" in scope or "project" in scope
 
     def test_ordinary_question_no_write(self):
-        """C: 普通问题不污染"""
+        """C: Casual questions do not pollute"""
         inp = PolicyInput(
             user_id="test_u1",
             phase="post_turn",

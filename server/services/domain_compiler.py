@@ -79,7 +79,7 @@ EN_ACTION_RE = re.compile(
     re.IGNORECASE,
 )
 
-# Chinese CPG: "X的患者建议Y"
+# Chinese CPG pattern: "X的患者建议Y" (patients with X should Y)
 CN_CPG_RE = re.compile(
     r'(.+?)(?:的患者|的伤者|的病人|的个体|情况下|的时候|时)'
     r'(.*?)'
@@ -88,7 +88,7 @@ CN_CPG_RE = re.compile(
     re.IGNORECASE,
 )
 
-# Chinese if-then: "如果X，建议Y"
+# Chinese if-then pattern: "如果X，建议Y" (if X, then recommend Y)
 CN_IF_THEN_RE = re.compile(
     r'(?:如果|若|假如|当|一旦|倘若)'
     r'\s*(.+?)'
@@ -555,7 +555,7 @@ class DomainCompiler:
 
             return f"{verb} {rest}".strip()
 
-        # Chinese: "建议/需要/应当..."
+        # Chinese action verbs: "建议/需要/应当..." (recommend/need/should...)
         m = re.search(
             r'(建议|应当|应该|需要|必须|推荐|进行|拍|做|查)'
             r'\s*(.+)',
@@ -616,7 +616,7 @@ class DomainCompiler:
             clause["nesting_depth"] = 1
             return self._finalize_clause(clause, sentence)
 
-        # Try Chinese "X的患者建议Y"
+        # Try Chinese CPG pattern "X的患者建议Y"
         cn_match = CN_CPG_RE.search(sentence)
         if cn_match:
             clause["triggers"].append(cn_match.group(1).strip())
@@ -626,7 +626,7 @@ class DomainCompiler:
             clause["actions"].append(cn_match.group(3).strip())
             return self._finalize_clause(clause, sentence)
 
-        # Try Chinese "如果X，建议Y"
+        # Try Chinese if-then pattern "如果X，建议Y"
         cn_if = CN_IF_THEN_RE.search(sentence)
         if cn_if:
             clause["triggers"].append(cn_if.group(1).strip())
