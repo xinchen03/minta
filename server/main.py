@@ -8,7 +8,7 @@ from pathlib import Path
 from fastapi import FastAPI, Request, Query, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 from sqlalchemy import text
 from routers import inbox, context_objects, upload, skills, auth, api_keys, verification, comments, admin, user_data, slots, session as session_router
 from routers.autopilot import router as autopilot_router
@@ -120,7 +120,10 @@ else:
 async def add_security_headers(request: Request, call_next):
     response = await call_next(request)
     response.headers["X-Content-Type-Options"] = "nosniff"
-    response.headers["X-Frame-Options"] = "DENY"
+    if MINTA_ENV in ("production", "prod"):
+        response.headers["X-Frame-Options"] = "DENY"
+    else:
+        response.headers["X-Frame-Options"] = "SAMEORIGIN"
     response.headers["X-XSS-Protection"] = "1; mode=block"
     response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
@@ -166,6 +169,11 @@ def _auto_scan_interval(hours: int = Query(24, ge=1, le=168), user = Depends(get
 @app.get("/ping")
 def ping():
     return {"ok": True}
+
+
+@app.get("/favicon.ico")
+async def favicon():
+    return Response(status_code=204)
 
 
 # ── Demo: Story page ──
