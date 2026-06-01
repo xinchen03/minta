@@ -98,14 +98,6 @@ def save_pids():
 
 def find_python() -> str:
     """Find a Python 3.9+ interpreter."""
-    candidates = [
-        r"D:\pycharm\anaconda\python.exe",
-        r"C:\Users\Lenovo\AppData\Local\Programs\Python\Python312\python.exe",
-        sys.executable,
-    ]
-    for p in candidates:
-        if os.path.exists(p):
-            return p
     return sys.executable
 
 
@@ -346,9 +338,16 @@ def cmd_launch(target: str = "claude"):
     # Final instructions
     print()
     print("-" * 50)
-    print(f"  {EDITORS[target]['name']} is ready to connect.")
-    print(f"  {EDITORS[target]['launch_hint']}")
-    print(f"\n  Dashboard: http://localhost:8772")
+    print(f"  {EDITORS[target]['name']} MCP configured → {EDITORS[target]['config_path']}")
+    print()
+    print("  ╔══════════════════════════════════════════════╗")
+    print("  ║  IMPORTANT: Restart your AI editor NOW.     ║")
+    print("  ║  MCP loads at startup — if already running, ║")
+    print("  ║  it won't see the new config until restart. ║")
+    print("  ╚══════════════════════════════════════════════╝")
+    print()
+    print(f"  Next session: 'minta start' first, THEN open your AI.")
+    print(f"  Dashboard: http://localhost:8772")
     print(f"  MCP:       http://localhost:18721/mcp")
     print("-" * 50)
 
