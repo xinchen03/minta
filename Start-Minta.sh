@@ -7,7 +7,8 @@
 #   Linux:  cp this file to ~/.config/autostart/
 #   macOS:  cp com.minta.starter.plist to ~/Library/LaunchAgents/
 
-DIR="$(cd "$(dirname "$0")/.." && pwd)"
+# Start-Minta.sh is at the repo root. Use its own directory.
+DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$DIR"
 nohup python minta_cli.py start > /dev/null 2>&1 &
 disown

@@ -64,7 +64,7 @@ D_V  完整率       "这条记忆没有来源。能信吗？"
 
 Alex 是位创业者。他的 AI 编程助手陪他工作了 3 个月。但有些东西正在记忆里腐烂……
 
-→ **安装后：** 运行 `minta start`，打开 `http://localhost:8772/story`。内置 25 条演示数据 + 6 个预设问题，看 Minta 如何在 1 秒内全部检测出来。
+→ **安装后：** 运行 `python minta_cli.py start`，打开 `http://localhost:8772/story`。内置 25 条演示数据 + 6 个预设问题，看 Minta 如何在 1 秒内全部检测出来。
 
 ---
 
@@ -120,7 +120,7 @@ MINTA_API_KEY=minta_改成你自己的key（留空则自动生成）
 ### 第三步：启动 Minta
 
 ```bash
-minta start                 # 后台启动全部服务
+python minta_cli.py start                 # 后台启动全部服务
 ```
 
 打开浏览器访问 **http://localhost:8772** ——你应该看到 Minta 的登录/注册页面。
@@ -136,15 +136,15 @@ minta start                 # 后台启动全部服务
 拿到 API Key 后，执行一行命令让 AI 编辑器能调用 Minta：
 
 ```bash
-minta connect --all          # 一次性配置 Claude Code + Cursor + VS Code + Codex
+python minta_cli.py connect --all          # 一次性配置 Claude Code + Cursor + VS Code + Codex
 ```
 
 或者只配一个：
 
 ```bash
-minta connect                # Claude Code
-minta connect --cursor       # Cursor IDE
-minta connect --vscode       # VS Code / Copilot
+python minta_cli.py connect                # Claude Code
+python minta_cli.py connect --cursor       # Cursor IDE
+python minta_cli.py connect --vscode       # VS Code / Copilot
 ```
 
 **重启你的 AI 编辑器**——回到对话里，你会看到 19 个 Minta 工具已经可用。
@@ -159,24 +159,24 @@ minta connect --vscode       # VS Code / Copilot
 
 ### 支持哪些 AI？
 
-`minta connect` 一键配置所有编辑器。用 flag 指定单个：
+`python minta_cli.py connect` 一键配置所有编辑器。用 flag 指定单个：
 
 | 命令 | AI 编辑器 | 模式 | 配置文件 |
 |------|----------|------|--------|
-| `minta connect`（默认） | **全部** | 混合 | 四个全写 |
-| `minta connect --claude` | Claude Code | stdio | `~/.claude/settings.json` |
-| `minta connect --cursor` | Cursor IDE | stdio | `~/.cursor/mcp.json` |
-| `minta connect --codex` | Codex CLI | stdio | `~/.codex/mcp.json` |
-| `minta connect --vscode` | VS Code / Copilot | HTTP | `~/.vscode/mcp.json` |
+| `python minta_cli.py connect`（默认） | **全部** | 混合 | 四个全写 |
+| `python minta_cli.py connect --claude` | Claude Code | stdio | `~/.claude/settings.json` |
+| `python minta_cli.py connect --cursor` | Cursor IDE | stdio | `~/.cursor/mcp.json` |
+| `python minta_cli.py connect --codex` | Codex CLI | stdio | `~/.codex/mcp.json` |
+| `python minta_cli.py connect --vscode` | VS Code / Copilot | HTTP | `~/.vscode/mcp.json` |
 
-> **stdio** = 编辑器启动时自动拉起 Minta。**HTTP** = 需先 `minta start` 启动服务。
+> **stdio** = 编辑器启动时自动拉起 Minta。**HTTP** = 需先 `python minta_cli.py start` 启动服务。
 
 ### 日常使用
 
 ```bash
-minta status               # 服务健康吗？
-minta stop                 # 关闭后台服务
-minta start                # 重新启动
+python minta_cli.py status               # 服务健康吗？
+python minta_cli.py stop                 # 关闭后台服务
+python minta_cli.py start                # 重新启动
 ```
 
 ### 保持连接（所有 Agent 通用）
@@ -275,11 +275,11 @@ Minta 的架构分两块：
 
 ```bash
 # 为你的 AI 编辑器自动配置：
-minta connect           # Claude Code
-minta connect --cursor  # Cursor IDE
-minta connect --codex   # Codex CLI
-minta connect --vscode  # VS Code / Copilot
-minta connect --all     # 全部
+python minta_cli.py connect           # Claude Code
+python minta_cli.py connect --cursor  # Cursor IDE
+python minta_cli.py connect --codex   # Codex CLI
+python minta_cli.py connect --vscode  # VS Code / Copilot
+python minta_cli.py connect --all     # 全部
 ```
 
 ---

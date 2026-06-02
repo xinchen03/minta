@@ -6,7 +6,7 @@
 Set WshShell = CreateObject("WScript.Shell")
 Set objFSO = CreateObject("Scripting.FileSystemObject")
 
-scriptDir = objFSO.GetParentFolderName(WScript.ScriptFullName)
-rootDir = objFSO.GetParentFolderName(scriptDir)
+' Start-Minta.vbs is at the repo root. Use its own directory as rootDir.
+rootDir = objFSO.GetParentFolderName(WScript.ScriptFullName)
 
 WshShell.Run "pythonw """ & rootDir & "\minta_cli.py"" start", 0, False

@@ -15,9 +15,28 @@ import time
 import urllib.request
 from pathlib import Path
 
-API_URL = "http://127.0.0.1:8772"
+# Read .env if present (supports custom MINTA_API_URL)
+_ENV_FILE = Path(__file__).resolve().parent.parent / ".env"
+if _ENV_FILE.exists():
+    try:
+        for _line in _ENV_FILE.read_text().splitlines():
+            _line = _line.strip()
+            if _line and not _line.startswith("#") and "=" in _line:
+                _k, _v = _line.split("=", 1)
+                _v = _v.strip().strip('"').strip("'")
+                if _k.strip() not in os.environ:
+                    os.environ[_k.strip()] = _v
+    except Exception:
+        pass
+
+API_URL = os.environ.get("MINTA_API_URL", "http://127.0.0.1:8772")
 MCP_URL = "http://127.0.0.1:18721/mcp"
 API_KEY = os.environ.get("MINTA_API_KEY", "")
+
+# Extract API port from URL
+import re as _re
+_port_match = _re.search(r':(\d{4,5})', API_URL)
+API_PORT = int(_port_match.group(1)) if _port_match else 8772
 
 # Editor MCP configs to check
 EDITOR_CONFIGS = {
@@ -94,7 +113,7 @@ def fetch_context_pack():
 
 
 def main():
-    api_ok = port_alive(8772)
+    api_ok = port_alive(API_PORT)
     mcp_ok = port_alive(18721)
     mcp_cfg_ok, cfg_editor = check_mcp_configured()
     handshake_ok, tool_count = check_mcp_handshake() if mcp_ok else (False, 0)
@@ -102,7 +121,7 @@ def main():
     # === Always: brief Minta intro so Claude knows it exists ===
     MINTA_INTRO = (
         "\n---\n"
-        "Minta is an AI memory engine running at http://localhost:8772.\n"
+        f"Minta is an AI memory engine running at {API_URL}.\n"
         "When connected via MCP (port 18721), you have access to 19 tools:\n"
         "minta_read_context, minta_write_context, minta_search_context,\n"
         "minta_get_pack, minta_append_inbox, minta_list_inbox,\n"
@@ -113,7 +132,6 @@ def main():
 
     # === CASE 1: Everything is ready ===
     if api_ok and mcp_ok and handshake_ok and mcp_cfg_ok:
-        # Always inject Minta intro so new users know what it is
         sys.stdout.buffer.write(MINTA_INTRO.encode("utf-8"))
         pack = fetch_context_pack()
         if pack:
@@ -126,19 +144,33 @@ def main():
         sys.stdout.buffer.flush()
         return
 
-    # === CASE 2: MCP config exists but services are down (user forgot to start) ===
-    if mcp_cfg_ok and not api_ok:
+    # === CASE 2: MCP is alive but Data API is down (tools visible but broken) ===
+    if mcp_cfg_ok and mcp_ok and handshake_ok and not api_ok:
         msg = (
-            "\n[Minta Hook] Minta is NOT running.\n"
+            f"\n[Minta Hook] ⚠️  MCP is connected but the Data API (port {API_PORT}) is NOT running.\n"
+            "Minta tools will appear in your tool list but ALL calls will return errors.\n"
             "Tell the user:\n"
-            '  "Minta services are stopped. Run `python minta_cli.py launch` and restart Claude."\n'
+            f'  "Minta Data API (port {API_PORT}) is down. Run `python minta_cli.py start` in the Minta folder.\n'
+            '   Do NOT uninstall or reconfigure — the MCP connection is fine, just the backend needs a restart."\n'
+            "Then STOP using Minta tools until the user confirms the API is back.\n"
+        )
+        sys.stdout.buffer.write(msg.encode("utf-8"))
+        sys.stdout.buffer.flush()
+        return
+
+    # === CASE 3: MCP config exists but services are completely down ===
+    if mcp_cfg_ok and not api_ok and not mcp_ok:
+        msg = (
+            "\n[Minta Hook] Minta services are NOT running.\n"
+            "Tell the user:\n"
+            '  "Minta is stopped. Run `python minta_cli.py launch` in the Minta folder and restart Claude."\n'
             "Then STOP — do NOT proceed with the conversation until Minta is running.\n"
         )
         sys.stdout.buffer.write(msg.encode("utf-8"))
         sys.stdout.buffer.flush()
         return
 
-    # === CASE 3: Services running but MCP not configured (first-time user) ===
+    # === CASE 4: Services running but MCP not configured (first-time user) ===
     if (api_ok or mcp_ok) and not mcp_cfg_ok:
         msg = (
             "\n[Minta Hook] Minta is running but MCP is not configured for any AI editor.\n"
@@ -150,7 +182,7 @@ def main():
         sys.stdout.buffer.flush()
         return
 
-    # === CASE 4: MCP configured + services running but handshake failed ===
+    # === CASE 5: MCP configured + services running but handshake failed ===
     if api_ok and mcp_ok and mcp_cfg_ok and not handshake_ok:
         msg = (
             "\n[Minta Hook] MCP handshake failed — Minta services may still be starting.\n"
@@ -160,7 +192,7 @@ def main():
         sys.stdout.buffer.flush()
         return
 
-    # === CASE 5: Nothing is set up (fresh install) ===
+    # === CASE 6: Nothing is set up (fresh install) ===
     msg = (
         "\n[Minta Hook] Minta not detected. This is likely a first-time setup.\n"
         "Ask the user:\n"

@@ -64,7 +64,7 @@ Every dimension is computed locally, with zero API calls. Your data never leaves
 
 Alex is a startup founder. Their AI coding assistant has been learning for 3 months. But something is rotting in its memory...
 
-→ **After installing:** run `minta start` and open `http://localhost:8772/story`. Seeds 25 demo memories with 6 built-in problems. Watch Minta detect them all in under a second.
+→ **After installing:** run `python minta_cli.py start` and open `http://localhost:8772/story`. Seeds 25 demo memories with 6 built-in problems. Watch Minta detect them all in under a second.
 
 ---
 
@@ -127,7 +127,7 @@ This one command configures **Claude Code, Cursor, Codex, and VS Code** for MCP.
 
 Open **http://localhost:8772** in your browser. You should see the login/register page.
 
-> **Restart your AI editor** after running `minta connect` to pick up the new MCP configuration.
+> **Restart your AI editor** after running `python minta_cli.py connect` to pick up the new MCP configuration.
 
 ### Step 4: Register on the Web
 
@@ -147,31 +147,31 @@ You should see `10/10 checks passed`. If anything fails, the output tells you ex
 
 **Restart your AI editor.** Ask it: *"What does Minta remember about me?"* If it responds, you're connected.
 
-> **Real-world time: ~5 minutes.** Install 3 min, `.env` 30 sec, `minta launch` 10 sec, register 1 min.
+> **Real-world time: ~5 minutes.** Install 3 min, `.env` 30 sec, `python minta_cli.py launch` 10 sec, register 1 min.
 
 ---
 
 ### Which AI Can I Use?
 
-`minta connect` configures all supported editors. Use a flag to pick just one:
+`python minta_cli.py connect` configures all supported editors. Use a flag to pick just one:
 
 | Command | AI Editor | Mode | Config |
 |---------|-----------|------|--------|
-| `minta connect` (default) | **All editors** | mixed | All four |
-| `minta connect --claude` | Claude Code | stdio | `~/.claude/settings.json` |
-| `minta connect --cursor` | Cursor IDE | stdio | `~/.cursor/mcp.json` |
-| `minta connect --codex` | Codex CLI | stdio | `~/.codex/mcp.json` |
-| `minta connect --vscode` | VS Code / Copilot | HTTP | `~/.vscode/mcp.json` |
+| `python minta_cli.py connect` (default) | **All editors** | mixed | All four |
+| `python minta_cli.py connect --claude` | Claude Code | stdio | `~/.claude/settings.json` |
+| `python minta_cli.py connect --cursor` | Cursor IDE | stdio | `~/.cursor/mcp.json` |
+| `python minta_cli.py connect --codex` | Codex CLI | stdio | `~/.codex/mcp.json` |
+| `python minta_cli.py connect --vscode` | VS Code / Copilot | HTTP | `~/.vscode/mcp.json` |
 
-> **stdio** = editor auto-starts Minta on demand. **HTTP** = start Minta first with `minta start`.
+> **stdio** = editor auto-starts Minta on demand. **HTTP** = start Minta first with `python minta_cli.py start`.
 
 ### Day-to-Day
 
 ```bash
-minta status               # Are services healthy?
-minta verify               # Full 10-point end-to-end check
-minta stop                 # Shut down background services
-minta start                # Start them again
+python minta_cli.py status               # Are services healthy?
+python minta_cli.py verify               # Full 10-point end-to-end check
+python minta_cli.py stop                 # Shut down background services
+python minta_cli.py start                # Start them again
 ```
 
 ### Day-to-Day
@@ -222,7 +222,7 @@ cp scripts/minta-start-silent.sh ~/.config/autostart/
 ```
 </details>
 
-> **Desktop / web-coding users:** The silent launcher is for you. Double-click, no terminal, Minta runs in the background. Then open your AI — it connects automatically if you've run `minta launch --all` once.
+> **Desktop / web-coding users:** The silent launcher is for you. Double-click, no terminal, Minta runs in the background. Then open your AI — it connects automatically if you've run `python minta_cli.py launch --all` once.
 
 ### Docker
 
@@ -234,7 +234,7 @@ docker compose down        # Stop
 
 Data persists in a Docker volume. MCP runs at `http://localhost:18721/mcp`.
 
-> **How connections work:** `minta connect` writes MCP config to your editor. stdio editors (Claude, Cursor, Codex) auto-start Minta on demand. HTTP editors (VS Code) need `minta start` first.
+> **How connections work:** `python minta_cli.py connect` writes MCP config to your editor. stdio editors (Claude, Cursor, Codex) auto-start Minta on demand. HTTP editors (VS Code) need `python minta_cli.py start` first.
 >
 ### Double Insurance: Hooks
 
@@ -257,7 +257,7 @@ Install once:
 cp -r hooks/* ~/.claude/hooks/
 
 # Other editors: hooks are Claude Code-specific.
-# Use 'minta launch' for Cursor / VS Code / Codex instead.
+# Use 'python minta_cli.py launch' for Cursor / VS Code / Codex instead.
 ```
 
 > The hook never crashes your session. If Minta's API is unreachable, it silently passes — you just don't get context injection that session.
@@ -320,9 +320,9 @@ Beyond this README, we have detailed guides for every use case:
 
 ```bash
 # Auto-configure for your AI editor:
-minta connect           # Claude Code
-minta connect --cursor  # Cursor IDE
-minta connect --codex   # Codex CLI (coming soon)
+python minta_cli.py connect           # Claude Code
+python minta_cli.py connect --cursor  # Cursor IDE
+python minta_cli.py connect --codex   # Codex CLI (coming soon)
 
 # Or manually:
 claude mcp add minta --url http://localhost:18721/mcp

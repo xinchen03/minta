@@ -760,7 +760,11 @@ _REQ_ID = 0
 
 
 def _ensure_api_running():
-    """stdio mode: auto-start the Minta API if it's not already running (max 12s wait)."""
+    """stdio mode: auto-start the Minta API if it's not already running (max 12s wait).
+
+    Uses the port from MINTA_API env var (default 8772) so custom ports are respected.
+    """
+    import re
     api_health = f"{MINTA_API.rstrip('/')}/ping"
     try:
         urllib.request.urlopen(urllib.request.Request(api_health), timeout=2)
@@ -768,11 +772,15 @@ def _ensure_api_running():
     except Exception:
         pass
 
+    # Extract port from MINTA_API URL (e.g. http://127.0.0.1:4891/ping → 4891)
+    port_match = re.search(r':(\d{4,5})', MINTA_API)
+    api_port = port_match.group(1) if port_match else "8772"
+
     server_dir = os.path.dirname(os.path.abspath(__file__))
     try:
         subprocess.Popen(
             [sys.executable, "-m", "uvicorn", "main:app",
-             "--host", "127.0.0.1", "--port", "8772",
+             "--host", "127.0.0.1", "--port", str(api_port),
              "--log-level", "error"],
             cwd=server_dir,
             stdout=subprocess.DEVNULL,

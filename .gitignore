@@ -50,3 +50,4 @@ node_modules/
 .vscode/
 *.swp
 data/
+.minta_pids.json

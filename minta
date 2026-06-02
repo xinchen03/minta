@@ -1,0 +1,5 @@
+#!/bin/bash
+# Minta CLI wrapper — add this directory to PATH, then type "minta" anywhere
+# Usage: minta start | minta stop | minta connect | minta launch | ...
+DIR="$(cd "$(dirname "$0")" && pwd)"
+exec python "$DIR/minta_cli.py" "$@"
