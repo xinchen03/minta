@@ -69,7 +69,7 @@ Alex is a startup founder. Their AI coding assistant has been learning for 3 mon
 ---
 
 <p align="center">
-  <video src="assets/demo.mp4" autoplay muted loop playsinline width="800"></video>
+  <img src="assets/demo.gif" alt="Minta Demo" width="800">
 </p>
 
 ## What Minta Handles
