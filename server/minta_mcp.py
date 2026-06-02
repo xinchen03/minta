@@ -809,6 +809,9 @@ def _respond_error(id_val, code, message):
 
 def main():
     global _REQ_ID
+    # Force UTF-8 stdout on Windows (defaults to GBK, which corrupts MCP JSON-RPC)
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
     _ensure_api_running()
     for line in sys.stdin:
         line = line.strip()
