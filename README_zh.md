@@ -157,27 +157,19 @@ minta connect --vscode       # VS Code / Copilot
 
 ---
 
-### 一键启动：`minta launch`
-
-如果你不想分步操作，`minta launch` 帮你完成第三步 + 第五步——启动服务 + 自动配置 AI。
-
-```bash
-minta launch                # 默认 Claude Code
-minta launch --all           # 全部 AI 编辑器
-minta launch --cursor        # 仅 Cursor
-```
-
-但第一次用还是要先跑第一步（安装）和第二步（配置 .env）以及第四步（注册账号）。
-
 ### 支持哪些 AI？
 
-| 命令 | AI 编辑器 | 配置了什么 |
-|------|----------|-----------|
-| `minta launch` | Claude Code（默认） | 写入 `~/.claude/settings.json` |
-| `minta launch --cursor` | Cursor IDE | 写入 `~/.cursor/mcp.json` |
-| `minta launch --codex` | Codex CLI | 写入 `~/.codex/mcp.json` |
-| `minta launch --vscode` | VS Code / Copilot | 写入 `~/.vscode/mcp.json` |
-| `minta launch --all` | 全部 | 一次性配置所有平台 |
+`minta connect` 一键配置所有编辑器。用 flag 指定单个：
+
+| 命令 | AI 编辑器 | 模式 | 配置文件 |
+|------|----------|------|--------|
+| `minta connect`（默认） | **全部** | 混合 | 四个全写 |
+| `minta connect --claude` | Claude Code | stdio | `~/.claude/settings.json` |
+| `minta connect --cursor` | Cursor IDE | stdio | `~/.cursor/mcp.json` |
+| `minta connect --codex` | Codex CLI | stdio | `~/.codex/mcp.json` |
+| `minta connect --vscode` | VS Code / Copilot | HTTP | `~/.vscode/mcp.json` |
+
+> **stdio** = 编辑器启动时自动拉起 Minta。**HTTP** = 需先 `minta start` 启动服务。
 
 ### 日常使用
 
@@ -221,7 +213,7 @@ docker compose up -d       # 启动 (http://localhost:8772)
 docker compose down        # 停止
 ```
 
-数据持久化在 Docker 卷中。MCP 运行在 `http://localhost:18721/mcp`。
+数据持久化在 Docker 卷中。MCP 支持 stdio（Claude/Cursor/Codex 自动拉起）和 HTTP（`localhost:18721/mcp`）双模式。
 
 ---
 

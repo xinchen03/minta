@@ -39,37 +39,44 @@ SERVICES = [
 PROCS = []
 
 # --- Editor MCP configs ---
-# Each entry: (name, config_path, needs_type_field)
+# stdio mode (Claude, Cursor, Codex): editor spawns Minta process on demand
+# HTTP mode (VS Code): requires Minta server running on localhost:18721
+_MCP_STDIO = {
+    "command": sys.executable,
+    "args": [str(SERVER_DIR / "minta_mcp.py")],
+}
+_MCP_HTTP = {"url": "http://localhost:18721/mcp"}
+
 EDITORS = {
     "claude": {
         "name": "Claude Code",
         "config_path": Path.home() / ".claude" / "settings.json",
         "mcp_key": "mcpServers",
-        "entry": {"type": "http", "url": "http://localhost:18721/mcp"},
-        "launch_hint": "Run 'claude' in your terminal.",
+        "entry": _MCP_STDIO,
+        "launch_hint": "Run 'claude' in your terminal. Minta auto-starts on demand.",
     },
     "cursor": {
         "name": "Cursor IDE",
         "config_path": Path.home() / ".cursor" / "mcp.json",
         "mcp_key": "mcpServers",
-        "entry": {"url": "http://localhost:18721/mcp"},
-        "launch_hint": "Open Cursor and check the MCP panel (Ctrl+Shift+P ->'MCP: List Tools').",
+        "entry": _MCP_STDIO,
+        "launch_hint": "Open Cursor. Minta auto-starts on demand via MCP panel.",
     },
     "codex": {
         "name": "Codex CLI",
         "config_path": Path.home() / ".codex" / "mcp.json",
         "mcp_key": "mcpServers",
-        "entry": {"url": "http://localhost:18721/mcp"},
-        "launch_hint": "Run 'codex' in your terminal.",
+        "entry": _MCP_STDIO,
+        "launch_hint": "Run 'codex' in your terminal. Minta auto-starts on demand.",
     },
     "vscode": {
         "name": "VS Code / Copilot",
         "config_path": Path.home() / ".vscode" / "mcp.json",
         "mcp_key": "mcpServers",
-        "entry": {"url": "http://localhost:18721/mcp"},
+        "entry": _MCP_HTTP,
         "launch_hint": (
-            "Add this to your project's .vscode/mcp.json, then open VS Code.\n"
-            "  Or copy to ~/.vscode/mcp.json for global use."
+            "HTTP mode — run `python minta_cli.py start` first to start Minta services.\n"
+            "  Then open VS Code and MCP tools will be available."
         ),
     },
 }
@@ -338,11 +345,12 @@ def cmd_init():
 # --- Connect ---
 
 def _install_hooks():
-    """Copy hooks/ to ~/.claude/hooks/ so SessionStart hook auto-detects Minta."""
+    """Copy hooks to ~/.claude/hooks/ AND register SessionStart hook in settings.json."""
     hooks_src = ROOT / "hooks"
     hooks_dst = Path.home() / ".claude" / "hooks"
     if not hooks_src.is_dir():
         return
+
     hooks_dst.mkdir(parents=True, exist_ok=True)
     copied = 0
     for f in hooks_src.iterdir():
@@ -352,6 +360,29 @@ def _install_hooks():
             copied += 1
     if copied:
         print(f"  [OK] {copied} hooks installed -> {hooks_dst}")
+
+    # Register SessionStart hook in settings.json so it runs on every new session
+    python = find_python()
+    hook_script = str(hooks_dst / "session_start.py")
+    claude_config = Path.home() / ".claude" / "settings.json"
+    cfg = _read_json(claude_config)
+    if "hooks" not in cfg:
+        cfg["hooks"] = {}
+    if "SessionStart" not in cfg["hooks"]:
+        cfg["hooks"]["SessionStart"] = []
+    # Check if hook already registered
+    already = any(
+        h.get("command", "").endswith("session_start.py")
+        for h in cfg["hooks"]["SessionStart"]
+        if isinstance(h, dict)
+    )
+    if not already:
+        cfg["hooks"]["SessionStart"].append({
+            "type": "command",
+            "command": f"{python} {hook_script}",
+        })
+        _write_json(claude_config, cfg)
+        print(f"  [OK] SessionStart hook registered -> checks Minta on every new session")
 
 
 def _setup_editor(editor_key: str) -> bool:
@@ -382,20 +413,18 @@ def _setup_editor(editor_key: str) -> bool:
 
 def cmd_connect(target: str = "claude"):
     """Configure MCP for one or all AI editors."""
-    if not all_services_ready():
-        print("[Minta] WARNING: Services are not running.")
-        print("  Run 'minta start' first, or use 'minta launch' instead.")
-        print()
-
-    mcp_url = "http://localhost:18721/mcp"
-
     if target == "all":
-        print(f"[Minta] Configuring ALL editors for {mcp_url}:\n")
+        print("[Minta] Configuring ALL editors:\n")
         for key in EDITORS:
             _setup_editor(key)
-        print(f"\n[Minta] All editors configured — restart your AI to connect.")
+        print(f"\n[Minta] All editors configured.")
+        print("  stdio editors (Claude, Cursor, Codex): auto-start on demand.")
+        print("  HTTP editor (VS Code): run 'minta start' first.")
+        print("  Restart your AI editor to pick up the new config.")
     else:
-        print(f"[Minta] Configuring {EDITORS[target]['name']} for {mcp_url}:\n")
+        info = EDITORS[target]
+        mode = "stdio (auto-start)" if "command" in info["entry"] else "HTTP"
+        print(f"[Minta] Configuring {info['name']} ({mode}):\n")
         if _setup_editor(target):
             print(f"\n  {EDITORS[target]['launch_hint']}")
 

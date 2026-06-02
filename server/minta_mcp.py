@@ -6,6 +6,8 @@ Exposes tools to Claude Code, no longer writing local .md files.
 import json
 import os
 import sys
+import time
+import subprocess
 import urllib.request
 import urllib.parse
 from typing import Any, Dict
@@ -18,6 +20,12 @@ _PRO_UPGRADE = (
 
 MINTA_API = os.environ.get("MINTA_API_URL", "http://127.0.0.1:8772")
 API_KEY = os.environ.get("MINTA_API_KEY", "")
+if not API_KEY:
+    try:
+        from config import MINTA_API_KEY as _config_key
+        API_KEY = _config_key
+    except Exception:
+        pass
 
 
 def _auth_headers(token: str = "") -> dict:
@@ -44,36 +52,35 @@ def _api(method: str, path: str, token: str = "", body: dict = None) -> dict:
         return {"error": str(e)}
 
 
-def _login(username: str, password: str) -> str:
-    """Login and get token. Only needed when API_KEY env var is not set."""
-    if API_KEY:
-        return "__api_key__"
-    r = _api("POST", "/api/auth/login", body={"username": username, "password": password})
-    if "accessToken" in r:
-        return r["accessToken"]
-    return ""
-
-
 TOKEN_CACHE: Dict[str, Dict[str, str]] = {}  # username -> {"token": str, "expires": float}
 
 
-def _get_token(username: str, password: str) -> str:
-    """Get cached token or login. Token expiry is 24h (per JWT config)."""
-    cached = TOKEN_CACHE.get(username)
-    if cached:
+def _resolve_auth(username: str = "", password: str = "") -> str:
+    """Unified auth: API Key takes precedence; falls back to username/password login.
+    Returns token string, or empty string on failure."""
+    # API Key mode — no username/password needed
+    if API_KEY:
+        return "__api_key__"
+    # Username/password mode — must provide both
+    if not username or not password:
+        return ""
+    import time as _time
+    cache_key = f"{username}:{password}"
+    cached = TOKEN_CACHE.get(cache_key)
+    if cached and cached["expires"] > _time.time():
         return cached["token"]
-    token = _login(username, password)
-    if token:
-        import time
-        TOKEN_CACHE[username] = {"token": token, "expires": time.time() + 82800}  # 23h cache
-    return token
+    r = _api("POST", "/api/auth/login", body={"username": username, "password": password})
+    if "accessToken" in r:
+        TOKEN_CACHE[cache_key] = {"token": r["accessToken"], "expires": _time.time() + 82800}
+        return r["accessToken"]
+    return ""
 
 
 # ── MCP Tool Handlers ──
 
 def minta_login(username: str, password: str) -> str:
     """Login to Minta account and return the result. Must login before using other tools."""
-    token = _get_token(username, password)
+    token = _resolve_auth(username, password)
     if token:
         return f"✅ 登录成功 ({username})"
     return f"❌ 登录失败，请检查用户名密码"
@@ -81,7 +88,7 @@ def minta_login(username: str, password: str) -> str:
 
 def minta_read_context(username: str, password: str, type_filter: str = "") -> str:
     """Read the user's Context Objects list. Pass type_filter to filter by type."""
-    token = _get_token(username, password)
+    token = _resolve_auth(username, password)
     if not token:
         return "❌ 请先登录"
     qs = f"?type={urllib.parse.quote(type_filter)}" if type_filter else ""
@@ -100,7 +107,7 @@ def minta_write_context(username: str, password: str, title: str, type: str,
                         summary: str = "", body: str = "", tags: str = "") -> str:
     """Write a Context Object to Minta.
     Available type values: preference, workflow, project_context, decision_criteria, lesson_learned, writing_style, rule, ai_brief, work_profile"""
-    token = _get_token(username, password)
+    token = _resolve_auth(username, password)
     if not token:
         return "❌ 请先登录"
     tag_list = [t.strip() for t in tags.split(",") if t.strip()] if tags else []
@@ -123,7 +130,7 @@ def minta_write_context(username: str, password: str, title: str, type: str,
 def minta_append_inbox(username: str, password: str, text: str, confidence: float = 0.8, tags: str = "") -> str:
     """Write a counter-example/reminder to the Inbox.
     Call this tool immediately when the user corrects your behavior or tells you something was wrong."""
-    token = _get_token(username, password)
+    token = _resolve_auth(username, password)
     if not token:
         return "❌ 请先登录"
     tag_list = [t.strip() for t in tags.split(",") if t.strip()] if tags else []
@@ -136,7 +143,7 @@ def minta_append_inbox(username: str, password: str, text: str, confidence: floa
 
 def minta_search_context(username: str, password: str, query: str) -> str:
     """Search Context Objects (matches title, summary, tags)."""
-    token = _get_token(username, password)
+    token = _resolve_auth(username, password)
     if not token:
         return "❌ 请先登录"
     r = _api("GET", "/api/contextObjects", token=token)
@@ -158,7 +165,7 @@ def minta_search_context(username: str, password: str, query: str) -> str:
 
 def minta_list_inbox(username: str, password: str, status: str = "pending") -> str:
     """List items in the Inbox."""
-    token = _get_token(username, password)
+    token = _resolve_auth(username, password)
     if not token:
         return "请先登录"
     r = _api("GET", f"/api/inbox?status={urllib.parse.quote(status)}", token=token)
@@ -179,7 +186,7 @@ def minta_list_inbox(username: str, password: str, status: str = "pending") -> s
 
 def minta_confirm_inbox(username: str, password: str, inbox_id: int, context_type: str = "lesson_learned") -> str:
     """Confirm an Inbox item and convert it to a Context Object."""
-    token = _get_token(username, password)
+    token = _resolve_auth(username, password)
     if not token:
         return "请先登录"
     r = _api("POST", f"/api/inbox/{inbox_id}/confirm", token=token,
@@ -191,7 +198,7 @@ def minta_confirm_inbox(username: str, password: str, inbox_id: int, context_typ
 
 def minta_discard_inbox(username: str, password: str, inbox_id: int) -> str:
     """Discard an Inbox item."""
-    token = _get_token(username, password)
+    token = _resolve_auth(username, password)
     if not token:
         return "请先登录"
     r = _api("POST", f"/api/inbox/{inbox_id}/discard", token=token)
@@ -202,7 +209,7 @@ def minta_discard_inbox(username: str, password: str, inbox_id: int) -> str:
 
 def minta_get_pack(username: str, password: str, scene: str = "auto") -> str:
     """Get the Context Pack — AI context injection text auto-generated from 7 slots."""
-    token = _get_token(username, password)
+    token = _resolve_auth(username, password)
     if not token:
         return "请先登录"
     r = _api("GET", f"/api/slots/pack/generate?scene={urllib.parse.quote(scene)}", token=token)
@@ -213,7 +220,7 @@ def minta_get_pack(username: str, password: str, scene: str = "auto") -> str:
 
 def minta_get_slot(username: str, password: str, label: str) -> str:
     """Read the content of a slot. label: persona/preferences/knowledge/counter_examples/skills/pending/rules"""
-    token = _get_token(username, password)
+    token = _resolve_auth(username, password)
     if not token:
         return "请先登录"
     r = _api("GET", f"/api/slots/{urllib.parse.quote(label)}", token=token)
@@ -224,7 +231,7 @@ def minta_get_slot(username: str, password: str, label: str) -> str:
 
 def minta_update_slot(username: str, password: str, label: str, content: str) -> str:
     """Update the content of a slot."""
-    token = _get_token(username, password)
+    token = _resolve_auth(username, password)
     if not token:
         return "请先登录"
     r = _api("PUT", f"/api/slots/{urllib.parse.quote(label)}", token=token,
@@ -240,7 +247,7 @@ def minta_expert_infer(username: str, password: str, message: str, domain: str) 
     """Run expert inference on a user message (symptom/question)."""
     if not MINTA_EXPERT_ENABLED:
         return _PRO_UPGRADE
-    token = _get_token(username, password)
+    token = _resolve_auth(username, password)
     if not token:
         return "请先登录"
     session_id = f"mcp-{username}"
@@ -253,7 +260,7 @@ def minta_expert_list(username: str, password: str) -> str:
     """List available experts and their rule counts."""
     if not MINTA_EXPERT_ENABLED:
         return _PRO_UPGRADE
-    token = _get_token(username, password)
+    token = _resolve_auth(username, password)
     if not token:
         return "请先登录"
     r = _api("GET", "/api/expert/meta/experts", token=token)
@@ -275,7 +282,7 @@ def minta_expert_consult(username: str, password: str, message: str,
     """Cross-domain consultation — ask another expert for opinion."""
     if not MINTA_EXPERT_ENABLED:
         return _PRO_UPGRADE
-    token = _get_token(username, password)
+    token = _resolve_auth(username, password)
     if not token:
         return "请先登录"
     session_id = f"mcp-{username}"
@@ -296,7 +303,7 @@ def minta_expert_trust(username: str, password: str, domain: str) -> str:
     """Get trust/confidence metrics (Goldman metrics) for a domain."""
     if not MINTA_EXPERT_ENABLED:
         return _PRO_UPGRADE
-    token = _get_token(username, password)
+    token = _resolve_auth(username, password)
     if not token:
         return "请先登录"
     r = _api("GET", f"/api/expert/trust/{urllib.parse.quote(domain)}", token=token)
@@ -307,7 +314,7 @@ def minta_expert_feedback(username: str, password: str, log_id: int, signal: str
     """Submit expert inference feedback. signal is 'positive' (diagnosis correct) or 'negative' (diagnosis incorrect)."""
     if not MINTA_EXPERT_ENABLED:
         return _PRO_UPGRADE
-    token = _get_token(username, password)
+    token = _resolve_auth(username, password)
     if not token:
         return "请先登录"
     if signal not in ("positive", "negative"):
@@ -321,7 +328,7 @@ def minta_expert_feedback(username: str, password: str, log_id: int, signal: str
 
 def minta_chat(username: str, password: str, message: str) -> str:
     """Main conversation entry — detects if message relates to any expert domain and routes."""
-    token = _get_token(username, password)
+    token = _resolve_auth(username, password)
     if not token:
         return "请先登录"
     body = {"message": message}
@@ -369,6 +376,9 @@ def handle_call(tool_name: str, arguments: dict) -> str:
     handler = handlers.get(tool_name)
     if not handler:
         return json.dumps({"error": f"Unknown tool: {tool_name}"})
+    # Inject default empty username/password when API_KEY is set (not needed for auth)
+    arguments.setdefault("username", "")
+    arguments.setdefault("password", "")
     return handler(**arguments)
 
 
@@ -382,7 +392,7 @@ TOOL_DEFINITIONS = [
                 "username": {"type": "string", "description": "Minta 用户名"},
                 "password": {"type": "string", "description": "Minta 密码"},
             },
-            "required": ["username", "password"],
+            "required": [],
         },
     },
     {
@@ -395,7 +405,7 @@ TOOL_DEFINITIONS = [
                 "password": {"type": "string"},
                 "type_filter": {"type": "string", "description": "按类型筛选（可选）"},
             },
-            "required": ["username", "password"],
+            "required": [],
         },
     },
     {
@@ -412,7 +422,7 @@ TOOL_DEFINITIONS = [
                 "body": {"type": "string", "description": "详细内容"},
                 "tags": {"type": "string", "description": "逗号分隔的标签"},
             },
-            "required": ["username", "password", "title", "type"],
+            "required": ["title", "type"],
         },
     },
     {
@@ -427,7 +437,7 @@ TOOL_DEFINITIONS = [
                 "confidence": {"type": "number", "description": "置信度 0-1"},
                 "tags": {"type": "string", "description": "逗号分隔的标签"},
             },
-            "required": ["username", "password", "text"],
+            "required": ["text"],
         },
     },
     {
@@ -440,7 +450,7 @@ TOOL_DEFINITIONS = [
                 "password": {"type": "string"},
                 "query": {"type": "string", "description": "搜索关键词"},
             },
-            "required": ["username", "password", "query"],
+            "required": ["query"],
         },
     },
     {
@@ -453,7 +463,7 @@ TOOL_DEFINITIONS = [
                 "password": {"type": "string"},
                 "status": {"type": "string", "description": "pending 或 archived"},
             },
-            "required": ["username", "password"],
+            "required": [],
         },
     },
     {
@@ -467,7 +477,7 @@ TOOL_DEFINITIONS = [
                 "inbox_id": {"type": "integer", "description": "Inbox 条目 ID"},
                 "context_type": {"type": "string", "description": "Context 类型: lesson_learned/preference/rule/workflow 等"},
             },
-            "required": ["username", "password", "inbox_id"],
+            "required": ["inbox_id"],
         },
     },
     {
@@ -480,7 +490,7 @@ TOOL_DEFINITIONS = [
                 "password": {"type": "string"},
                 "inbox_id": {"type": "integer", "description": "Inbox 条目 ID"},
             },
-            "required": ["username", "password", "inbox_id"],
+            "required": ["inbox_id"],
         },
     },
     {
@@ -493,7 +503,7 @@ TOOL_DEFINITIONS = [
                 "password": {"type": "string"},
                 "scene": {"type": "string", "description": "场景: auto/coding/writing/research/general"},
             },
-            "required": ["username", "password"],
+            "required": [],
         },
     },
     {
@@ -506,7 +516,7 @@ TOOL_DEFINITIONS = [
                 "password": {"type": "string"},
                 "label": {"type": "string", "description": "槽位标签"},
             },
-            "required": ["username", "password", "label"],
+            "required": ["label"],
         },
     },
     {
@@ -520,7 +530,7 @@ TOOL_DEFINITIONS = [
                 "label": {"type": "string", "description": "槽位标签"},
                 "content": {"type": "string", "description": "新内容"},
             },
-            "required": ["username", "password", "label", "content"],
+            "required": ["label", "content"],
         },
     },
     {
@@ -534,7 +544,7 @@ TOOL_DEFINITIONS = [
                 "message": {"type": "string", "description": "用户的症状描述或问题"},
                 "domain": {"type": "string", "description": "专家领域, e.g. ankle_injury, knee_injury, running_analysis"},
             },
-            "required": ["username", "password", "message", "domain"],
+            "required": ["message", "domain"],
         },
     },
     {
@@ -546,7 +556,7 @@ TOOL_DEFINITIONS = [
                 "username": {"type": "string"},
                 "password": {"type": "string"},
             },
-            "required": ["username", "password"],
+            "required": [],
         },
     },
     {
@@ -561,7 +571,7 @@ TOOL_DEFINITIONS = [
                 "primary_domain": {"type": "string", "description": "主诊专家领域"},
                 "consult_domain": {"type": "string", "description": "会诊专家领域"},
             },
-            "required": ["username", "password", "message", "primary_domain", "consult_domain"],
+            "required": ["message", "primary_domain", "consult_domain"],
         },
     },
     {
@@ -574,7 +584,7 @@ TOOL_DEFINITIONS = [
                 "password": {"type": "string"},
                 "domain": {"type": "string", "description": "专家领域"},
             },
-            "required": ["username", "password", "domain"],
+            "required": ["domain"],
         },
     },
     {
@@ -588,7 +598,7 @@ TOOL_DEFINITIONS = [
                 "log_id": {"type": "integer", "description": "推理返回的 feedback_id"},
                 "signal": {"type": "string", "description": "positive 或 negative"},
             },
-            "required": ["username", "password", "log_id", "signal"],
+            "required": ["log_id", "signal"],
         },
     },
     {
@@ -601,7 +611,7 @@ TOOL_DEFINITIONS = [
                 "password": {"type": "string"},
                 "message": {"type": "string", "description": "用户消息"},
             },
-            "required": ["username", "password", "message"],
+            "required": ["message"],
         },
     },
     # ── Autopilot tools ──
@@ -748,6 +758,39 @@ def _autopilot_reason(policy):
 
 _REQ_ID = 0
 
+
+def _ensure_api_running():
+    """stdio mode: auto-start the Minta API if it's not already running (max 12s wait)."""
+    api_health = f"{MINTA_API.rstrip('/')}/ping"
+    try:
+        urllib.request.urlopen(urllib.request.Request(api_health), timeout=2)
+        return  # already running
+    except Exception:
+        pass
+
+    server_dir = os.path.dirname(os.path.abspath(__file__))
+    try:
+        subprocess.Popen(
+            [sys.executable, "-m", "uvicorn", "main:app",
+             "--host", "127.0.0.1", "--port", "8772",
+             "--log-level", "error"],
+            cwd=server_dir,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            start_new_session=True,
+        )
+    except Exception:
+        return  # don't block — tool calls will return readable errors
+
+    for _ in range(24):  # wait up to 12 seconds
+        time.sleep(0.5)
+        try:
+            urllib.request.urlopen(urllib.request.Request(api_health), timeout=1)
+            return
+        except Exception:
+            pass
+
+
 def _respond(id_val, result):
     sys.stdout.write(json.dumps({"jsonrpc": "2.0", "id": id_val, "result": result}) + "\n")
     sys.stdout.flush()
@@ -758,6 +801,7 @@ def _respond_error(id_val, code, message):
 
 def main():
     global _REQ_ID
+    _ensure_api_running()
     for line in sys.stdin:
         line = line.strip()
         if not line:
