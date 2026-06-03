@@ -151,18 +151,43 @@ You should see `10/10 checks passed`. If anything fails, the output tells you ex
 
 ---
 
-## ⚠️ API Provider Compatibility
+## ⚠️ API Provider & Agent Compatibility
 
-MCP tools work through your AI editor's API provider. Here's what you need to know:
+Minta connects to your AI through two paths: **MCP tools** (dynamic, full-featured) and **hooks** (text injection, always works). What you get depends on your editor + API combination:
 
-| API Provider | MCP Tools | Memory Injection | Experience |
-|-------------|-----------|-----------------|------------|
-| **Anthropic (Claude) official** | ✅ Full 19 tools | ✅ Auto | Full Minta experience |
-| **DeepSeek / other proxies** | ❌ Tools blocked | ✅ Via hooks | Memory pre-loaded at session start; no dynamic minta_* tools |
+### By AI Editor
 
-**If you're not on Anthropic's official API**, Minta still works — the SessionStart hook automatically fetches your Context Pack and injects it into every conversation. You get all your memories, preferences, and project context. The only difference: you won't see `minta_write_context` / `minta_search_context` as tools during the conversation. Use the Web UI (`http://localhost:8772`) to manage memories directly.
+| Editor | MCP Support | Minta Experience |
+|--------|------------|-----------------|
+| **Claude Code** | ✅ Native | Full: 19 MCP tools + hooks |
+| **Cursor** | ✅ Native | Full: 19 MCP tools + hooks |
+| **Codex (OpenAI)** | ✅ Configurable | MCP tools via `minta connect --codex` |
+| **VS Code / Copilot** | ⚠️ HTTP mode | Tools via HTTP; set up with `minta connect --vscode` |
+| **Other editors** (Windsurf, Continue, etc.) | ⚠️ Varies | Hooks inject memory text; manage via Web UI |
 
-**Why?** Claude Code injects MCP tool definitions into API requests. Some proxy layers (DeepSeek, OpenRouter, etc.) don't forward these tool definitions to the underlying model. Minta's hooks bypass this by injecting memory directly into the prompt text — no proxy involvement needed. Read works. Write works via Web UI.
+### By API Provider
+
+| API Provider | MCP Tools | Hooks (Memory Injection) | Web UI |
+|-------------|-----------|------------------------|--------|
+| **Anthropic official** | ✅ All 19 | ✅ Auto | ✅ |
+| **OpenAI official** | ✅ (editor-dependent) | ✅ Auto | ✅ |
+| **DeepSeek (Anthropic mode)** | ❌ Proxy blocks | ✅ Works | ✅ |
+| **OpenRouter** | ⚠️ Varies by model | ✅ Works | ✅ |
+| **Groq / Together / others** | ❌ No MCP | ✅ Works | ✅ |
+
+### What "hooks work" means
+
+Even without MCP tools, Minta's SessionStart hook runs on your machine — it calls the Minta HTTP API, fetches your Context Pack (memories, preferences, rules, project context), and injects it directly into the conversation as text. This happens **before** any API call, so it works with every provider.
+
+| You get | Without MCP tools | With MCP tools |
+|---------|-------------------|----------------|
+| Memory pre-load at session start | ✅ Hooks | ✅ Hooks |
+| Search memories during chat | ❌ | ✅ `minta_search_context` |
+| Save new memories during chat | ❌ | ✅ `minta_write_context` |
+| Manage via Web UI (localhost:8772) | ✅ | ✅ |
+| Conflict detection, decay, inbox | ✅ Web UI | ✅ Web UI + tools |
+
+**Bottom line:** Hooks ensure Minta works everywhere. MCP tools are a bonus for Anthropic/OpenAI users. The Web UI is always available as a fallback.
 
 ### Which AI Can I Use?
 

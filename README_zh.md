@@ -155,18 +155,43 @@ python minta_cli.py connect --vscode       # VS Code / Copilot
 
 ---
 
-## ⚠️ API 供应商兼容性
+## ⚠️ API 供应商 & Agent 兼容性
 
-MCP 工具通过 AI 编辑器的 API 供应商转发。以下是需要注意的情况：
+Minta 通过两条路径连接你的 AI：**MCP 工具**（动态、全功能）和 **Hook**（文本注入、始终可用）。你能用到什么取决于编辑器 + API 的组合：
 
-| API 供应商 | MCP 工具 | 记忆注入 | 体验 |
-|-----------|---------|---------|------|
-| **Anthropic (Claude) 官方** | ✅ 全部 19 个工具 | ✅ 自动 | 完整 Minta 体验 |
-| **DeepSeek / 其他代理** | ❌ 工具被拦截 | ✅ 通过 Hook | 会话开始时预加载记忆；对话中无动态 minta_* 工具 |
+### 按 AI 编辑器
 
-**如果你用的不是 Anthropic 官方 API**，Minta 仍然可以使用——SessionStart Hook 会自动从 Minta API 拉取你的 Context Pack 并注入到每次对话中。你的记忆、偏好、项目背景都在。唯一的区别：对话中看不到 `minta_write_context` / `minta_search_context` 这些工具。用 Web UI（`http://localhost:8772`）直接管理记忆即可。
+| 编辑器 | MCP 支持 | Minta 体验 |
+|--------|---------|-----------|
+| **Claude Code** | ✅ 原生 | 完整：19 个 MCP 工具 + Hook |
+| **Cursor** | ✅ 原生 | 完整：19 个 MCP 工具 + Hook |
+| **Codex (OpenAI)** | ✅ 可配置 | MCP 工具通过 `minta connect --codex` |
+| **VS Code / Copilot** | ⚠️ HTTP 模式 | 通过 HTTP 使用工具；`minta connect --vscode` |
+| **其他编辑器**（Windsurf、Continue 等） | ⚠️ 看情况 | Hook 注入记忆文本；用 Web UI 管理 |
 
-**原因？** Claude Code 把 MCP 工具定义注入到 API 请求中，但 DeepSeek 等代理层不会把这些工具定义转发给底层模型。Minta 的 Hook 绕过了这个问题——直接把记忆文本注入到 prompt 里，不经过代理层。读没问题，写用 Web UI。
+### 按 API 供应商
+
+| API 供应商 | MCP 工具 | Hook（记忆注入） | Web UI |
+|-----------|---------|-----------------|--------|
+| **Anthropic 官方** | ✅ 全部 19 个 | ✅ 自动 | ✅ |
+| **OpenAI 官方** | ✅（取决于编辑器） | ✅ 自动 | ✅ |
+| **DeepSeek（Anthropic 模式）** | ❌ 代理拦截 | ✅ 可用 | ✅ |
+| **OpenRouter** | ⚠️ 因模型而异 | ✅ 可用 | ✅ |
+| **Groq / Together / 其他** | ❌ 不支持 MCP | ✅ 可用 | ✅ |
+
+### "Hook 可用"是什么意思
+
+即使没有 MCP 工具，Minta 的 SessionStart Hook 在你的本机运行——它会调用 Minta HTTP API，拉取你的 Context Pack（记忆、偏好、规则、项目背景），以纯文本形式注入到对话中。这发生在**任何 API 调用之前**，所以对所有供应商都有效。
+
+| 你能做什么 | 没有 MCP 工具 | 有 MCP 工具 |
+|-----------|-------------|-----------|
+| 会话开始时预加载记忆 | ✅ Hook | ✅ Hook |
+| 对话中搜索记忆 | ❌ | ✅ `minta_search_context` |
+| 对话中保存新记忆 | ❌ | ✅ `minta_write_context` |
+| 通过 Web UI 管理 (localhost:8772) | ✅ | ✅ |
+| 冲突检测、衰减、收件箱 | ✅ Web UI | ✅ Web UI + 工具 |
+
+**一句话：Hook 保证 Minta 在所有地方都能用。MCP 工具是 Anthropic/OpenAI 用户的额外加分项。Web UI 始终可作为后备方案。**
 
 > **实际上手只需 3 分钟：** 前两步各 30 秒，安装 3 分钟，注册 1 分钟，连接 10 秒。总共不超过 5 分钟。
 
