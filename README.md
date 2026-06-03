@@ -69,7 +69,7 @@ Alex is a startup founder. Their AI coding assistant has been learning for 3 mon
 ---
 
 <p align="center">
-  <img src="assets/demo.gif" alt="Minta Demo" width="800">
+  <video src="assets/demo.mp4" autoplay muted loop playsinline width="800"></video>
 </p>
 
 ## What Minta Handles
@@ -150,6 +150,19 @@ You should see `10/10 checks passed`. If anything fails, the output tells you ex
 > **Real-world time: ~5 minutes.** Install 3 min, `.env` 30 sec, `python minta_cli.py launch` 10 sec, register 1 min.
 
 ---
+
+## ⚠️ API Provider Compatibility
+
+MCP tools work through your AI editor's API provider. Here's what you need to know:
+
+| API Provider | MCP Tools | Memory Injection | Experience |
+|-------------|-----------|-----------------|------------|
+| **Anthropic (Claude) official** | ✅ Full 19 tools | ✅ Auto | Full Minta experience |
+| **DeepSeek / other proxies** | ❌ Tools blocked | ✅ Via hooks | Memory pre-loaded at session start; no dynamic minta_* tools |
+
+**If you're not on Anthropic's official API**, Minta still works — the SessionStart hook automatically fetches your Context Pack and injects it into every conversation. You get all your memories, preferences, and project context. The only difference: you won't see `minta_write_context` / `minta_search_context` as tools during the conversation. Use the Web UI (`http://localhost:8772`) to manage memories directly.
+
+**Why?** Claude Code injects MCP tool definitions into API requests. Some proxy layers (DeepSeek, OpenRouter, etc.) don't forward these tool definitions to the underlying model. Minta's hooks bypass this by injecting memory directly into the prompt text — no proxy involvement needed. Read works. Write works via Web UI.
 
 ### Which AI Can I Use?
 

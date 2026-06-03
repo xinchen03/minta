@@ -153,6 +153,21 @@ python minta_cli.py connect --vscode       # VS Code / Copilot
 
 在 AI 里问一句："Minta 记得我什么？" 如果能正常返回，说明一切就绪。
 
+---
+
+## ⚠️ API 供应商兼容性
+
+MCP 工具通过 AI 编辑器的 API 供应商转发。以下是需要注意的情况：
+
+| API 供应商 | MCP 工具 | 记忆注入 | 体验 |
+|-----------|---------|---------|------|
+| **Anthropic (Claude) 官方** | ✅ 全部 19 个工具 | ✅ 自动 | 完整 Minta 体验 |
+| **DeepSeek / 其他代理** | ❌ 工具被拦截 | ✅ 通过 Hook | 会话开始时预加载记忆；对话中无动态 minta_* 工具 |
+
+**如果你用的不是 Anthropic 官方 API**，Minta 仍然可以使用——SessionStart Hook 会自动从 Minta API 拉取你的 Context Pack 并注入到每次对话中。你的记忆、偏好、项目背景都在。唯一的区别：对话中看不到 `minta_write_context` / `minta_search_context` 这些工具。用 Web UI（`http://localhost:8772`）直接管理记忆即可。
+
+**原因？** Claude Code 把 MCP 工具定义注入到 API 请求中，但 DeepSeek 等代理层不会把这些工具定义转发给底层模型。Minta 的 Hook 绕过了这个问题——直接把记忆文本注入到 prompt 里，不经过代理层。读没问题，写用 Web UI。
+
 > **实际上手只需 3 分钟：** 前两步各 30 秒，安装 3 分钟，注册 1 分钟，连接 10 秒。总共不超过 5 分钟。
 
 ---
