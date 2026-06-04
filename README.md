@@ -587,7 +587,16 @@ The MIT core handles personal memory — one user, one machine, full quality gov
 Shared knowledge bases with per-member boundaries. Your team's AI knows what the team knows — without leaking what it shouldn't. For engineering teams, research labs, and any group that needs collective memory that stays correct over time.
 
 **Domain Expert Mode** (in research)
-AI that doesn't just remember facts — it reasons about them with domain judgment. Not generic prompts, but deeply tuned to how experts in medicine, law, education, and engineering actually think about correctness. The goal: an AI that knows when a memory is not just stale, but *wrong* — and why.
+
+AI that doesn't just retrieve facts — it reasons about them with domain judgment. The approach is grounded in a few core ideas:
+
+- **Federated, not monolithic.** Instead of one giant model trying to know everything, independent domain experts each specialize deeply — medicine, law, education, engineering — and consult each other across boundaries. An expert in clinical reasoning can ask an expert in legal reasoning for a second opinion. The system learns which experts to trust for which kinds of questions, and each expert knows the limits of its own competence.
+
+- **Memories live in a graph, not a list.** Facts aren't stored as isolated entries. They're connected — dependencies, contradictions, supporting evidence — forming a living structure that can answer "what else would change if this fact turns out to be wrong?"
+
+- **The system knows what it knows — and what it doesn't.** Meta-knowledge runs at every layer: each expert tracks its own track record, the federation routes questions to the right expertise, and the system refuses to answer when it's out of its depth. This is the difference between a confident wrong answer and a honest "I don't know."
+
+The design philosophy is simple: domain experts — doctors, lawyers, engineers — already know what "correct" looks like in their field. They just can't write code. We give them the controls. They define the rules. The AI enforces them.
 
 **The Long Game: Personal Expert Agents**
 
