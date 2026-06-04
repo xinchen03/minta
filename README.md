@@ -570,30 +570,32 @@ Next       Memory Structure  From isolated facts to a living knowledge graph.
                              Dependencies mapped, cascading updates,
                              voice input added. Beliefs that evolve.
 
-Then       Memory Reasoning  A world model that predicts how memories change.
-                             Expert systems that reason across domains.
+Then       Memory Reasoning  Expert reasoning across specialized domains.
+                             Multi-tenant team workspaces.
                              Video processing for enterprise meetings, training.
 
-Beyond     Memory Platform   Multimodal, multi-tenant, enterprise-grade.
-                             Visual rule editor for domain experts.
+Beyond     Memory Platform   The infrastructure for industry-grade personal agents.
+                             Domain experts define rules. AI enforces them.
                              MIT core. Pro for teams and verticals.
 ```
 
-### What Pro Unlocks
+### What's Ahead: Pro & Enterprise
 
-The MIT-licensed core will always handle personal memory — one user, one machine, full quality governance. **Minta Pro** extends this to teams and specialized domains:
+The MIT core handles personal memory — one user, one machine, full quality governance. Beyond that, we're working on:
 
-| Pro Capability | What It Means | Status |
-|---------------|---------------|:------:|
-| **Multi-Tenant Memory** | Shared team knowledge bases with per-member privacy boundaries. Your AI knows what the team knows — without leaking what it shouldn't. | 📋 Planned |
-| **Domain Expert Modules** | Pre-calibrated rule packs for medicine, law, education, and engineering. Not generic prompts — curated knowledge graphs tuned to each vertical's reasoning patterns. | 🔬 Research |
-| **Visual Rule Editor** | Drag-and-drop editor for domain experts to define memory quality rules without writing code. Lawyers, doctors, teachers — they know what "correct" means in their field. We give them the controls. | 📋 Planned |
-| **Enterprise Deployment** | SSO, audit trails, encrypted at rest, on-premise deployment. For teams that need memory governance but can't send data anywhere. | 📋 Planned |
-| **Calibrated Rule Packs** | The open-source core ships with default thresholds. Pro ships with domain-calibrated values — tuned on real expert annotations, not heuristics. | 🔬 Research |
+**Team Edition** (planned)
+Shared knowledge bases with per-member boundaries. Your team's AI knows what the team knows — without leaking what it shouldn't. For engineering teams, research labs, and any group that needs collective memory that stays correct over time.
 
-> **The line:** Memory *mechanics* (detection, decay, retrieval) are MIT — forever. Memory *expertise* (domain rules, calibrated thresholds, vertical reasoning patterns) is Pro. You can build anything with the mechanics. Pro saves you the calibration.
+**Domain Expert Mode** (in research)
+AI that doesn't just remember facts — it reasons about them with domain judgment. Not generic prompts, but deeply tuned to how experts in medicine, law, education, and engineering actually think about correctness. The goal: an AI that knows when a memory is not just stale, but *wrong* — and why.
 
-Interested in Pro? → [xxinchen03@gmail.com](mailto:xxinchen03@gmail.com)
+**The Long Game: Personal Expert Agents**
+
+Every knowledge worker should have an AI that learns from their work, catches their blind spots, and grows more valuable over time — not more cluttered. The open-source core proves the mechanics work. Pro extends this into industry-grade infrastructure that enterprises can embed into their own products, training their own domain experts without sending data to the cloud.
+
+> **The line:** Memory *mechanics* (detection, decay, retrieval) are MIT — forever. Memory *expertise* (domain reasoning, calibrated judgment, team infrastructure) is Pro. You can build anything with the mechanics. Pro saves you years of tuning.
+
+Interested in shaping this? → [xxinchen03@gmail.com](mailto:xxinchen03@gmail.com)
 
 ---
 
