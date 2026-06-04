@@ -551,7 +551,7 @@ See [LICENSE](LICENSE) for details.
 
 ## 🔭 Where This Is Going
 
-Every AI will need memory. But memory without quality control is just a dumpster with a search bar.
+Every AI needs memory. But memory without quality control is just a dumpster with a search bar.
 
 We're building the **memory quality layer** for the AI era — the same way databases got ACID, CI/CD got testing, and code got linting. Memory needs its own correctness guarantee. Minta is that guarantee.
 
@@ -578,6 +578,22 @@ Beyond     Memory Platform   Multimodal, multi-tenant, enterprise-grade.
                              Visual rule editor for domain experts.
                              MIT core. Pro for teams and verticals.
 ```
+
+### What Pro Unlocks
+
+The MIT-licensed core will always handle personal memory — one user, one machine, full quality governance. **Minta Pro** extends this to teams and specialized domains:
+
+| Pro Capability | What It Means | Status |
+|---------------|---------------|:------:|
+| **Multi-Tenant Memory** | Shared team knowledge bases with per-member privacy boundaries. Your AI knows what the team knows — without leaking what it shouldn't. | 📋 Planned |
+| **Domain Expert Modules** | Pre-calibrated rule packs for medicine, law, education, and engineering. Not generic prompts — curated knowledge graphs tuned to each vertical's reasoning patterns. | 🔬 Research |
+| **Visual Rule Editor** | Drag-and-drop editor for domain experts to define memory quality rules without writing code. Lawyers, doctors, teachers — they know what "correct" means in their field. We give them the controls. | 📋 Planned |
+| **Enterprise Deployment** | SSO, audit trails, encrypted at rest, on-premise deployment. For teams that need memory governance but can't send data anywhere. | 📋 Planned |
+| **Calibrated Rule Packs** | The open-source core ships with default thresholds. Pro ships with domain-calibrated values — tuned on real expert annotations, not heuristics. | 🔬 Research |
+
+> **The line:** Memory *mechanics* (detection, decay, retrieval) are MIT — forever. Memory *expertise* (domain rules, calibrated thresholds, vertical reasoning patterns) is Pro. You can build anything with the mechanics. Pro saves you the calibration.
+
+Interested in Pro? → [xxinchen03@gmail.com](mailto:xxinchen03@gmail.com)
 
 ---
 
