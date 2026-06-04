@@ -596,7 +596,9 @@ AI that doesn't just retrieve facts — it reasons about them with domain judgme
 
 - **The system knows what it knows — and what it doesn't.** Meta-knowledge runs at every layer: each expert tracks its own track record, the federation routes questions to the right expertise, and the system refuses to answer when it's out of its depth. This is the difference between a confident wrong answer and a honest "I don't know."
 
-The design philosophy is simple: domain experts — doctors, lawyers, engineers — already know what "correct" looks like in their field. They just can't write code. We give them the controls. They define the rules. The AI enforces them.
+- **Confidence isn't a score. It's a prediction.** Behind every expert judgment, a running model learns how memories and opinions evolve over time. When the expert's output aligns with what the model predicted — trust accumulates. When reality diverges from prediction — something changed, and the system flags it. Over time, it learns to anticipate what *should* happen, and notices when the world breaks the pattern. A memory that contradicts the predicted trajectory isn't just surprising — it's a signal.
+
+The design philosophy is simple: domain experts — doctors, lawyers, engineers — already know what "correct" looks like in their field. They just can't write code. We give them the controls. They define the rules. The AI enforces them, and a world model watches to catch what the rules miss.
 
 **The Long Game: Personal Expert Agents**
 
