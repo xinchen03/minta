@@ -14,6 +14,7 @@ class ContextObject(Base):
         SAEnum(
             "preference", "workflow", "project_context", "decision_criteria",
             "lesson_learned", "writing_style", "rule", "ai_brief", "work_profile",
+            "task_note",
             name="context_object_type",
         ),
         nullable=False,
