@@ -243,7 +243,7 @@ def register(req: RegisterRequest, db: Session = Depends(get_db)):
         username=req.username,
         email=req.email,
         password_hash=hash_password(req.password),
-        email_verified=1 if not SMTP_CONFIGURED else 0,  # auto-verify when SMTP not set
+        email_verified=1,  # auto-verify always (email verification disabled pre-commercialization)
         experiment_condition=random.choice(["control", "treatment"]),
     )
     db.add(user)

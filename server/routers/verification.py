@@ -48,12 +48,22 @@ class VerifyCodeRequest(BaseModel):
 
 @router.post("/send-code")
 def send_verification_code(req: SendCodeRequest):
-    """Send email verification code — auto-verify when SMTP is not configured."""
+    """Send email verification code — auto-verify always (disabled pre-commercialization).
+
+    When MINTA_EMAIL_VERIFICATION_ENABLED is false (default), skips email sending.
+    Set MINTA_EMAIL_VERIFICATION_ENABLED=true to enable real verification for production.
+    """
+    import os
     _check_rate_limit(f"send-code:{req.email}", max_attempts=3, window=120)
 
-    if not SMTP_CONFIGURED:
-        # Auto-verify: no SMTP configured, skip email sending
+    verification_enabled = os.environ.get("MINTA_EMAIL_VERIFICATION_ENABLED", "false").lower() in ("true", "1", "yes")
+
+    if not verification_enabled:
+        # Auto-verify: email verification disabled, skip email sending
         return {"success": True, "message": "验证无需邮件，已自动通过"}
+
+    if not SMTP_CONFIGURED:
+        raise HTTPException(status_code=500, detail="SMTP not configured. Set MINTA_SMTP_USER + MINTA_SMTP_PASS.")
 
     code = "".join(random.choices(string.digits, k=6))
     _verify_codes[req.email] = {"code": code, "expires": time.time() + 300}
@@ -66,7 +76,22 @@ def send_verification_code(req: SendCodeRequest):
 
 @router.post("/verify-code")
 def verify_code(req: VerifyCodeRequest, db: Session = Depends(get_db)):
-    """Verify email verification code and mark the email as verified."""
+    """Verify email verification code and mark the email as verified.
+
+    When MINTA_EMAIL_VERIFICATION_ENABLED is false, auto-passes without code check.
+    """
+    import os
+    verification_enabled = os.environ.get("MINTA_EMAIL_VERIFICATION_ENABLED", "false").lower() in ("true", "1", "yes")
+
+    if not verification_enabled:
+        # Auto-pass: mark email verified without code check
+        user = db.query(User).filter(User.email == req.email).first()
+        if user:
+            user.email_verified = 1
+            db.commit()
+        return {"success": True, "message": "验证无需邮件，已自动通过"}
+
+    # ── Real verification flow (commercialization) ──
     record = _verify_codes.get(req.email)
     if not record:
         raise HTTPException(status_code=400, detail="请先请求验证码")

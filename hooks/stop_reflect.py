@@ -2,7 +2,7 @@
 """Stop hook — trigger slot reflection at session end.
 
 Called when Claude Code session ends.
-Reads CLAUDE_SESSION_ID from environment.
+Reads CLAUDE_SESSION_ID from environment (primary — always safe, never blocks).
 """
 import json
 import os
