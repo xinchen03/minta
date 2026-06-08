@@ -344,8 +344,36 @@ def cmd_init():
 
 # --- Connect ---
 
+def _register_hook_entry(cfg: dict, hook_event: str, script_name: str, python: str, hooks_dst: Path) -> bool:
+    """Register a hook in settings.json if not already present. Returns True if added."""
+    hook_script = str(hooks_dst / script_name)
+    if hook_event not in cfg.get("hooks", {}):
+        cfg.setdefault("hooks", {})[hook_event] = []
+    already = any(
+        h.get("command", "").endswith(script_name)
+        for entry in cfg["hooks"][hook_event]
+        for h in (entry.get("hooks", []) if isinstance(entry, dict) else [])
+    )
+    if not already:
+        cfg["hooks"][hook_event].append({
+            "hooks": [{
+                "type": "command",
+                "command": f"{python} {hook_script}",
+            }]
+        })
+        return True
+    return False
+
+
 def _install_hooks():
-    """Copy hooks to ~/.claude/hooks/ AND register SessionStart hook in settings.json."""
+    """Copy hooks to ~/.claude/hooks/ AND register all Minta hooks in settings.json.
+
+    Registered hooks:
+      - SessionStart:       check Minta connection + inject Context Pack
+      - PostToolUse:        detect correction signals → counter-example inbox
+      - PostToolUseFailure: auto-mark failed tool calls as counter-examples
+      - Stop:               trigger slot reflection at session end
+    """
     hooks_src = ROOT / "hooks"
     hooks_dst = Path.home() / ".claude" / "hooks"
     if not hooks_src.is_dir():
@@ -361,28 +389,24 @@ def _install_hooks():
     if copied:
         print(f"  [OK] {copied} hooks installed -> {hooks_dst}")
 
-    # Register SessionStart hook in settings.json so it runs on every new session
     python = find_python()
-    hook_script = str(hooks_dst / "session_start.py")
     claude_config = Path.home() / ".claude" / "settings.json"
     cfg = _read_json(claude_config)
-    if "hooks" not in cfg:
-        cfg["hooks"] = {}
-    if "SessionStart" not in cfg["hooks"]:
-        cfg["hooks"]["SessionStart"] = []
-    # Check if hook already registered
-    already = any(
-        h.get("command", "").endswith("session_start.py")
-        for h in cfg["hooks"]["SessionStart"]
-        if isinstance(h, dict)
-    )
-    if not already:
-        cfg["hooks"]["SessionStart"].append({
-            "type": "command",
-            "command": f"{python} {hook_script}",
-        })
+
+    # Register all 4 hooks (idempotent — skips if already present)
+    registered = []
+    if _register_hook_entry(cfg, "SessionStart", "session_start.py", python, hooks_dst):
+        registered.append("SessionStart")
+    if _register_hook_entry(cfg, "PostToolUse", "post_tool_use.py", python, hooks_dst):
+        registered.append("PostToolUse")
+    if _register_hook_entry(cfg, "PostToolUseFailure", "post_tool_failure.py", python, hooks_dst):
+        registered.append("PostToolUseFailure")
+    if _register_hook_entry(cfg, "Stop", "stop_reflect.py", python, hooks_dst):
+        registered.append("Stop")
+
+    if registered:
         _write_json(claude_config, cfg)
-        print(f"  [OK] SessionStart hook registered -> checks Minta on every new session")
+        print(f"  [OK] Hooks registered: {', '.join(registered)}")
 
 
 def _setup_editor(editor_key: str) -> bool:
