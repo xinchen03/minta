@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://minta.dev/schemas/compliance-report.schema.json",
+  "title": "Compliance Report",
+  "type": "object",
+  "required": ["profile_id", "manuscript_baseline", "summary", "checks"],
+  "properties": {
+    "profile_id": { "type": "string" },
+    "manuscript_baseline": { "type": "string" },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "summary": {
+      "type": "object",
+      "required": ["PASS", "FAIL", "WARNING", "NOT_APPLICABLE", "NOT_CHECKED", "BLOCKED"],
+      "properties": {
+        "PASS": { "type": "integer" },
+        "FAIL": { "type": "integer" },
+        "WARNING": { "type": "integer" },
+        "NOT_APPLICABLE": { "type": "integer" },
+        "NOT_CHECKED": { "type": "integer" },
+        "BLOCKED": { "type": "integer" }
+      }
+    },
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["rule_id", "status"],
+        "properties": {
+          "rule_id": { "type": "string" },
+          "status": { "enum": ["PASS", "FAIL", "WARNING", "NOT_APPLICABLE", "NOT_CHECKED", "BLOCKED"] },
+          "category": { "type": "string" },
+          "strength": { "type": "string" },
+          "evaluation_mode": { "type": "string" },
+          "requirement": { "type": "string" },
+          "observed": { "type": "object" },
+          "required_value": { "type": "string" },
+          "evidence": { "type": "object" },
+          "recommended_action": { "type": "string" },
+          "evaluator_notes": { "type": "string" }
+        }
+      }
+    }
+  }
+}

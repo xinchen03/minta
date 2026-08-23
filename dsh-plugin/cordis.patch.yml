@@ -1,0 +1,3 @@
+- insert:
+    - id: minta
+      name: '@minta/dsh-plugin'

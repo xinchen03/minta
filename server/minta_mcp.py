@@ -1,36 +1,62 @@
 """
-Minta MCP Server — lets Claude read/write the Minta API through tools.
-Exposes tools to Claude Code, no longer writing local .md files.
+Minta MCP Server — 让 Claude 通过工具直接读写 Minta API。
+暴露 tools 给 Claude Code，不再写本地 .md 文件。
 """
 
 import json
 import os
 import sys
 import time
-import subprocess
-import urllib.request
 import urllib.parse
 from typing import Any, Dict
-from config import MINTA_EXPERT_ENABLED
 
-_PRO_UPGRADE = (
-    "🔒 Expert system is a Minta Pro feature. "
-    "Visit https://github.com/xinchen03/minta for details."
-)
+import requests
+import subprocess
+import urllib.request
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 MINTA_API = os.environ.get("MINTA_API_URL", "http://127.0.0.1:8772")
-API_KEY = os.environ.get("MINTA_API_KEY", "")
-if not API_KEY:
+_api_key_env = os.environ.get("MINTA_API_KEY", "")
+api_key_ready = False
+if not _api_key_env:
     try:
         from config import MINTA_API_KEY as _config_key
-        API_KEY = _config_key
+        if _config_key:
+            _api_key_env = _config_key
     except Exception:
         pass
+API_KEY = _api_key_env
+
+# ── Shared session with connection pooling + retry + timeout ──
+
+_SESSION = None
+
+
+def _get_session():
+    global _SESSION
+    if _SESSION is None:
+        _SESSION = requests.Session()
+        retry = Retry(
+            total=3,
+            backoff_factor=0.5,
+            status_forcelist=[],
+            allowed_methods=["GET", "POST", "PUT", "DELETE"],
+            respect_retry_after_header=True,
+        )
+        adapter = HTTPAdapter(
+            max_retries=retry,
+            pool_connections=4,
+            pool_maxsize=8,
+        )
+        _SESSION.mount("http://", adapter)
+        _SESSION.mount("https://", adapter)
+    return _SESSION
 
 
 def _auth_headers(token: str = "") -> dict:
     """Build auth headers: prefer API Key (env var), fall back to Bearer token."""
-    h = {"Content-Type": "application/json"}
+    h = {"Content-Type": "application/json; charset=utf-8"}
     if API_KEY:
         h["X-API-Key"] = API_KEY
     elif token:
@@ -39,15 +65,27 @@ def _auth_headers(token: str = "") -> dict:
 
 
 def _api(method: str, path: str, token: str = "", body: dict = None) -> dict:
-    """Call Minta API and return JSON."""
+    """Call Minta API and return JSON. 15s timeout, 3 retries on connection errors."""
     url = f"{MINTA_API}{path}"
-    data = json.dumps(body).encode() if body else None
-    req = urllib.request.Request(url, data=data, headers=_auth_headers(token), method=method)
+    headers = _auth_headers(token)
+    kwargs = dict(method=method, url=url, headers=headers, timeout=15)
+    if body:
+        kwargs["json"] = body
     try:
-        with urllib.request.urlopen(req) as resp:
-            return json.loads(resp.read())
-    except urllib.error.HTTPError as e:
-        return {"error": f"HTTP {e.code}: {e.read().decode()}"}
+        resp = _get_session().request(**kwargs)
+        resp.encoding = "utf-8"
+        resp.raise_for_status()
+        return resp.json()
+    except requests.exceptions.Timeout:
+        return {"error": "API timeout after 15s"}
+    except requests.exceptions.ConnectionError as e:
+        return {"error": f"API connection failed (retries exhausted): {e}"}
+    except requests.exceptions.HTTPError as e:
+        try:
+            err_body = e.response.text[:500]
+        except Exception:
+            err_body = "(unable to read response body)"
+        return {"error": f"HTTP {e.response.status_code}: {err_body}"}
     except Exception as e:
         return {"error": str(e)}
 
@@ -55,7 +93,7 @@ def _api(method: str, path: str, token: str = "", body: dict = None) -> dict:
 TOKEN_CACHE: Dict[str, Dict[str, str]] = {}  # username -> {"token": str, "expires": float}
 
 
-def _resolve_auth(username: str = "", password: str = "") -> str:
+def _resolve_auth(username: str, password: str) -> str:
     """Unified auth: API Key takes precedence; falls back to username/password login.
     Returns token string, or empty string on failure."""
     # API Key mode — no username/password needed
@@ -64,14 +102,13 @@ def _resolve_auth(username: str = "", password: str = "") -> str:
     # Username/password mode — must provide both
     if not username or not password:
         return ""
-    import time as _time
     cache_key = f"{username}:{password}"
     cached = TOKEN_CACHE.get(cache_key)
-    if cached and cached["expires"] > _time.time():
+    if cached and cached["expires"] > time.time():
         return cached["token"]
     r = _api("POST", "/api/auth/login", body={"username": username, "password": password})
     if "accessToken" in r:
-        TOKEN_CACHE[cache_key] = {"token": r["accessToken"], "expires": _time.time() + 82800}
+        TOKEN_CACHE[cache_key] = {"token": r["accessToken"], "expires": time.time() + 82800}
         return r["accessToken"]
     return ""
 
@@ -79,7 +116,7 @@ def _resolve_auth(username: str = "", password: str = "") -> str:
 # ── MCP Tool Handlers ──
 
 def minta_login(username: str, password: str) -> str:
-    """Login to Minta account and return the result. Must login before using other tools."""
+    """登录 Minta 账号，返回登录结果。必须先登录才能用其他工具。"""
     token = _resolve_auth(username, password)
     if token:
         return f"✅ 登录成功 ({username})"
@@ -87,7 +124,7 @@ def minta_login(username: str, password: str) -> str:
 
 
 def minta_read_context(username: str, password: str, type_filter: str = "") -> str:
-    """Read the user's Context Objects list. Pass type_filter to filter by type."""
+    """读取用户的 Context Objects 列表。可传入 type_filter 按类型筛选。"""
     token = _resolve_auth(username, password)
     if not token:
         return "❌ 请先登录"
@@ -105,31 +142,41 @@ def minta_read_context(username: str, password: str, type_filter: str = "") -> s
 
 def minta_write_context(username: str, password: str, title: str, type: str,
                         summary: str = "", body: str = "", tags: str = "") -> str:
-    """Write a Context Object to Minta.
-    Available type values: preference, workflow, project_context, decision_criteria, lesson_learned, writing_style, rule, ai_brief, work_profile"""
-    token = _resolve_auth(username, password)
-    if not token:
-        return "❌ 请先登录"
-    tag_list = [t.strip() for t in tags.split(",") if t.strip()] if tags else []
-    body_data = {
-        "title": title,
-        "type": type,
-        "summary": summary,
-        "body": body,
-        "tags": tag_list,
-        "source": "conversation",
-        "status": "active",
-        "confidence": 4,
-    }
-    r = _api("POST", "/api/contextObjects", token=token, body=body_data)
-    if "id" in r:
-        return f"✅ 已保存为 Context Object: {r['id']}"
-    return json.dumps(r, ensure_ascii=False)
+    """写入一条 Context Object 到 Minta。
+    type可选值: preference, workflow, project_context, decision_criteria, lesson_learned, writing_style, rule, ai_brief, work_profile"""
+    try:
+        token = _resolve_auth(username, password)
+        if not token:
+            return "❌ 请先登录"
+        tag_list = [t.strip() for t in tags.split(",") if t.strip()] if tags else []
+        body_data = {
+            "title": title,
+            "type": type,
+            "summary": summary,
+            "body": body,
+            "tags": tag_list,
+            "source": "conversation",
+            "status": "active",
+            "confidence": 4,
+        }
+        r = _api("POST", "/api/contextObjects", token=token, body=body_data)
+        if "id" in r:
+            return f"✅ 已保存为 Context Object: {r['id']}"
+        return json.dumps(r, ensure_ascii=False)
+    except Exception as e:
+        import traceback
+        tb = traceback.format_exc()
+        try:
+            with open("C:/Users/Lenovo/.claude/projects/C--Users-Lenovo/memory/logs/mcp_debug.log", "a", encoding="utf-8") as f:
+                f.write(f"=== minta_write_context CRASH ===\n{tb}\n")
+        except:
+            pass
+        return json.dumps({"error": f"write_context exception: {e}\n{tb}"})
 
 
 def minta_append_inbox(username: str, password: str, text: str, confidence: float = 0.8, tags: str = "") -> str:
-    """Write a counter-example/reminder to the Inbox.
-    Call this tool immediately when the user corrects your behavior or tells you something was wrong."""
+    """写入一条反例/提醒到 Inbox（收件箱）。
+    当用户纠正你的行为、告诉你做错了什么时，立即调用此工具。"""
     token = _resolve_auth(username, password)
     if not token:
         return "❌ 请先登录"
@@ -142,7 +189,7 @@ def minta_append_inbox(username: str, password: str, text: str, confidence: floa
 
 
 def minta_search_context(username: str, password: str, query: str) -> str:
-    """Search Context Objects (matches title, summary, tags)."""
+    """搜索 Context Objects（匹配标题、摘要、标签）。"""
     token = _resolve_auth(username, password)
     if not token:
         return "❌ 请先登录"
@@ -161,10 +208,10 @@ def minta_search_context(username: str, password: str, query: str) -> str:
     return "\n".join(lines)
 
 
-# ── MCP Protocol: Tool Definitions ──
+# ── MCP Protocol: 工具定义 ──
 
 def minta_list_inbox(username: str, password: str, status: str = "pending") -> str:
-    """List items in the Inbox."""
+    """列出 Inbox 中的条目。"""
     token = _resolve_auth(username, password)
     if not token:
         return "请先登录"
@@ -185,7 +232,7 @@ def minta_list_inbox(username: str, password: str, status: str = "pending") -> s
 
 
 def minta_confirm_inbox(username: str, password: str, inbox_id: int, context_type: str = "lesson_learned") -> str:
-    """Confirm an Inbox item and convert it to a Context Object."""
+    """确认一条 Inbox 条目，转为 Context Object。"""
     token = _resolve_auth(username, password)
     if not token:
         return "请先登录"
@@ -197,18 +244,18 @@ def minta_confirm_inbox(username: str, password: str, inbox_id: int, context_typ
 
 
 def minta_discard_inbox(username: str, password: str, inbox_id: int) -> str:
-    """Discard an Inbox item."""
+    """丢弃一条 Inbox 条目。"""
     token = _resolve_auth(username, password)
     if not token:
         return "请先登录"
-    r = _api("POST", f"/api/inbox/{inbox_id}/discard", token=token)
+    r = _api("POST", "/api/inbox/discard", token=token, body=[inbox_id])
     if r.get("success"):
         return f"Discarded inbox #{inbox_id}"
     return json.dumps(r, ensure_ascii=False)
 
 
 def minta_get_pack(username: str, password: str, scene: str = "auto") -> str:
-    """Get the Context Pack — AI context injection text auto-generated from 7 slots."""
+    """获取 Context Pack —— 从 7 个槽位自动生成的 AI 上下文注入文本。"""
     token = _resolve_auth(username, password)
     if not token:
         return "请先登录"
@@ -219,7 +266,7 @@ def minta_get_pack(username: str, password: str, scene: str = "auto") -> str:
 
 
 def minta_get_slot(username: str, password: str, label: str) -> str:
-    """Read the content of a slot. label: persona/preferences/knowledge/counter_examples/skills/pending/rules"""
+    """读取某个槽位的内容。label: persona/preferences/knowledge/counter_examples/skills/pending/rules"""
     token = _resolve_auth(username, password)
     if not token:
         return "请先登录"
@@ -230,7 +277,7 @@ def minta_get_slot(username: str, password: str, label: str) -> str:
 
 
 def minta_update_slot(username: str, password: str, label: str, content: str) -> str:
-    """Update the content of a slot."""
+    """更新某个槽位的内容。"""
     token = _resolve_auth(username, password)
     if not token:
         return "请先登录"
@@ -245,8 +292,6 @@ def minta_update_slot(username: str, password: str, label: str, content: str) ->
 
 def minta_expert_infer(username: str, password: str, message: str, domain: str) -> str:
     """Run expert inference on a user message (symptom/question)."""
-    if not MINTA_EXPERT_ENABLED:
-        return _PRO_UPGRADE
     token = _resolve_auth(username, password)
     if not token:
         return "请先登录"
@@ -258,8 +303,6 @@ def minta_expert_infer(username: str, password: str, message: str, domain: str) 
 
 def minta_expert_list(username: str, password: str) -> str:
     """List available experts and their rule counts."""
-    if not MINTA_EXPERT_ENABLED:
-        return _PRO_UPGRADE
     token = _resolve_auth(username, password)
     if not token:
         return "请先登录"
@@ -280,8 +323,6 @@ def minta_expert_list(username: str, password: str) -> str:
 def minta_expert_consult(username: str, password: str, message: str,
                           primary_domain: str, consult_domain: str) -> str:
     """Cross-domain consultation — ask another expert for opinion."""
-    if not MINTA_EXPERT_ENABLED:
-        return _PRO_UPGRADE
     token = _resolve_auth(username, password)
     if not token:
         return "请先登录"
@@ -301,8 +342,6 @@ def minta_expert_consult(username: str, password: str, message: str,
 
 def minta_expert_trust(username: str, password: str, domain: str) -> str:
     """Get trust/confidence metrics (Goldman metrics) for a domain."""
-    if not MINTA_EXPERT_ENABLED:
-        return _PRO_UPGRADE
     token = _resolve_auth(username, password)
     if not token:
         return "请先登录"
@@ -311,9 +350,7 @@ def minta_expert_trust(username: str, password: str, domain: str) -> str:
 
 
 def minta_expert_feedback(username: str, password: str, log_id: int, signal: str) -> str:
-    """Submit expert inference feedback. signal is 'positive' (diagnosis correct) or 'negative' (diagnosis incorrect)."""
-    if not MINTA_EXPERT_ENABLED:
-        return _PRO_UPGRADE
+    """提交 Expert 推理反馈。signal 为 'positive'（诊断正确）或 'negative'（诊断错误）。"""
     token = _resolve_auth(username, password)
     if not token:
         return "请先登录"
@@ -760,27 +797,21 @@ _REQ_ID = 0
 
 
 def _ensure_api_running():
-    """stdio mode: auto-start the Minta API if it's not already running (max 12s wait).
-
-    Uses the port from MINTA_API env var (default 8772) so custom ports are respected.
-    """
-    import re
+    """stdio 模式下：如果 API 服务没跑，自动拉起（最多等 12 秒）。"""
     api_health = f"{MINTA_API.rstrip('/')}/ping"
     try:
-        urllib.request.urlopen(urllib.request.Request(api_health), timeout=2)
-        return  # already running
+        urllib.request.urlopen(
+            urllib.request.Request(api_health), timeout=2
+        )
+        return  # 已经在跑了
     except Exception:
         pass
-
-    # Extract port from MINTA_API URL (e.g. http://127.0.0.1:4891/ping → 4891)
-    port_match = re.search(r':(\d{4,5})', MINTA_API)
-    api_port = port_match.group(1) if port_match else "8772"
 
     server_dir = os.path.dirname(os.path.abspath(__file__))
     try:
         subprocess.Popen(
             [sys.executable, "-m", "uvicorn", "main:app",
-             "--host", "127.0.0.1", "--port", str(api_port),
+             "--host", "127.0.0.1", "--port", "8772",
              "--log-level", "error"],
             cwd=server_dir,
             stdout=subprocess.DEVNULL,
@@ -788,12 +819,14 @@ def _ensure_api_running():
             start_new_session=True,
         )
     except Exception:
-        return  # don't block — tool calls will return readable errors
+        return  # 启动失败不阻塞，tool call 会返回可读错误
 
-    for _ in range(24):  # wait up to 12 seconds
+    for _ in range(24):  # 最多等 12 秒
         time.sleep(0.5)
         try:
-            urllib.request.urlopen(urllib.request.Request(api_health), timeout=1)
+            urllib.request.urlopen(
+                urllib.request.Request(api_health), timeout=1
+            )
             return
         except Exception:
             pass
@@ -809,10 +842,9 @@ def _respond_error(id_val, code, message):
 
 def main():
     global _REQ_ID
-    # Force UTF-8 stdout on Windows (defaults to GBK, which corrupts MCP JSON-RPC)
-    if hasattr(sys.stdout, "reconfigure"):
-        sys.stdout.reconfigure(encoding="utf-8")
     _ensure_api_running()
+    # Force UTF-8 on Windows; default cp936 garbles Chinese from Claude Code
+    sys.stdin.reconfigure(encoding="utf-8")
     for line in sys.stdin:
         line = line.strip()
         if not line:

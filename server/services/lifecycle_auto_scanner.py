@@ -18,7 +18,7 @@ from models.inbox import InboxItem
 
 logger = logging.getLogger(__name__)
 
-CONFIG_PATH = Path(__file__).resolve().parent.parent.parent / "data" / "auto_scan_config.json"
+CONFIG_PATH = Path(__file__).resolve().parent.parent.parent / "auto_scan_config.json"
 DEFAULT_INTERVAL_HOURS = 24
 
 # ── In-memory state ──

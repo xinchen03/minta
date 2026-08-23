@@ -51,3 +51,11 @@ node_modules/
 *.swp
 data/
 .minta_pids.json
+
+# Minta-next specific
+chroma_data*/
+*.pyd
+.minta_pids.json
+feedback/
+archive/
+draft/
