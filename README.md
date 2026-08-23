@@ -24,7 +24,9 @@
 
 ## Why Minta
 
-Every memory system stores more. Minta's job is to make sure what the agent knows is **still true** — and that it doesn't claim what it hasn't done.
+> **Other memory systems store. Minta verifies what remains true.**
+
+Memory has three tenses: it *was* true, it *is* true, and it is *still* true today. Almost every memory system optimizes the first. Minta is built for the second and third.
 
 | What others do | What Minta does |
 |---|---|
@@ -32,6 +34,15 @@ Every memory system stores more. Minta's job is to make sure what the agent know
 | Store everything forever | Detect what expired, flag it, decide with you |
 | Treat all memories equally | Type-specific decay: preferences last longer than project state |
 | Hope the LLM figures it out | Lifecycle scan + health score + **staged gates** (no over-claims) |
+
+### The same agent, with or without Minta
+
+| | Without Minta | With Minta |
+|---|---|---|
+| A fact expires | Keeps using the old truth | Marks it stale, archives it, shows you |
+| Two memories conflict | Returns both, glues them together | Surfaces the contradiction; you decide |
+| You correct the agent | Forgets by next session | Inbox → your confirm → becomes a rule |
+| Context grows | 10,000 memories in one prompt | Token-budgeted context pack |
 
 **Contents** · [Why Minta](#why-minta) · [Quick Start](#quick-start) · [Features](#features) · [Open-Core](#open-core-open-code-locked-assets) · [Benchmarks](#benchmarks) · [DeepSeek Harness](#deepseek-harness) · [Roadmap](#roadmap)
 
