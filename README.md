@@ -50,8 +50,6 @@ The full Minta workspace (`Personal Context Layer`, V8.3 engine UI). The layers 
 
 </p>
 
-*(A short demo video ships in the repo: `assets/demo.mp4` — open it after cloning.)*
-
 Three layers, one engine:
 
 ```
@@ -77,7 +75,7 @@ Or Docker: `docker compose up -d`. Then connect your agent:
 ```bash
 # any MCP-capable editor/agent — Claude Code / Codex / Cursor / dsh
 python minta_cli.py connect claude
-# DeepSeek Harness (verified) → see docs/dsh-integration.md
+# DeepSeek Harness: dsh plugin --profile web add @xxinchen/dsh-plugin  (or connect via MCP → docs/dsh-integration.md)
 ```
 
 The web UI opens at `http://127.0.0.1:8772` — memory health dashboard, 3D knowledge graph, inbox review, expert panels.
@@ -119,7 +117,7 @@ Agent integration per editor → [`docs/mcp-integration.md`](docs/mcp-integratio
 | Research compliance engine + domain pack (CUMCM stages) | Sports-medicine / clinical packs |
 | Web dist · MCP · DSH integration · 12 guides | Data flywheel: calibration sets, weights, rule bases |
 
-**The commercial line is `accumulated precision`, not code.** You can clone everything; you can't clone what 1,000 users corrected into the calibration.
+The hosted tiers above are roadmap features — the open core is always a complete, runnable memory system.
 
 ## Benchmarks
 
@@ -199,10 +197,9 @@ actually done. The long thesis:
 
 ## Star Us
 
-🔭 **Minta is a two-person research project.** A star tells the next
-contributor, integrator, and journal reviewer that this experiment is worth
-their attention. One click, three seconds, and it funds nothing — but it funds
-everything.
+🔭 **If Minta saved you an hour, give it a ★.** One click, three seconds —
+and it tells the next contributor, integrator, and journal reviewer that this
+experiment deserves their attention.
 
 ## References & Lineage
 

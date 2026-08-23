@@ -48,8 +48,6 @@
 | <img src="assets/ui/ui-skills.png" width="420"> | <img src="assets/ui/ui-research.png" width="420"> |
 | **Skills Library** — 50 登録ワークフロー | **Research Workspace** — プロジェクト、エビデンス、実行パッケージ |
 
-*(短いデモ動画はリポジトリ内に同梱:`assets/demo.mp4` — clone 後に開いてください。)*
-
 3 つのレイヤー、1 つのエンジン:
 
 ```
@@ -74,7 +72,7 @@ python minta_cli.py start          # API :8772 · Autopilot :18730 · MCP :18721
 ```bash
 # 任意の MCP 対応エディタ/エージェント — Claude Code / Codex / Cursor / dsh
 python minta_cli.py connect claude
-# DeepSeek Harness(検証済み)→ docs/dsh-integration.md
+# DeepSeek Harness: dsh plugin --profile web add @xxinchen/dsh-plugin(MCP 接続は docs/dsh-integration.md)
 ```
 
 Web UI は `http://127.0.0.1:8772` — メモリ健康ダッシュボード、3D 知識グラフ、受信箱レビュー、エキスパートパネル。
@@ -115,7 +113,7 @@ python -c "import secrets; print('MINTA_API_KEY=minta_'+secrets.token_hex(32))"
 | 研究コンプライアンスエンジン + ドメインパック | スポーツ医学 / 臨床パック |
 | Web dist · MCP · DSH 統合 · 12 ガイド | データフライホイール: 校正セット、重み、ルールベース |
 
-**商業ラインは「累積精度」であり、コードではない。** 何でも clone できますが、1,000 人のユーザー訂正が校正に沈殿したものは clone できません。
+上の表の右側のホステッド層は**将来のロードマップ機能**です — オープンコアは常に完全・実行可能なメモリシステムです。
 
 ## ベンチマーク
 
@@ -178,7 +176,7 @@ good-first-issue PR 歓迎: `entity_linker` の英語パターン、実在感の
 
 ## スターをお願いします
 
-🔭 **Minta は二人の研究プロジェクトです。** スターひとつが、次の貢献者・インテグレーター・ジャーナル査読者に「この実験は注目に値する」と伝えます。
+🔭 **Minta が 1 時間を節約したなら、★ をひとつ。** 1 クリック、3 秒——次の貢献者・インテグレーター・査読者に「この実験は注目に値する」と伝わります。
 
 ## 思想的起源と系譜
 

@@ -48,8 +48,6 @@
 | <img src="assets/ui/ui-skills.png" width="420"> | <img src="assets/ui/ui-research.png" width="420"> |
 | **Skills Library** — 50 个已注册工作流 | **Research Workspace** — 项目、证据、运行包 |
 
-*(简短 demo 视频同步在仓库里:`assets/demo.mp4` —— clone 后直接打开。)*
-
 三层的引擎:
 
 ```
@@ -74,7 +72,7 @@ python minta_cli.py start          # API :8772 · Autopilot :18730 · MCP :18721
 ```bash
 # 任意 MCP 编辑器/智能体 — Claude Code / Codex / Cursor / dsh
 python minta_cli.py connect claude
-# DeepSeek Harness(已验证)→ 见 docs/dsh-integration.md
+# DeepSeek Harness:dsh plugin --profile web add @xxinchen/dsh-plugin(或走 MCP → docs/dsh-integration.md)
 ```
 
 Web 界面自动打开于 `http://127.0.0.1:8772` — 记忆健康仪表盘、3D 知识图谱、收件箱审核、专家面板。
@@ -115,7 +113,7 @@ python -c "import secrets; print('MINTA_API_KEY=minta_'+secrets.token_hex(32))" 
 | 科研合规引擎 + 域包 | 运动医学 / 临床域包 |
 | Web dist · MCP · DSH 集成 · 12 篇指南 | 数据飞轮:校准集、权重、规则库 |
 
-**商业分界线是"累积精度",不是代码。** 你可以 clone 一切;但克隆不了 1,000 个用户纠错后沉淀进校准的东西。
+上表右侧的托管层属于**未来规划能力**——开放核心永远是完整可运行的记忆系统。
 
 ## 基准测试
 
@@ -178,7 +176,7 @@ python -m pytest tests/                # 服务端测试
 
 ## 求星
 
-🔭 **Minta 是两人研究项目。** 一个星标告诉下一位贡献者、集成者与期刊审稿人:这个实验值得他们投入。一键三秒,星标不付房租——但它支付一切。
+🔭 **如果 Minta 帮你省了一小时,点个 ★。** 一键,三秒——它会告诉下一位贡献者、集成者与审稿人:这个实验值得他们关注。
 
 ## 思想来源与传承
 
