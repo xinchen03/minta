@@ -18,7 +18,7 @@
   <a href="#benchmarks"><img src="https://img.shields.io/badge/MCP-19%20tools-orange"></a>
 </p>
 
-> ⭐ New (2026-08): **open-core v2** — memory engine + research compliance engine + expert domain pack, now with **DeepSeek Harness integration (verified)**. The paper behind the quality layer is under review at *Information Processing & Management*.
+> ⭐ New (2026-08): **open-core v2** — memory engine + research compliance engine + expert domain pack, now with **DeepSeek Harness integration (verified)**.
 
 ---
 
@@ -137,7 +137,6 @@ Minta started as the memory layer of a research workflow — literature notes, m
 
 Companion execution skills (Apache-2.0, separate repo): [nature-skills](https://github.com/Yuan1z0825/nature-skills) — reading, figures, citations, polishing.
 
-**Cite:** Chen X., et al. *A Governance Framework for Quality–Utility–Privacy Trade-Offs in Synthetic Athlete Monitoring Data.* Journal of Science and Medicine in Sport (in review); and the IP&M memory-quality paper (available on request).
 
 ## DeepSeek Harness
 
@@ -181,7 +180,6 @@ actually done. The long thesis:
 
 ## Roadmap
 
-- **v2.1** — IP&M reproduction scripts; conformal calibration UI
 - **2026 Q4** — **hosted API** (full precision, monitoring), sports-medicine domain pack, npm plugin v1 release
 - **2027 Q1** — enterprise private deployment + governance audit reports; SME (structure-mapping) engine public
 - **2027** — multi-agent shared memory workspaces (team context layers)
@@ -191,7 +189,6 @@ actually done. The long thesis:
 - 🐛 **GitHub Issues** — bugs, feature requests (we respond fast)
 - 💬 **GitHub Discussions** — questions, RFCs, show-your-work
 - 📮 **Research contact** — papers, collaboration & governance consulting: open an issue tagged `research` or DM via Discussions.
-- 🎓 **Academic** — the IP&M memory-quality paper and the JSAMS data-governance paper
   are the publishable signs of this repo's claims; HackerNews/DSH plugin discussions
   welcome at every release.
 

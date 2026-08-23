@@ -18,7 +18,7 @@
   <a href="#ベンチマーク"><img src="https://img.shields.io/badge/MCP-19%20tools-orange"></a>
 </p>
 
-> ⭐ 新着 (2026-08): **オープンコア v2** — メモリエンジン + 研究コンプライアンスエンジン + 専門ドメインパック、**DeepSeek Harness 統合(検証済み)**。品質レイヤーの背後にある論文は *Information Processing & Management* で査読中。
+> ⭐ 新着 (2026-08): **オープンコア v2** — メモリエンジン + 研究コンプライアンスエンジン + 専門ドメインパック、**DeepSeek Harness 統合(検証済み)**。
 
 ---
 
@@ -133,7 +133,6 @@ Minta はもともと研究ワークフローのメモリ層として始まり�
 
 補完スキル(Apache-2.0、別リポジトリ): [nature-skills](https://github.com/Yuan1z0825/nature-skills) — 読解、図、引用、推敲。
 
-**引用:** Chen X. et al., *Governing Synthetic Athlete Monitoring Data…* (JSAMS 査読中); IP&M メモリ品質論文(依頼可)。
 
 ## DeepSeek Harness
 
@@ -172,11 +171,9 @@ good-first-issue PR 歓迎: `entity_linker` の英語パターン、実在感の
 - 🐛 **GitHub Issues** — バグ、機能リクエスト(迅速対応)
 - 💬 **GitHub Discussions** — 質問、RFC、作品披露
 - 📮 **研究連絡** — 論文・共同研究・ガバナンス相談: `research` タグで Issue、または Discussions へ
-- 🎓 **学術** — IP&M メモリ品質論文と JSAMS データガバナンス論文がこの主張の出版証拠
 
 ## スターをお願いします
 
-🔭 **Minta が 1 時間を節約したなら、★ をひとつ。** 1 クリック、3 秒——次の貢献者・インテグレーター・査読者に「この実験は注目に値する」と伝わります。
 
 ## 思想的起源と系譜
 
@@ -190,7 +187,6 @@ good-first-issue PR 歓迎: `entity_linker` の英語パターン、実在感の
 
 ## ロードマップ
 
-- **v2.1** — IP&M 再現スクリプト、共形校正 UI
 - **2026 Q4** — ホステッド API(全精度・モニタリング)、スポーツ医学パック、npm プラグイン v1
 - **2027 Q1** — エンタープライズオンプレミス + ガバナンス監査レポート、SME エンジン公開
 - **2027** — マルチエージェント共有メモリワークスペース

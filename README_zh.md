@@ -18,7 +18,7 @@
   <a href="#基准测试"><img src="https://img.shields.io/badge/MCP-19%20tools-orange"></a>
 </p>
 
-> ⭐ 新消息(2026-08):**开放核心 v2** —— 记忆引擎 + 科研合规引擎 + 专家域包,并已接入 **DeepSeek Harness(验证通过)**。质量层背后的论文正在 *Information Processing & Management* 外审中。
+> ⭐ 新消息(2026-08):**开放核心 v2** —— 记忆引擎 + 科研合规引擎 + 专家域包,并已接入 **DeepSeek Harness(验证通过)**。
 
 ---
 
@@ -133,7 +133,6 @@ Minta 最初就是科研工作流的记忆层——文献笔记、稿件清单�
 
 配套执行技能(Apache-2.0,独立仓库):[nature-skills](https://github.com/Yuan1z0825/nature-skills) — 阅读、制图、引用、润色。
 
-**引用:** Chen X. 等,《Governing Synthetic Athlete Monitoring Data…》(JSAMS 外审);以及 IP&M 记忆质量论文(可按需索取)。
 
 ## DeepSeek Harness
 
@@ -172,7 +171,6 @@ python -m pytest tests/                # 服务端测试
 - 🐛 **GitHub Issues** — bug、功能请求(响应快)
 - 💬 **GitHub Discussions** — 问题、RFC、展示作品
 - 📮 **科研联系** — 论文、合作、治理咨询:开 issue 打 `research` 标签或 Discussion 私信
-- 🎓 **学术** — IP&M 记忆质量论文与 JSAMS 数据治理论文是本仓库主张的出版证据
 
 ## 求星
 
@@ -190,7 +188,6 @@ python -m pytest tests/                # 服务端测试
 
 ## 路线图
 
-- **v2.1** — IP&M 复现脚本;conformal 校准 UI
 - **2026 Q4** — 托管 API(全精度、监控)、运动医学域包、npm 插件 v1
 - **2027 Q1** — 企业私有化 + 治理审计报告;SME(结构映射)引擎公开
 - **2027** — 多智能体共享记忆工作区(团队上下文层)
