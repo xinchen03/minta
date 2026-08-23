@@ -129,7 +129,7 @@ python -c "import secrets; print('MINTA_API_KEY=minta_'+secrets.token_hex(32))"
 
 ## 研究ファースト
 
-Minta はもともと研究ワークフローのメモリ層として始まりました — 文献ノート、原稿チェックリスト、ジャーナルコンプライアンス。`runtime/compliance/` と `docs/interaction-guide.md` 参照。
+Minta はもともと研究ワークフローのメモリ層として始まりました — 文献ノート、原稿チェックリスト、ジャーナルコンプライアンス。`runtime/compliance/` と `docs/interaction-guide.md` 参照。フレームワーク(メモリ品質・データガバナンス)の論文は執筆中です。
 
 補完スキル(Apache-2.0、別リポジトリ): [nature-skills](https://github.com/Yuan1z0825/nature-skills) — 読解、図、引用、推敲。
 
@@ -170,7 +170,7 @@ good-first-issue PR 歓迎: `entity_linker` の英語パターン、実在感の
 
 - 🐛 **GitHub Issues** — バグ、機能リクエスト(迅速対応)
 - 💬 **GitHub Discussions** — 質問、RFC、作品披露
-- 📮 **研究連絡** — 論文・共同研究・ガバナンス相談: `research` タグで Issue、または Discussions へ
+- 📧 **連絡先**: xxinchen03@gmail.com(研究協力・相談)
 
 ## スターをお願いします
 

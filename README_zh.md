@@ -140,7 +140,7 @@ python -c "import secrets; print('MINTA_API_KEY=minta_'+secrets.token_hex(32))" 
 
 ## 科研优先
 
-Minta 最初就是科研工作流的记忆层——文献笔记、稿件清单、期刊合规、裁决门控的诉求追踪。见 `runtime/compliance/` 与 `docs/interaction-guide.md`。
+Minta 最初就是科研工作流的记忆层——文献笔记、稿件清单、期刊合规、裁决门控的诉求追踪。见 `runtime/compliance/` 与 `docs/interaction-guide.md`。描述本框架(记忆质量、数据治理)的论文正在撰写中。
 
 配套执行技能(Apache-2.0,独立仓库):[nature-skills](https://github.com/Yuan1z0825/nature-skills) — 阅读、制图、引用、润色。
 
@@ -181,7 +181,7 @@ python -m pytest tests/                # 服务端测试
 
 - 🐛 **GitHub Issues** — bug、功能请求(响应快)
 - 💬 **GitHub Discussions** — 问题、RFC、展示作品
-- 📮 **科研联系** — 论文、合作、治理咨询:开 issue 打 `research` 标签或 Discussion 私信
+- 📧 **直接联系**:xxinchen03@gmail.com(科研合作、咨询)
 
 ## 求星
 

@@ -144,7 +144,7 @@ The hosted tiers above are roadmap features — the open core is always a comple
 
 ## Research first
 
-Minta started as the memory layer of a research workflow — literature notes, manuscript checklists, journal compliance, verdict-gated claim tracking. See `runtime/compliance/` and `docs/interaction-guide.md`.
+Minta started as the memory layer of a research workflow — literature notes, manuscript checklists, journal compliance, verdict-gated claim tracking. See `runtime/compliance/` and `docs/interaction-guide.md`. Manuscripts describing the framework (memory quality; data governance) are in preparation.
 
 Companion execution skills (Apache-2.0, separate repo): [nature-skills](https://github.com/Yuan1z0825/nature-skills) — reading, figures, citations, polishing.
 
@@ -199,7 +199,7 @@ actually done. The long thesis:
 
 - 🐛 **GitHub Issues** — bugs, feature requests (we respond fast)
 - 💬 **GitHub Discussions** — questions, RFCs, show-your-work
-- 📮 **Research contact** — papers, collaboration & governance consulting: open an issue tagged `research` or DM via Discussions.
+- 📧 **Contact**: xxinchen03@gmail.com (direct; research collaboration, consulting)
   are the publishable signs of this repo's claims; HackerNews/DSH plugin discussions
   welcome at every release.
 
