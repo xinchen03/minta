@@ -162,7 +162,7 @@ We welcome good-first-issue PRs: `entity_linker` English patterns, richer demo s
 
 - Local-first: database, vectors and logs stay on your machine. No telemetry by default.
 - Data export / delete: `GET /api/user/export-data` · `DELETE /api/user/delete-data` (authenticated).
-- Secrets: generated on first run into `.minta_api_key` (never committed); `MINTA_ADMIN_IDS` gates admin APIs (unset = nobody).
+- Secrets: generated on first run into `.minta_api_key` (never committed); privileged APIs are off by default unless explicitly configured.
 - See `SECURITY.md` for disclosure policy.
 
 ## Vision: Where This Is Going

@@ -158,7 +158,7 @@ good-first-issue PR 歓迎: `entity_linker` の英語パターン、実在感の
 
 - ローカルファースト: データベース・ベクトル・ログはマシン内に留まる。デフォルトでテレメトリなし。
 - エクスポート/削除: `GET /api/user/export-data` · `DELETE /api/user/delete-data`(認証済み)。
-- シークレット: 初回実行時に生成(`.minta_api_key`、コミット回避)。`MINTA_ADMIN_IDS` が管理 API をゲート(未設定=誰もアクセス不可)。
+- シークレット: 初回実行時に生成(`.minta_api_key`、コミット回避)。特権 API は明示的に設定しない限り無効。
 - 開示ポリシーは `SECURITY.md`。
 
 ## ビジョン: どこへ向かうか

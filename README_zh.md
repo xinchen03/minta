@@ -158,7 +158,7 @@ python -m pytest tests/                # 服务端测试
 
 - 本地优先:数据库、向量、日志留在你的机器;默认零遥测。
 - 数据导出/删除:`GET /api/user/export-data` · `DELETE /api/user/delete-data`(需认证)。
-- 密钥:首次运行生成(`.minta_api_key`,永不提交);`MINTA_ADMIN_IDS` 管理后台接口门槛(不设=无人可入)。
+- 密钥:首次运行生成(`.minta_api_key`,永不提交);特权 API 默认关闭,除非显式配置。
 - 披露策略见 `SECURITY.md`。
 
 ## 愿景:要去哪
