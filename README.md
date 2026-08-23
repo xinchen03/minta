@@ -82,6 +82,23 @@ python minta_cli.py connect claude
 
 The web UI opens at `http://127.0.0.1:8772` — memory health dashboard, 3D knowledge graph, inbox review, expert panels.
 
+### Configuration & Keys (first run)
+
+```bash
+cp .env.example .env    # then edit secrets
+python -c "import secrets; print('MINTA_API_KEY=minta_'+secrets.token_hex(32))"  # generate a secure key
+```
+
+| Variable | Default | What it does |
+|---|---|---|
+| `MINTA_DATABASE_URL` | `sqlite:///./minta.db` | Zero-config SQLite; switch to MySQL in one line |
+| `MINTA_JWT_SECRET` | *(must set)* | Session signing secret — generate, don't copy |
+| `MINTA_API_KEY` | auto-generated on first run | Programmatic access + MCP (connect your editor → `python minta_cli.py connect claude`) |
+| `MINTA_ADMIN_IDS` | unset = **nobody** | Comma-separated admin user ids; unset means no admin API access |
+
+Full variable reference, SMTP, CORS, feature flags → [`docs/configuration.md`](docs/configuration.md).
+Agent integration per editor → [`docs/mcp-integration.md`](docs/mcp-integration.md).
+
 ## Features
 
 | Layer | Feature | What you get |

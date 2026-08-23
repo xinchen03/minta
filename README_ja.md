@@ -84,6 +84,22 @@ python minta_cli.py connect claude
 
 Web UI は `http://127.0.0.1:8772` — メモリ健康ダッシュボード、3D 知識グラフ、受信箱レビュー、エキスパートパネル。
 
+### 設定とキー(初回実行)
+
+```bash
+cp .env.example .env
+python -c "import secrets; print('MINTA_API_KEY=minta_'+secrets.token_hex(32))"
+```
+
+| 変数 | デフォルト | 説明 |
+|---|---|---|
+| `MINTA_DATABASE_URL` | `sqlite:///./minta.db` | ゼロ設定 SQLite;1 行で MySQL へ |
+| `MINTA_JWT_SECRET` | *(要設定)* | セッション署名シークレット — 生成する、コピーしない |
+| `MINTA_API_KEY` | 初回起動時に自動生成 | プログラムアクセス + MCP(`python minta_cli.py connect claude`) |
+| `MINTA_ADMIN_IDS` | 未設定=**誰もアクセス不可** | カンマ区切りの管理者ユーザー id |
+
+変数リファレンス(SMTP、CORS、フラグ)→ [`docs/configuration.md`](docs/configuration.md)。エージェント接続 → [`docs/mcp-integration.md`](docs/mcp-integration.md)。
+
 ## 機能
 
 | レイヤー | 機能 | 得られるもの |
