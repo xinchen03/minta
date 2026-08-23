@@ -50,12 +50,7 @@ The full Minta workspace (`Personal Context Layer`, V8.3 engine UI). The layers 
 
 </p>
 
-<details>
-<summary><b>▶ Demo video</b> (local-first run)</summary>
-
-<video src="assets/demo.mp4" controls width="860"></video>
-If the player doesn't render, open <code>assets/demo.mp4</code> after cloning.
-</details>
+*(A short demo video ships in the repo: `assets/demo.mp4` — open it after cloning.)*
 
 Three layers, one engine:
 
@@ -154,11 +149,56 @@ We welcome good-first-issue PRs: `entity_linker` English patterns, richer demo s
 - Secrets: generated on first run into `.minta_api_key` (never committed); `MINTA_ADMIN_IDS` gates admin APIs (unset = nobody).
 - See `SECURITY.md` for disclosure policy.
 
+## Vision: Where This Is Going
+
+Memory is the easy part; *truth* is the product. The agent era already has plenty of
+"remember more" systems. The bottleneck is the opposite — AIs confidently serve stale,
+contradicted, or unearned claims. Minta's answer is a **context quality layer**:
+the memory knows its own health (`stale / conflict / redundant / fragile`), the expert
+layer knows its own limits (calibrated coverage), and the claim gates know what was
+actually done. The long thesis:
+
+- **Personal**: every AI assistant, every session starts from a context hub that
+  already understands you — stop re-onboarding your AI.
+- **Team / enterprise**: memory, expertise, and compliance checks shared across a
+  research group or a clinical unit — with audit trails and governance reports.
+- **Vertical**: sports-medicine, clinical-triage, and manufacturing expert packs
+  layered on the same engine, tuned by their users' corrections (data flywheel).
+
 ## Roadmap
 
-- 2026 Q4 — hosted API (full precision, monitoring), sports-medicine domain pack
-- 2027 Q1 — enterprise private deployment + governance audit reports
-- v2.1 — paper reproduction scripts (IP&M)
+- **v2.1** — IP&M reproduction scripts; conformal calibration UI
+- **2026 Q4** — **hosted API** (full precision, monitoring), sports-medicine domain pack, npm plugin v1 release
+- **2027 Q1** — enterprise private deployment + governance audit reports; SME (structure-mapping) engine public
+- **2027** — multi-agent shared memory workspaces (team context layers)
+
+## Community & Contact
+
+- 🐛 **GitHub Issues** — bugs, feature requests (we respond fast)
+- 💬 **GitHub Discussions** — questions, RFCs, show-your-work
+- 📮 **Research contact** — papers, collaboration & governance consulting: open an issue tagged `research` or DM via Discussions.
+- 🎓 **Academic** — the IP&M memory-quality paper and the JSAMS data-governance paper
+  are the publishable signs of this repo's claims; HackerNews/DSH plugin discussions
+  welcome at every release.
+
+## Star Us
+
+🔭 **Minta is a two-person research project.** A star tells the next
+contributor, integrator, and journal reviewer that this experiment is worth
+their attention. One click, three seconds, and it funds nothing — but it funds
+everything.
+
+## References & Lineage
+
+Where the ideas come from (and how Minta differs):
+
+| Work | What Minta took | What Minta differs in |
+|---|---|---|
+| **Mem0 / MemOS** | Memory store + hybrid retrieval | They store; Minta *verifies* quality (decay, conflict, redundancy, fragmentation) |
+| **Vovk (2005), conformal prediction** | Distribution-free coverage guarantee | Used as the *metacognitive gate*, not just an estimator |
+| **JEPA (LeCun)** | Predict in latent space, not raw space | Domain rules > JEPA — predictions only fire when history exists |
+| **Ebbinghaus-inspired decay** (MemoryBank et al.) | Time-aware forgetting | Type-specific half-lives: preferences > project state |
+| **Paperclip doc-maintenance** | Audit-driven maintenance | Same discipline, now for AI memory, not files |
 
 ## License
 
