@@ -96,7 +96,6 @@ python -c "import secrets; print('MINTA_API_KEY=minta_'+secrets.token_hex(32))" 
 | `MINTA_DATABASE_URL` | `sqlite:///./minta.db` | 零配置 SQLite;一行切 MySQL |
 | `MINTA_JWT_SECRET` | *(必须设)* | 会话签名密钥——生成,别抄 |
 | `MINTA_API_KEY` | 首次运行自动生成 | 程序化访问 + MCP(接编辑器 → `python minta_cli.py connect claude`) |
-| `MINTA_ADMIN_IDS` | 不设=**谁都进不去** | 逗号分隔的管理员用户 id |
 
 完整变量参考(SMTP、CORS、功能开关)→ [`docs/configuration.md`](docs/configuration.md)。编辑器接入 → [`docs/mcp-integration.md`](docs/mcp-integration.md)。
 

@@ -94,7 +94,6 @@ python -c "import secrets; print('MINTA_API_KEY=minta_'+secrets.token_hex(32))" 
 | `MINTA_DATABASE_URL` | `sqlite:///./minta.db` | Zero-config SQLite; switch to MySQL in one line |
 | `MINTA_JWT_SECRET` | *(must set)* | Session signing secret — generate, don't copy |
 | `MINTA_API_KEY` | auto-generated on first run | Programmatic access + MCP (connect your editor → `python minta_cli.py connect claude`) |
-| `MINTA_ADMIN_IDS` | unset = **nobody** | Comma-separated admin user ids; unset means no admin API access |
 
 Full variable reference, SMTP, CORS, feature flags → [`docs/configuration.md`](docs/configuration.md).
 Agent integration per editor → [`docs/mcp-integration.md`](docs/mcp-integration.md).

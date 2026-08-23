@@ -96,7 +96,6 @@ python -c "import secrets; print('MINTA_API_KEY=minta_'+secrets.token_hex(32))"
 | `MINTA_DATABASE_URL` | `sqlite:///./minta.db` | ゼロ設定 SQLite;1 行で MySQL へ |
 | `MINTA_JWT_SECRET` | *(要設定)* | セッション署名シークレット — 生成する、コピーしない |
 | `MINTA_API_KEY` | 初回起動時に自動生成 | プログラムアクセス + MCP(`python minta_cli.py connect claude`) |
-| `MINTA_ADMIN_IDS` | 未設定=**誰もアクセス不可** | カンマ区切りの管理者ユーザー id |
 
 変数リファレンス(SMTP、CORS、フラグ)→ [`docs/configuration.md`](docs/configuration.md)。エージェント接続 → [`docs/mcp-integration.md`](docs/mcp-integration.md)。
 
