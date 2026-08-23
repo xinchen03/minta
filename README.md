@@ -35,10 +35,19 @@ Every memory system stores more. Minta's job is to make sure what the agent know
 
 **Contents** · [Why Minta](#why-minta) · [Quick Start](#quick-start) · [Features](#features) · [Open-Core](#open-core-open-code-locked-assets) · [Benchmarks](#benchmarks) · [DeepSeek Harness](#deepseek-harness) · [Roadmap](#roadmap)
 
-## Demo & Screenshots
+## Product UI
 
-<p align="center">
-  <img src="assets/dashboard.png" alt="Minta dashboard — memory health, knowledge graph, inbox" width="860">
+The full Minta workspace (`Personal Context Layer`, V8.3 engine UI). The layers you see — research cockpit, expert infer, memory health — map to the engine tiers below; the open-core dist ships the memory hub UI, and the rest activate through the same API.
+
+| | | |
+|---|---|---|
+| <img src="assets/ui/ui-hero.png" width="420"> | <img src="assets/ui/ui-context-draw.png" width="420"> |
+| **Context Hub** — "Stop re-onboarding your AI" | **Context Draw** — 3D knowledge graph + card recall |
+| <img src="assets/ui/ui-health.png" width="420"> | <img src="assets/ui/ui-inbox.png" width="420"> |
+| **Context Health** — lifecycle dashboard (decay/conflict at a glance) | **Inbox** — confirm/discard corrections, counter-example review |
+| <img src="assets/ui/ui-skills.png" width="420"> | <img src="assets/ui/ui-research.png" width="420"> |
+| **Skills Library** — 50 registered workflows | **Research Workspace** — projects, evidence, run packages |
+
 </p>
 
 <details>

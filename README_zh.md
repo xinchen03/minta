@@ -35,11 +35,18 @@
 
 **内容导航** · [为什么是 Minta](#为什么是-minta) · [快速入门](#快速入门) · [功能](#功能) · [开放核心](#开放核心open-code-locked-assets) · [基准测试](#基准测试) · [DeepSeek Harness](#deepseek-harness) · [路线图](#路线图)
 
-## 演示与截图
+## 产品界面
 
-<p align="center">
-  <img src="assets/dashboard.png" alt="Minta 仪表盘 — 记忆健康、知识图谱、收件箱" width="860">
-</p>
+完整 Minta 工作台(`Personal Context Layer`,V8.3 引擎 UI)。你看到的各层——研究驾驶舱、专家推理、记忆健康——对应下方引擎分层;开放核心的 dist 附带记忆中枢 UI,其余面板通过同一套 API 激活。
+
+| | | |
+|---|---|---|
+| <img src="assets/ui/ui-hero.png" width="420"> | <img src="assets/ui/ui-context-draw.png" width="420"> |
+| **Context Hub** — "停止让你的 AI 重复上手" | **Context Draw** — 3D 知识图谱 + 卡片召回 |
+| <img src="assets/ui/ui-health.png" width="420"> | <img src="assets/ui/ui-inbox.png" width="420"> |
+| **Context Health** — 生命周期仪表盘(衰减/冲突一目了然) | **Inbox** — 确认/丢弃纠正,反例审查 |
+| <img src="assets/ui/ui-skills.png" width="420"> | <img src="assets/ui/ui-research.png" width="420"> |
+| **Skills Library** — 50 个已注册工作流 | **Research Workspace** — 项目、证据、运行包 |
 
 <details>
 <summary><b>▶ 查看演示视频</b>(本地优先,8772 UI)</summary>

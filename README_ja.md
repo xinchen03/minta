@@ -35,11 +35,18 @@
 
 **目次** · [なぜ Minta](#なぜ-minta) · [クイックスタート](#クイックスタート) · [機能](#機能) · [オープンコア](#オープンコアopen-code-locked-assets) · [ベンチマーク](#ベンチマーク) · [DeepSeek Harness](#deepseek-harness) · [ロードマップ](#ロードマップ)
 
-## デモとスクリーンショット
+## 製品 UI
 
-<p align="center">
-  <img src="assets/dashboard.png" alt="Minta ダッシュボード" width="860">
-</p>
+完全な Minta ワークスペース(`Personal Context Layer`、V8.3 エンジン UI)。研究コックピット、エキスパート推論、メモリヘルスなど、下のエンジン階層に対応。オープンコアの dist はメモリハブ UI を同梱し、他のパネルは同じ API で有効化されます。
+
+| | | |
+|---|---|---|
+| <img src="assets/ui/ui-hero.png" width="420"> | <img src="assets/ui/ui-context-draw.png" width="420"> |
+| **Context Hub** — 「AI の再オンボーディングを止める」 | **Context Draw** — 3D ナレッジグラフ + カードリコール |
+| <img src="assets/ui/ui-health.png" width="420"> | <img src="assets/ui/ui-inbox.png" width="420"> |
+| **Context Health** — ライフサイクルダッシュボード | **Inbox** — 訂正の確認/破棄、反例レビュー |
+| <img src="assets/ui/ui-skills.png" width="420"> | <img src="assets/ui/ui-research.png" width="420"> |
+| **Skills Library** — 50 登録ワークフロー | **Research Workspace** — プロジェクト、エビデンス、実行パッケージ |
 
 <details>
 <summary><b>▶ デモ動画</b>(ローカルファースト)</summary>
