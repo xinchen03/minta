@@ -48,12 +48,7 @@
 | <img src="assets/ui/ui-skills.png" width="420"> | <img src="assets/ui/ui-research.png" width="420"> |
 | **Skills Library** — 50 个已注册工作流 | **Research Workspace** — 项目、证据、运行包 |
 
-<details>
-<summary><b>▶ 查看演示视频</b>(本地优先,8772 UI)</summary>
-
-<video src="assets/demo.mp4" controls width="860"></video>
-若无法播放,clone 后直接打开 <code>assets/demo.mp4</code>。
-</details>
+*(简短 demo 视频同步在仓库里:`assets/demo.mp4` —— clone 后直接打开。)*
 
 三层的引擎:
 
@@ -144,7 +139,7 @@ Minta 最初就是科研工作流的记忆层——文献笔记、稿件清单�
 
 ## DeepSeek Harness
 
-已验证集成(2026-08):2 分钟内把 Minta 作为 DSH 的 MCP 服务器接入——`docs/dsh-integration.md` 有完整的 `cordis.patch.yml` 片段。开放核心插件包发布在 npm(`@minta/dsh-plugin`)。
+已验证集成(2026-08):2 分钟内把 Minta 作为 DSH 的 MCP 服务器接入——`docs/dsh-integration.md` 有完整的 `cordis.patch.yml` 片段。开放核心插件包发布在 npm(`@xxinchen/dsh-plugin`)。
 
 ## 构建与贡献
 

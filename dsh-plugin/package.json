@@ -1,5 +1,5 @@
 {
-  "name": "@minta/dsh-plugin",
+  "name": "@xxinchen/dsh-plugin",
   "version": "0.0.1",
   "description": "Minta — context quality layer for DeepSeek Harness. Memory quality governance, expert domains and claim-stage gates via the Minta MCP server.",
   "type": "module",

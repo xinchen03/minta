@@ -143,7 +143,7 @@ Companion execution skills (Apache-2.0, separate repo): [nature-skills](https://
 
 ## DeepSeek Harness
 
-Verified integration (2026-08): connect Minta as an MCP server in DSH in 2 minutes — see `docs/dsh-integration.md` for the exact `cordis.patch.yml` insert. The open-core plugin bundle is published on npm (`@minta/dsh-plugin`).
+Verified integration (2026-08): connect Minta as an MCP server in DSH in 2 minutes — see `docs/dsh-integration.md` for the exact `cordis.patch.yml` insert. The open-core plugin bundle is published on npm (`@xxinchen/dsh-plugin`).
 
 ## Building & contributing
 

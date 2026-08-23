@@ -1,4 +1,4 @@
-# @minta/dsh-plugin
+# @xxinchen/dsh-plugin
 
 Minta — context quality layer for DeepSeek Harness.
 Memory quality governance, expert domains, and claim-stage gates through the Minta MCP server.

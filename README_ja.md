@@ -48,12 +48,7 @@
 | <img src="assets/ui/ui-skills.png" width="420"> | <img src="assets/ui/ui-research.png" width="420"> |
 | **Skills Library** — 50 登録ワークフロー | **Research Workspace** — プロジェクト、エビデンス、実行パッケージ |
 
-<details>
-<summary><b>▶ デモ動画</b>(ローカルファースト)</summary>
-
-<video src="assets/demo.mp4" controls width="860"></video>
-再生されない場合は clone 後に <code>assets/demo.mp4</code> を開いてください。
-</details>
+*(短いデモ動画はリポジトリ内に同梱:`assets/demo.mp4` — clone 後に開いてください。)*
 
 3 つのレイヤー、1 つのエンジン:
 
@@ -144,7 +139,7 @@ Minta はもともと研究ワークフローのメモリ層として始まり�
 
 ## DeepSeek Harness
 
-検証済み統合 (2026-08): 2 分で Minta を DSH の MCP サーバーとして接続 — `docs/dsh-integration.md` に `cordis.patch.yml` の完全な挿入例。npm(`@minta/dsh-plugin`)に公開予定。
+検証済み統合 (2026-08): 2 分で Minta を DSH の MCP サーバーとして接続 — `docs/dsh-integration.md` に `cordis.patch.yml` の完全な挿入例。npm(`@xxinchen/dsh-plugin`)に公開予定。
 
 ## ビルドとコントリビュート
 
