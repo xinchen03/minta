@@ -8,6 +8,10 @@
 </p>
 
 <p align="center">
+  <b>English</b> · <a href="README_zh.md">中文</a> · <a href="README_ja.md">日本語</a>
+</p>
+
+<p align="center">
   <a href="#license"><img src="https://img.shields.io/badge/license-Apache--2.0-blue"></a>
   <a href="#quick-start"><img src="https://img.shields.io/badge/python-3.9%2B-green"></a>
   <a href="#deepseek-harness"><img src="https://img.shields.io/badge/DeepSeek%20Harness-verified-purple"></a>
@@ -28,6 +32,21 @@ Every memory system stores more. Minta's job is to make sure what the agent know
 | Store everything forever | Detect what expired, flag it, decide with you |
 | Treat all memories equally | Type-specific decay: preferences last longer than project state |
 | Hope the LLM figures it out | Lifecycle scan + health score + **staged gates** (no over-claims) |
+
+**Contents** · [Why Minta](#why-minta) · [Quick Start](#quick-start) · [Features](#features) · [Open-Core](#open-core-open-code-locked-assets) · [Benchmarks](#benchmarks) · [DeepSeek Harness](#deepseek-harness) · [Roadmap](#roadmap)
+
+## Demo & Screenshots
+
+<p align="center">
+  <img src="assets/dashboard.png" alt="Minta dashboard — memory health, knowledge graph, inbox" width="860">
+</p>
+
+<details>
+<summary><b>▶ Demo video</b> (local-first run)</summary>
+
+<video src="assets/demo.mp4" controls width="860"></video>
+If the player doesn't render, open <code>assets/demo.mp4</code> after cloning.
+</details>
 
 Three layers, one engine:
 

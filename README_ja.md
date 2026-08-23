@@ -1,0 +1,155 @@
+<p align="center">
+  <img src="assets/logo.png" alt="Minta" width="420">
+</p>
+
+<p align="center">
+  <b>AI エージェントのためのコンテキスト品質レイヤー.</b><br>
+  エージェントの記憶が<u>誤る</u>とき、Minta は「間違っている」— そして何が<u>言えないことか</u>を教えます。
+</p>
+
+<p align="center">
+  <a href="README.md">English</a> · <a href="README_zh.md">中文</a> · <b>日本語</b>
+</p>
+
+<p align="center">
+  <a href="#license"><img src="https://img.shields.io/badge/license-Apache--2.0-blue"></a>
+  <a href="#クイックスタート"><img src="https://img.shields.io/badge/python-3.9%2B-green"></a>
+  <a href="#deepseek-harness"><img src="https://img.shields.io/badge/DeepSeek%20Harness-verified-purple"></a>
+  <a href="#ベンチマーク"><img src="https://img.shields.io/badge/MCP-19%20tools-orange"></a>
+</p>
+
+> ⭐ 新着 (2026-08): **オープンコア v2** — メモリエンジン + 研究コンプライアンスエンジン + 専門ドメインパック、**DeepSeek Harness 統合(検証済み)**。品質レイヤーの背後にある論文は *Information Processing & Management* で査読中。
+
+---
+
+## Minta の理由
+
+すべてのメモリシステムは「より多く保存する」ことに集中。Minta の仕事は、エージェントが知っていることが**依然として真実**であること、そして**やっていないことを主張しない**ことを守ることです。
+
+| 他社は | Minta は |
+|---|---|
+| 「ここに関連する記憶」 | 「2 件が競合。1 件が陳腐化。事実はこれ」 |
+| 永遠に保存 | 期限切れを検知し、フラグし、あなたが決める |
+| すべて同じに扱う | 型別減衰: 好みはプロジェクト状態より長生き |
+| LLM に任せる | ライフサイクルスキャン + 健康スコア + **ステージゲート**(過剰申告なし) |
+
+**目次** · [なぜ Minta](#なぜ-minta) · [クイックスタート](#クイックスタート) · [機能](#機能) · [オープンコア](#オープンコアopen-code-locked-assets) · [ベンチマーク](#ベンチマーク) · [DeepSeek Harness](#deepseek-harness) · [ロードマップ](#ロードマップ)
+
+## デモとスクリーンショット
+
+<p align="center">
+  <img src="assets/dashboard.png" alt="Minta ダッシュボード" width="860">
+</p>
+
+<details>
+<summary><b>▶ デモ動画</b>(ローカルファースト)</summary>
+
+<video src="assets/demo.mp4" controls width="860"></video>
+再生されない場合は clone 後に <code>assets/demo.mp4</code> を開いてください。
+</details>
+
+3 つのレイヤー、1 つのエンジン:
+
+```
+L1 記憶ガバナンス → stale / conflict / redundant / fragile——見つけること、溜め込まないこと
+L2 専門知識      → あなたの訂正から昇格するルール、ドメイン型
+L3 クレームゲート → 「やっていない段階を主張できない」— 校正された信頼度つき
+```
+
+## クイックスタート
+
+**60 秒。** ローカルファースト。クラウド不要。オープンコアにサブスクリプション不要。
+
+```bash
+git clone https://github.com/xinchen03/minta.git
+cd minta
+python -m pip install -r server/requirements.txt
+python minta_cli.py start          # API :8772 · Autopilot :18730 · MCP :18721
+```
+
+または Docker: `docker compose up -d`。あなたのエージェントを接続:
+
+```bash
+# 任意の MCP 対応エディタ/エージェント — Claude Code / Codex / Cursor / dsh
+python minta_cli.py connect claude
+# DeepSeek Harness(検証済み)→ docs/dsh-integration.md
+```
+
+Web UI は `http://127.0.0.1:8772` — メモリ健康ダッシュボード、3D 知識グラフ、受信箱レビュー、エキスパートパネル。
+
+## 機能
+
+| レイヤー | 機能 | 得られるもの |
+|---|---|---|
+| 記憶 | ハイブリッド検索(ベクトル + BM25 + エンティティ + FTS) | 正しい記憶を選ぶ |
+| 記憶 | ライフサイクルエンジン(減衰/競合/冗長/断片化) | 品質チェックが定期的に走る |
+| 訂正ループ | 受信箱 + 反例キャプチャ(フック: SessionStart → PostToolUse → Stop) | 訂正がルールに昇格(確認後) |
+| 専門ドメイン | マルチドメインルール(足首/膝/頚椎、ISO9001、PRISMA…) + CUMCM 段階ワークフロー | 信頼度つきドメイン推論 |
+| 研究 | 原稿インベントリ + コンプライアンス評価 | 投稿前チェック |
+| メタ認知 | 共形信頼度(校正・データロック) | カバレッジ保証つきの「知っている」 |
+| 提供 | Web dist + MCP(19 ツール)+ DSH プラグイン検証済み | 3 つの入口、1 つの記憶 |
+
+## オープンコア(Open Code, Locked Assets)
+
+| このリポジトリ(Apache-2.0、無料) | API キー / エンタープライズライセンス |
+|---|---|
+| メモリエンジン — 完全・実行可能 | マネージドエンジン + モニタリング |
+| 品質カーネルアルゴリズム(共形/ルール昇格/DGM/コンパイラ) | 全精度: 自動校正、プライベートドメイン |
+| 研究コンプライアンスエンジン + ドメインパック | スポーツ医学 / 臨床パック |
+| Web dist · MCP · DSH 統合 · 12 ガイド | データフライホイール: 校正セット、重み、ルールベース |
+
+**商業ラインは「累積精度」であり、コードではない。** 何でも clone できますが、1,000 人のユーザー訂正が校正に沈殿したものは clone できません。
+
+## ベンチマーク
+
+<img src="assets/benchmark_comparison.png" alt="メモリ品質比較">
+
+| 検出 | 指標 | スコア | Mem0 | Hindsight |
+|---|---|---|---|---|
+| 競合 | F₁ | 0.81(held-out、未見 5 ドメイン) | なし | なし |
+| 陳腐化 | UFA | 0.86(12 事実ペアテンプレート) | なし | なし |
+| 冗長 | 圧縮 RR | 0.67(25 クラスタ) | なし | なし |
+| 断片化 | MCR | 0.746(15 フラグメント) | なし | なし |
+| 検索(LoCoMo) | Recall@20 | 97.1% | — | — |
+
+## 研究ファースト
+
+Minta はもともと研究ワークフローのメモリ層として始まりました — 文献ノート、原稿チェックリスト、ジャーナルコンプライアンス。`runtime/compliance/` と `docs/interaction-guide.md` 参照。
+
+補完スキル(Apache-2.0、別リポジトリ): [nature-skills](https://github.com/Yuan1z0825/nature-skills) — 読解、図、引用、推敲。
+
+**引用:** Chen X. et al., *Governing Synthetic Athlete Monitoring Data…* (JSAMS 査読中); IP&M メモリ品質論文(依頼可)。
+
+## DeepSeek Harness
+
+検証済み統合 (2026-08): 2 分で Minta を DSH の MCP サーバーとして接続 — `docs/dsh-integration.md` に `cordis.patch.yml` の完全な挿入例。npm(`@minta/dsh-plugin`)に公開予定。
+
+## ビルドとコントリビュート
+
+```bash
+python scripts/build_open_release.py
+python -m pytest tests/
+```
+
+good-first-issue PR 歓迎: `entity_linker` の英語パターン、実在感のあるデモシナリオ。詳細は `CONTRIBUTING.md`。
+
+## ガイド
+
+[インタラクションガイド](docs/interaction-guide.md) · [起動順序](docs/startup-chain.md) · [DSH 統合](docs/dsh-integration.md) · [設定](docs/configuration.md) · [ユーザーガイド](docs/user-guide.md) · [MCP 統合](docs/mcp-integration.md)
+
+## データとプライバシー
+
+- ローカルファースト: データベース・ベクトル・ログはマシン内に留まる。デフォルトでテレメトリなし。
+- エクスポート/削除: `GET /api/user/export-data` · `DELETE /api/user/delete-data`(認証済み)。
+- シークレット: 初回実行時に生成(`.minta_api_key`、コミット回避)。`MINTA_ADMIN_IDS` が管理 API をゲート(未設定=誰もアクセス不可)。
+- 開示ポリシーは `SECURITY.md`。
+
+## ロードマップ
+
+- 2026 Q4 — ホステッド API(全精度、モニタリング)、スポーツメディカルドメインパック
+- 2027 Q1 — エンタープライズオンプレミス + ガバナンス監査レポート
+- v2.1 — IP&M 論文再現スクリプト
+
+## ライセンス
+
+Apache-2.0。上流バンドル資産は各ライセンスを保持 — 後日 `skills/` 参照。
