@@ -1,8 +1,0 @@
-{
-  "enabled": true,
-  "interval_hours": 24,
-  "last_scan_at": null,
-  "last_scan_findings": 0,
-  "next_scan_at": "2026-06-01T15:50:30.541188+00:00",
-  "scanned_users": 0
-}
