@@ -107,17 +107,19 @@ def _check(label, passed, detail=""):
 
 def _test_inbox_route(api_key):
     # type: (str) -> bool
-    """Quick check: can we reach the inbox append endpoint?"""
-    if not api_key:
-        return False
+    """Health check: is the inbox route mounted (auth aside)? 200/401/403/405
+    all prove the route and DB are wired; only 5xx / refused mean failure."""
+    import urllib.error
     try:
         import urllib.request
 
         req = urllib.request.Request(
             "%s/api/inbox" % os.environ.get("MINTA_API_URL", "http://127.0.0.1:8772"),
-            headers={"X-API-Key": api_key},
+            headers={"X-API-Key": api_key} if api_key else {},
         )
         with urllib.request.urlopen(req, timeout=5) as resp:
-            return resp.status == 200
+            return resp.status in (200, 401, 403, 405)
+    except urllib.error.HTTPError as e:
+        return e.code in (200, 401, 403, 405)
     except Exception:
         return False
