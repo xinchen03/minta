@@ -8,3 +8,5 @@
         serverName: minta
         url: http://127.0.0.1:18721/mcp
         failOnStartupError: false
+    - id: minta-plugin
+      name: '@xxinchen/dsh-plugin'

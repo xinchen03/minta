@@ -2,13 +2,19 @@
 
 Minta — context quality layer for DeepSeek Harness.
 
-Installing this package adds the Minta MCP wiring to a DSH profile: it composes
-the `mcp-client-minta` row (official `@deepseek-ai/dsh-mcp-client`) pointing at
-the local Minta engine's streamable-HTTP endpoint. The capabilities — memory
-quality governance, expert domains, claim-stage gates, 19 `minta_*` tools —
-are provided by the Minta engine itself, which runs separately (see
-Prerequisites). See `docs/dsh-integration.md` in the repo for the verified
-end-to-end flow.
+Installing this package composes two Cordis rows into a DSH profile:
+
+- `mcp-client-minta` — official `@deepseek-ai/dsh-mcp-client` wired to the local
+  Minta engine's streamable-HTTP endpoint (its 19 `minta_*` tools reach the agent).
+- `minta-plugin` — this package as a real Cordis plugin. At mount it registers a
+  runtime skill (`minta-memory-governance`, content derived from the Minta
+  interaction guide) and a `agent/session-start` hook that prewarms engine
+  health + recent memory over the Minta REST API (fail-open: an unreachable
+  engine never breaks a session).
+
+The memory engine itself is a separately deployed service (see Prerequisites);
+the plugin is a thin DSH-native surface over it. See `docs/dsh-integration.md`
+for the verified end-to-end flow.
 
 ## Prerequisites
 
@@ -58,7 +64,16 @@ Append to `~/.dsh/profiles/web/cordis.patch.yml`:
         failOnStartupError: false
 ```
 
-## Roadmap
+## Roadmap and known boundaries
 
-The Minta skills and lifecycle plugin (autopilot pre/post-flight hooks) are
-planned for a later release; today the package only wires the MCP client.
+Shipped: MCP wiring, runtime skill registration, session-start prewarm.
+
+Not here yet (and why):
+- **Automatic pre/post-flight per turn** — DeepSeek Harness 0.1.1-rc.2 exposes
+  no per-step or turn-end agent events, so per-message autopilot stays a
+  model-facing tool call (`minta_autopilot_preflight` / `minta_autopilot_postflight`,
+  instructed by the registered skill) rather than a hidden automatic hook.
+- **Prompt injection of the prewarm result** — the profile-level plugin cannot
+  safely shadow the deployment persona (the prompt registry owns that slot);
+  prewarm currently logs engine state, and the agent reads memory on demand
+  through the MCP tools.
