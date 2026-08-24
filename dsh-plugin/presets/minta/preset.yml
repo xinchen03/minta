@@ -1,0 +1,2 @@
+name: Minta
+description: Coding agent with the Minta memory layer — per-turn preflight/postflight memory protocol. Requires the Minta engine + MCP row (see README).

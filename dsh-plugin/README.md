@@ -55,6 +55,30 @@ false` means a stopped engine does not break DSH sessions.
 7. **Engine stopped / unreachable**: sessions keep working; tools and prewarm
    just report unavailable (fail-open).
 
+## Minta agent preset (per-turn protocol)
+
+For turn-level automation (DSH rc.2 has no per-step/turn-end events, so the
+protocol is carried by the preset persona, which the model follows every
+turn), install the preset shipped in this package:
+
+```bash
+mkdir -p ~/.dsh/.agent-presets
+cp -r <node_modules>/@xxinchen/dsh-plugin/presets/minta ~/.dsh/.agent-presets/  # or cp -r the repo's dsh-plugin/presets/minta
+```
+
+Then, in DSH, pick **Minta** in the session preset picker — or set it as the
+default by overriding the `agent-presets` row (in `~/.dsh/profiles/web/cordis.patch.yml`):
+
+```yaml
+- id: agent-presets
+  config:
+    default: minta
+```
+
+The preset persona adds the per-turn protocol: `minta_autopilot_preflight`
+before answering about prior work, `minta_autopilot_postflight` after each
+reply, inbox-only writes, and graceful degradation when the engine is offline.
+
 ### Migrating from the manual `cordis.patch.yml` block
 
 If you previously set Minta up by appending the `mcp-client-minta` block to
