@@ -1,6 +1,6 @@
 {
   "name": "@xxinchen/dsh-plugin",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Minta for DeepSeek Harness — installs the MCP wiring for the Minta memory engine (memory governance, expert domains, claim-stage gates). Attaches the official @deepseek-ai/dsh-mcp-client to a locally-run Minta engine; the engine provides the 19 minta_* tools.",
   "type": "module",
   "main": "lib/index.js",

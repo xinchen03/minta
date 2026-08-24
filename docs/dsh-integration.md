@@ -23,6 +23,8 @@ dsh plugin --profile web add @xxinchen/dsh-plugin
 
 > 插件包只做一件事: 把下面的 mcp-client 行合入 profile。引擎(单独部署)提供全部能力。
 > 想检查合成结果: `npx @deepseek-ai/dsh --profile web --dump-config | grep mcp-client-minta`
+>
+> **迁移用户注意**: 若你之前按旧教程手动在 `cordis.patch.yml` 里加过 `mcp-client-minta` 块, 装插件前必须先删掉它——bundle patch 与手动块插入同一 loader entry id, 并存时 boot 直接失败(`duplicate loader entry id: mcp-client-minta`)。检查: `grep -A6 mcp-client-minta ~/.dsh/profiles/web/cordis.patch.yml`(无输出即干净)。
 
 ## 手动接入(不装 npm 包时的备选)
 

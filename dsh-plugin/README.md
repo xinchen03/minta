@@ -29,6 +29,20 @@ minta" → the 19 `mcp__minta__*` tools.
 Note: the engine must be running before the tools respond; `failOnStartupError:
 false` means a stopped engine does not break DSH sessions.
 
+### Migrating from the manual `cordis.patch.yml` block
+
+If you previously set Minta up by appending the `mcp-client-minta` block to
+`~/.dsh/profiles/web/cordis.patch.yml`, **remove that block before installing
+this plugin**. The bundle patch and the manual block insert the same loader
+entry id `mcp-client-minta`; with both present the profile fails to boot with
+`duplicate loader entry id: mcp-client-minta`. Check you are clean with:
+
+```bash
+grep -A6 mcp-client-minta ~/.dsh/profiles/web/cordis.patch.yml   # expect no output
+```
+
+(A patch file containing only `[]` is valid and means "no overrides".)
+
 ## Manual alternative (no npm install)
 
 Append to `~/.dsh/profiles/web/cordis.patch.yml`:
