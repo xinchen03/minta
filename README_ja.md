@@ -136,7 +136,7 @@ Minta はもともと研究ワークフローのメモリ層として始まり�
 
 ## DeepSeek Harness
 
-検証済み統合 (2026-08): 2 分で Minta を DSH の MCP サーバーとして接続 — `docs/dsh-integration.md` に `cordis.patch.yml` の完全な挿入例。npm(`@xxinchen/dsh-plugin`)に公開予定。
+検証済み統合 (2026-08): `dsh plugin --profile web add @xxinchen/dsh-plugin` で接続 — プラグインが公式 `dsh-mcp-client` 行を自動合成します(エンジンは別途デプロイされ、19 個の `minta_*` ツールを提供)。手動 `cordis.patch.yml` 挿入にも対応。詳細は `docs/dsh-integration.md`。プラグイン 0.2.0 には `minta` コピー済みプリセット(毎ターン記憶プロトコル)も同梱 — `dsh-plugin/presets/minta` を `~/.dsh/.agent-presets/` にコピーするとセッション選択で利用できます。
 
 ## ビルドとコントリビュート
 

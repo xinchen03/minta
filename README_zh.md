@@ -147,7 +147,7 @@ Minta 最初就是科研工作流的记忆层——文献笔记、稿件清单�
 
 ## DeepSeek Harness
 
-已验证集成(2026-08):2 分钟内把 Minta 作为 DSH 的 MCP 服务器接入——`docs/dsh-integration.md` 有完整的 `cordis.patch.yml` 片段。开放核心插件包发布在 npm(`@xxinchen/dsh-plugin`)。
+已验证集成(2026-08):`dsh plugin --profile web add @xxinchen/dsh-plugin` 即接入——插件自动合成官方 `dsh-mcp-client` 行(引擎单独部署,提供 19 个 `minta_*` 工具)。手动 `cordis.patch.yml` 插入同样支持,详见 `docs/dsh-integration.md`。插件 0.2.0 还内置 `minta` 副本预设(每回合记忆协议),复制 `dsh-plugin/presets/minta` 到 `~/.dsh/.agent-presets/` 即可在会话选择器里选用。
 
 ## 构建与贡献
 

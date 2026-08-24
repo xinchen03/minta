@@ -151,7 +151,7 @@ Companion execution skills (Apache-2.0, separate repo): [nature-skills](https://
 
 ## DeepSeek Harness
 
-Verified integration (2026-08): `dsh plugin --profile web add @xxinchen/dsh-plugin` wires Minta into DSH in 2 minutes — the plugin composes the official `dsh-mcp-client` row for the locally-run engine (which provides the 19 `minta_*` tools). A manual `cordis.patch.yml` insert is also supported; see `docs/dsh-integration.md`.
+Verified integration (2026-08): `dsh plugin --profile web add @xxinchen/dsh-plugin` wires Minta into DSH in 2 minutes — the plugin composes the official `dsh-mcp-client` row for the locally-run engine (which provides the 19 `minta_*` tools). A manual `cordis.patch.yml` insert is also supported; see `docs/dsh-integration.md`. The plugin also ships the `minta` agent preset (per-turn memory protocol): copy `dsh-plugin/presets/minta` into `~/.dsh/.agent-presets/` and pick it in the session picker.
 
 ## Building & contributing
 
