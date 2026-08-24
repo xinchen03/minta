@@ -8,7 +8,23 @@
    - 确认健康: `minta_cli.py status` → Data API :8772 / Autopilot :18730 / MCP HTTP :18721 全 RUNNING
 2. DeepSeek Harness 已安装: `npx @deepseek-ai/dsh web`(配好 DeepSeek API Key)
 
-## 接入(2 分钟)
+## 接入(2 分钟, 推荐)
+
+安装插件包, MCP 行由 bundle patch 自动合成, 无需手改配置:
+
+```bash
+dsh plugin --profile web add @xxinchen/dsh-plugin
+```
+
+重启 web: `Ctrl+C` 后重新 `npx @deepseek-ai/dsh web`。
+
+验证: 新会话问一句 "列出所有名字带 minta 的工具"。
+预期: 19 个 `mcp__minta__*` 工具(login / read/write/search_context / get_pack / get_slot / update_slot / append/list/confirm/discard_inbox / autopilot_preflight / autopilot_postflight / chat / expert_list / infer / consult / trust / feedback)。
+
+> 插件包只做一件事: 把下面的 mcp-client 行合入 profile。引擎(单独部署)提供全部能力。
+> 想检查合成结果: `npx @deepseek-ai/dsh --profile web --dump-config | grep mcp-client-minta`
+
+## 手动接入(不装 npm 包时的备选)
 
 在 `~/.dsh/profiles/web/cordis.patch.yml` 追加(或新建):
 
@@ -24,10 +40,7 @@
         failOnStartupError: false
 ```
 
-重启 web: `Ctrl+C` 后重新 `npx @deepseek-ai/dsh web`。
-
-验证: 新会话问一句 "列出所有名字带 minta 的工具"。
-预期: 19 个 `mcp__minta__*` 工具(login / read/write/search_context / get_pack / get_slot / update_slot / append/list/confirm/discard_inbox / autopilot_preflight / autopilot_postflight / chat / expert_list / infer / consult / trust / feedback)。
+重启 web 后同上验证。
 
 ## 字段说明(mcp-client Config, 来自官方 schema)
 
@@ -40,7 +53,7 @@
 ## 注意(避坑记录)
 
 - **错误的写法**: package.json 里 `dsh.mcpServers` 字段目前不被 DSH 消费(无效果), 不要用它
-- 插件 bundle(`dsh.bundle.patch`)与 MCP 接入是两回事: bundle 用来装技能/生命周期插件, MCP 走 `mcp-client` insert
+- 插件 bundle(`dsh.bundle.patch`)把 patch 层合入 profile 配置树; MCP 连接本身走 `mcp-client` 插件行
 - profile 是隔离的: 插件/配置按 `--profile web / headless` 各自独立, 改 web 要重启 web
 - 无密钥时 web 可开但模型不可用; Minta 工具与模型无关, 登录用 `minta_login` 即可
 

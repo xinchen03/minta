@@ -1,3 +1,10 @@
+# Minta context layer — MCP server (streamable HTTP at 127.0.0.1:18721)
+# Requires the local Minta engine: python minta_cli.py start
 - insert:
-    - id: minta
-      name: '@minta/dsh-plugin'
+    - id: mcp-client-minta
+      name: '@deepseek-ai/dsh-mcp-client'
+      config:
+        transport: streamable-http
+        serverName: minta
+        url: http://127.0.0.1:18721/mcp
+        failOnStartupError: false
