@@ -156,6 +156,20 @@ def update_object(obj_id: str, payload: dict, user: User = Depends(get_current_u
         obj.tags = payload["tags"]
     if "isPublic" in payload:
         obj.is_public = payload["isPublic"]
+    # Lifecycle status: active <-> archived (soft, reversible), with audit stamps
+    if "status" in payload:
+        st = payload["status"]
+        if st in ("active", "archived"):
+            if st == "archived":
+                if obj.status != "archived":
+                    obj.archived_at = datetime.utcnow()
+                    obj.archived_by = user.id
+                    obj.archived_reason = payload.get("reason") or ""
+            else:
+                if obj.status == "archived":
+                    obj.restored_at = datetime.utcnow()
+                    obj.restored_by = user.id
+            obj.status = st
     obj.updated_at = datetime.utcnow()
 
     db.commit()
