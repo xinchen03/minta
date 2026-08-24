@@ -95,6 +95,8 @@ cp .env.example .env    # 编辑密钥
 python -c "import secrets; print('MINTA_API_KEY=minta_'+secrets.token_hex(32))"  # 生成安全密钥
 ```
 
+**注册 Key**:仅有 `minta_` 前缀还不够——API 只接受已登记在密钥表中的 Key。引擎运行期间,通过 Web UI(设置 → API 密钥)或携带用户令牌调用 `POST /api/keys` 完成登记。写类工具(收件箱、write_context)需要它;读类工具不需要。
+
 | 变量 | 默认 | 作用 |
 |---|---|---|
 | `MINTA_DATABASE_URL` | `sqlite:///./minta.db` | 零配置 SQLite;一行切 MySQL |

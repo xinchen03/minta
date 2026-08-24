@@ -84,6 +84,8 @@ cp .env.example .env
 python -c "import secrets; print('MINTA_API_KEY=minta_'+secrets.token_hex(32))"
 ```
 
+**キー登録**: `minta_` プレフィックスだけでは API は受理しません — キー表に登録済みである必要があります。エンジン起動中に Web UI(設定 → API キー)またはユーザートークンで `POST /api/keys` を呼んで登録してください。書き込み系ツール(受信箱、write_context)には必要です。読み取り系は不要です。
+
 | 変数 | デフォルト | 説明 |
 |---|---|---|
 | `MINTA_DATABASE_URL` | `sqlite:///./minta.db` | ゼロ設定 SQLite;1 行で MySQL へ |

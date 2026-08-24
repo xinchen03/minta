@@ -98,6 +98,8 @@ cp .env.example .env    # then edit secrets
 python -c "import secrets; print('MINTA_API_KEY=minta_'+secrets.token_hex(32))"  # generate a secure key
 ```
 
+**Register the key**: the `minta_` prefix alone is not enough — the API accepts a key only if it exists in the keys table. While the engine runs, create the record in the Web UI (`Settings → API keys`) or call `POST /api/keys` with a user token. Write-path tools (inbox, `write_context`) require a registered key; read tools do not.
+
 | Variable | Default | What it does |
 |---|---|---|
 | `MINTA_DATABASE_URL` | `sqlite:///./minta.db` | Zero-config SQLite; switch to MySQL in one line |
