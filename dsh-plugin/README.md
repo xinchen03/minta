@@ -35,6 +35,26 @@ minta" → the 19 `mcp__minta__*` tools.
 Note: the engine must be running before the tools respond; `failOnStartupError:
 false` means a stopped engine does not break DSH sessions.
 
+## Using Minta in a session
+
+1. **Keep the engine running** — `python minta_cli.py start` (or Docker).
+2. After `dsh plugin add` + one restart of `dsh web`, start a new session and
+   ask: *"list all tools whose name contains minta"* — expect the 19
+   `mcp__minta__*` tools. If they are absent, restart `dsh web` once more.
+3. **First session**: call `minta_login` (your Minta credentials) so the tools
+   operate with your identity.
+4. **Automatically at session start**: the plugin checks engine health and
+   recent memory (logged; never blocks the session). The skill
+   `minta-memory-governance` is registered and available to the model.
+5. **Manual first answer**: say *"用 Minta 先把记忆找出来再回答"* — or just ask
+   about prior work; the skilled model will `minta_search_context` first.
+6. **To save something durable**: tell the model to remember it — it will
+   `minta_append_inbox`, and you confirm or discard in the Minta UI
+   (`http://127.0.0.1:8772`, inbox review). Your memory is never edited
+   silently.
+7. **Engine stopped / unreachable**: sessions keep working; tools and prewarm
+   just report unavailable (fail-open).
+
 ### Migrating from the manual `cordis.patch.yml` block
 
 If you previously set Minta up by appending the `mcp-client-minta` block to
