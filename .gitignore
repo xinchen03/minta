@@ -59,3 +59,8 @@ chroma_data*/
 feedback/
 archive/
 draft/
+
+# AMC eval proxy runs (private benchmark artifacts)
+docs/eval-proxy/runs/
+eval.db
+server/eval.db
