@@ -64,3 +64,36 @@ jobs:
           name: pytest-log
           path: pytest.log
           if-no-files-found: ignore
+
+  # Platform-deployment pre-flight: AML builds the image from the repo
+  # Dockerfile, so we verify the exact same path — build + container +
+  # Add/Search round-trip — on every push.
+  docker-build:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build image (bakes mpnet + ms-marco models)
+        run: docker build -t minta-eval .
+
+      - name: Start container and wait for /health
+        run: |
+          docker run -d --name mintaeval -e MINTA_EVAL_DB=sqlite:////tmp/eval.db -p 18000:8000 minta-eval
+          for i in $(seq 1 90); do
+            if curl -sf http://127.0.0.1:18000/health >/dev/null; then echo "health OK"; exit 0; fi
+            sleep 5
+          done
+          echo "container never became healthy"; docker logs mintaeval | tail -30; exit 1
+
+      - name: Add/Search round-trip inside the built image
+        run: |
+          curl -sf -X POST http://127.0.0.1:18000/add -H 'Content-Type: application/json' \
+            -d '{"request_id":"ci:smoke1","user_id":"u1","session_id":"s1","messages":[{"role":"user","content":"She prefers yoga in the morning","timestamp":1700000000000}]}'
+          sleep 1
+          curl -sf -X POST http://127.0.0.1:18000/search -H 'Content-Type: application/json' \
+            -d '{"query":"what does she prefer?","user_id":"u1","top_k":5}' | grep -q yoga
+
+      - name: Cleanup
+        if: always()
+        run: docker rm -f mintaeval 2>/dev/null || true
