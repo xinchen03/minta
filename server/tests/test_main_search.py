@@ -236,12 +236,15 @@ def test_conflict_embedding_384_populated_on_write(monkeypatch):
     _register(f"ce_{uuid.uuid4().hex[:8]}", hdr)
     obj = _create(hdr, "conflict test topic", "some detail about it")
 
-    from sqlalchemy import create_engine
+    # Query through the app's real engine (whatever DB config bound to) so
+    # the assertion reads the row the API actually wrote — never a fresh
+    # hand-made engine that could point at a different file in full-suite
+    # runs (config's module-level engine is created at first import).
     from sqlalchemy.orm import sessionmaker
     from models.context_object import ContextObject
+    from config import engine as app_engine
 
-    engine = create_engine(f"sqlite:///{_TMP.replace(os.sep, '/')}/main_test.db")
-    with sessionmaker(bind=engine)() as db:
+    with sessionmaker(bind=app_engine)() as db:
         row = db.query(ContextObject).filter(ContextObject.id == obj["id"]).first()
         assert row is not None and row.embedding_384
         import json as _json
@@ -251,6 +254,6 @@ def test_conflict_embedding_384_populated_on_write(monkeypatch):
     r = _client().patch(f"/api/contextObjects/{obj['id']}", headers=hdr,
                         json={"summary": "updated conflicting detail"})
     assert r.status_code == 200
-    with sessionmaker(bind=engine)() as db:
+    with sessionmaker(bind=app_engine)() as db:
         row = db.query(ContextObject).filter(ContextObject.id == obj["id"]).first()
         assert row.embedding_384 and "updated conflicting detail" or True
