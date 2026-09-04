@@ -20,13 +20,22 @@
 D:/pycharm/anaconda/python.exe docs/eval-proxy/proxy_eval.py \
   --max-convs 2 --max-questions 20
 
-# 全打分(自备 OpenAI 兼容凭据;模型建议 gpt-4o-mini 与参赛口径一致)
-export PROXY_LLM_BASE=https://.../v1
-export PROXY_LLM_KEY=...
+# 全打分 —— 接口可切换(OpenAI 兼容)。当前无 GPT key 时用 DeepSeek:
+export DEEPSEEK_API_KEY=sk-...
+D:/pycharm/anaconda/python.exe docs/eval-proxy/proxy_eval.py \
+  --max-convs 10 --top-k 100
+
+# 换回 GPT(与参赛口径一致):
+export PROXY_LLM_BASE=https://api.openai.com/v1
+export PROXY_LLM_KEY=sk-...
 export PROXY_LLM_MODEL=gpt-4o-mini
 D:/pycharm/anaconda/python.exe docs/eval-proxy/proxy_eval.py \
   --max-convs 10 --top-k 100
 ```
+
+> **模型口径说明**:代理分只用于臂间相对比较(同一 judge 模型下 A/B 才可比),
+> 绝对值不等于官方成绩。官方系统模型为 gpt-4o-mini 口径,DeepSeek 跑出的
+> 绝对分仅供调优方向参考;换 GPT 后矩阵需整套重跑。
 
 嵌入模型默认 `D:/all-mpnet-base-v2`(存在时自动),可用 `MINTA_EVAL_EMBED_MODEL`
 覆盖。检索行为由 minta-open eval 适配器的 env 开关控制,例如 A/B:

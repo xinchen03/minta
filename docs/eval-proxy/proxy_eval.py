@@ -178,9 +178,18 @@ def main() -> None:
     ap.add_argument("--outdir", default=os.path.join(os.path.dirname(os.path.abspath(__file__)), "runs"))
     args = ap.parse_args()
 
+    # Credential resolution: PROXY_LLM_* first, DeepSeek as a local fallback
+    # (OpenAI-compatible). Swap back to GPT later by exporting PROXY_LLM_* —
+    # the interface is the same; only the judge/answer model changes.
     base_url = os.environ.get("PROXY_LLM_BASE", "")
     api_key = os.environ.get("PROXY_LLM_KEY", "")
     model = os.environ.get("PROXY_LLM_MODEL", "gpt-4o-mini")
+    if not (base_url and api_key) and os.environ.get("DEEPSEEK_API_KEY"):
+        base_url = base_url or "https://api.deepseek.com/v1"
+        api_key = os.environ["DEEPSEEK_API_KEY"]
+        model = os.environ.get("PROXY_LLM_MODEL", "deepseek-chat")
+        print("LLM: DeepSeek fallback (deepseek-chat) — proxy signal only; "
+              "export PROXY_LLM_* to switch to gpt-4o-mini later")
     do_score = bool(base_url and api_key)
 
     os.makedirs(args.outdir, exist_ok=True)
