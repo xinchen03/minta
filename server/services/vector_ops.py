@@ -55,3 +55,37 @@ def drop_object(obj_id: str) -> None:
         _service().delete_vectors([obj_id])
     except Exception:
         logger.warning("vector delete failed for %s (continuing)", obj_id, exc_info=True)
+
+
+_conflict_warned = False
+
+
+def apply_conflict_embedding(obj) -> None:
+    """Fill `obj.embedding_384` (MiniLM 384-d, JSON float array) on write.
+
+    This is the input column conflict_detector / lifecycle_scanner / debt /
+    facts read — it has never been populated in either codebase, leaving the
+    flagship "detect contradictions" feature inert. Called right before the
+    object's commit. Fail-open: a missing/corrupt MiniLM model must never
+    break a write (column simply stays NULL).
+    """
+    global _conflict_warned
+    if os.environ.get("MINTA_CONFLICT_EMBED", "1").lower() in ("0", "false", "off"):
+        return
+    text = compose_text(getattr(obj, "title", ""),
+                        getattr(obj, "summary", ""),
+                        getattr(obj, "body", ""))
+    if not text.strip():
+        return
+    try:
+        from services import embedding_service
+        import json as _json
+
+        vec = embedding_service.get_conflict_embedding()(text[:1000])
+        obj.embedding_384 = _json.dumps([float(x) for x in vec])
+    except Exception:
+        if not _conflict_warned:
+            _conflict_warned = True
+            logger.warning(
+                "conflict embedding unavailable — embedding_384 stays empty "
+                "(continuing)", exc_info=True)

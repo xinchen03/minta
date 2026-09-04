@@ -135,6 +135,7 @@ def create_object(payload: dict, user: User = Depends(get_current_user), db: Ses
         owner_name=payload.get("ownerName", user.username),
     )
     db.add(obj)
+    vector_ops.apply_conflict_embedding(obj)  # 384-d input for conflict detection
     db.commit()
     db.refresh(obj)
     vector_ops.index_object(obj.id, vector_ops.compose_text(obj.title, obj.summary, obj.body),
@@ -174,6 +175,7 @@ def update_object(obj_id: str, payload: dict, user: User = Depends(get_current_u
                     obj.restored_by = user.id
             obj.status = st
     obj.updated_at = datetime.utcnow()
+    vector_ops.apply_conflict_embedding(obj)  # keep 384-d input current
 
     db.commit()
     db.refresh(obj)

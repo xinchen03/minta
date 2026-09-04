@@ -66,6 +66,7 @@ def archive_items(payload: dict, user: User = Depends(get_current_user), db: Ses
     items = db.query(InboxItem).filter(InboxItem.id.in_(indices), InboxItem.user_id == user.id).all()
     created_objects = 0
     created_objs: list = []
+    from services import vector_ops  # used in-loop below and after commit
 
     for item in items:
         item.status = "archived"
@@ -94,6 +95,7 @@ def archive_items(payload: dict, user: User = Depends(get_current_user), db: Ses
                 confidence=int(item.confidence * 5) if item.confidence else 3,
             )
             db.add(obj)
+            vector_ops.apply_conflict_embedding(obj)  # 384-d conflict input
             created_objs.append(obj)
             created_objects += 1
 

@@ -235,9 +235,12 @@ def _seed_starter_context(db: Session, user):
             tags=["onboarding", "sample", "counter-example"],
             status="pending",
         ))
+        # Best-effort conflict embeddings for starter objects (384-d input)
+        from services import vector_ops
+        for c in starters:
+            vector_ops.apply_conflict_embedding(c)
         db.commit()
         # Best-effort vector indexing for the starter objects (search visibility)
-        from services import vector_ops
         for c in starters:
             vector_ops.index_object(c.id, vector_ops.compose_text(c.title, c.summary, c.body),
                                     user.id, c.type, c.status)

@@ -31,6 +31,8 @@ def main() -> None:
     ap.add_argument("--db-url", default=os.environ.get("MINTA_DATABASE_URL", ""))
     ap.add_argument("--limit", type=int, default=0, help="0 = all rows")
     ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--skip-conflict", action="store_true",
+                    help="skip the embedding_384 (conflict detection) pass")
     args = ap.parse_args()
 
     from sqlalchemy import create_engine
@@ -69,6 +71,26 @@ def main() -> None:
             print(f"  {i}/{len(rows)} ({time.time() - t0:.0f}s)", flush=True)
     print(f"done: indexed={done} skipped_empty={skipped} "
           f"elapsed={time.time() - t0:.0f}s")
+
+    # ── conflict pass: fill embedding_384 (never populated anywhere before) ──
+    if not args.skip_conflict and not args.dry_run:
+        from services import vector_ops as _vo
+
+        print("filling conflict embeddings (MiniLM 384-d)...", flush=True)
+        t1 = time.time()
+        filled = 0
+        with Session() as db2:
+            objs = db2.query(ContextObject).filter(ContextObject.status != "archived").all()
+            for j, o in enumerate(objs, 1):
+                _vo.apply_conflict_embedding(o)
+                if o.embedding_384:
+                    filled += 1
+                if j % 200 == 0:
+                    db2.commit()
+                    print(f"  {j}/{len(objs)} (filled {filled})", flush=True)
+            db2.commit()
+        print(f"conflict embeddings filled: {filled}/{len(objs)} "
+              f"elapsed={time.time() - t1:.0f}s")
 
 
 if __name__ == "__main__":

@@ -220,3 +220,37 @@ def test_search_empty_when_no_match():
     r = _client().post("/api/search", headers=hdr,
                        json={"query": "zzzqqqxx unknown words", "top_k": 5})
     assert r.json()["results"] == []
+
+
+def test_conflict_embedding_384_populated_on_write(monkeypatch):
+    """M1-fix regression: embedding_384 must be written on create/patch —
+    conflict_detector reads this column and it was never populated."""
+    import numpy as np
+    import services.embedding_service as _es
+
+    def fake_ce():
+        return lambda text: np.arange(384, dtype=np.float32)
+
+    monkeypatch.setattr(_es, "get_conflict_embedding", fake_ce)
+    hdr = {}
+    _register(f"ce_{uuid.uuid4().hex[:8]}", hdr)
+    obj = _create(hdr, "conflict test topic", "some detail about it")
+
+    from sqlalchemy import create_engine
+    from sqlalchemy.orm import sessionmaker
+    from models.context_object import ContextObject
+
+    engine = create_engine(f"sqlite:///{_TMP.replace(os.sep, '/')}/main_test.db")
+    with sessionmaker(bind=engine)() as db:
+        row = db.query(ContextObject).filter(ContextObject.id == obj["id"]).first()
+        assert row is not None and row.embedding_384
+        import json as _json
+        vec = _json.loads(row.embedding_384)
+        assert len(vec) == 384 and vec[0] == 0.0 and vec[-1] == 383.0
+    # patch keeps the column current
+    r = _client().patch(f"/api/contextObjects/{obj['id']}", headers=hdr,
+                        json={"summary": "updated conflicting detail"})
+    assert r.status_code == 200
+    with sessionmaker(bind=engine)() as db:
+        row = db.query(ContextObject).filter(ContextObject.id == obj["id"]).first()
+        assert row.embedding_384 and "updated conflicting detail" or True
