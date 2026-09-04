@@ -13,7 +13,6 @@ The rewrite prompt below is our own wording, not copied from any participant.
 """
 from __future__ import annotations
 
-import hashlib
 import json
 import logging
 import os
@@ -21,7 +20,8 @@ import urllib.request
 
 logger = logging.getLogger("minta.eval.recall")
 
-_cache: dict[str, str] = {}
+# No module-level caches: a cross-request cache would look like shared state
+# across evaluation samples (AML red line), even though it holds no memory.
 
 _SYSTEM = (
     "You help a memory retrieval system. The stored log is written in the "
@@ -43,9 +43,6 @@ def _model() -> str:
 
 def rewrite_recall_query(question: str) -> str | None:
     """First-person rewrite of `question`, or None when unavailable/failed."""
-    key = hashlib.sha256(question.encode("utf-8")).hexdigest()
-    if key in _cache:
-        return _cache[key]
     api_key = os.environ.get("MINTA_EVAL_LLM_KEY", "")
     if not api_key:
         return None
@@ -73,5 +70,4 @@ def rewrite_recall_query(question: str) -> str | None:
     text = text.strip().strip('"')
     if not text:
         return None
-    _cache[key] = text
     return text
