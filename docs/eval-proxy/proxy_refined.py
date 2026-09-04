@@ -84,7 +84,10 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--data", default=r"D:\LoCoMo_refined-main\data\public")
     ap.add_argument("--max-convs", type=int, default=10)
-    ap.add_argument("--max-questions", type=int, default=0)  # 0 = all textual
+    ap.add_argument("--max-questions", type=int, default=0)  # 0 = all in scope
+    ap.add_argument("--all", action="store_true",
+                    help="include the 521 multimodal-tagged questions (caption "
+                         "memory only — Add carries no images)")
     ap.add_argument("--top-k", type=int, default=100)
     ap.add_argument("--outdir", default=os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "runs", "refined"))
@@ -111,8 +114,11 @@ def main() -> None:
     q_path = os.path.join(args.data, "questions.jsonl")
     convs = [json.loads(l) for l in open(conv_path, encoding="utf-8") if l.strip()][:args.max_convs]
     all_q = [json.loads(l) for l in open(q_path, encoding="utf-8") if l.strip()]
-    qs = [q for q in all_q if str(q.get("is_multi_modality", "false")).lower() == "false"
-          and q["sample_id"] in {c["sample_id"] for c in convs}]
+    if args.all:
+        qs = [q for q in all_q if q["sample_id"] in {c["sample_id"] for c in convs}]
+    else:
+        qs = [q for q in all_q if str(q.get("is_multi_modality", "false")).lower() == "false"
+              and q["sample_id"] in {c["sample_id"] for c in convs}]
     if args.max_questions > 0:
         qs = qs[: args.max_questions]
     print(f"convs={len(convs)} textual_questions={len(qs)} (of {len(all_q)})")
