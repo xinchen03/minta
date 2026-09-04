@@ -8,7 +8,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# CPU torch first — otherwise pip resolves the CUDA build (2GB+) via the
+# sentence-transformers dependency graph and the build stalls/overflows.
+RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu \
+    && pip install --no-cache-dir -r requirements.txt
 
 COPY server/ ./server/
 COPY run.py .

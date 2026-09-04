@@ -75,7 +75,27 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Build image (bakes mpnet + ms-marco models)
-        run: docker build -t minta-eval .
+        run: |
+          docker build -t minta-eval . 2>&1 | tee build.log
+          rc=${PIPESTATUS[0]}
+          if [ $rc -ne 0 ]; then
+            tail -40 build.log | grep -vE '^\s*$' | tr '\n' ' ' | fold -w 260 > /tmp/buildmsg.txt
+            n=0
+            while IFS= read -r line; do
+              n=$((n+1))
+              esc=$(printf '%s' "$line" | sed 's/%/%25/g; s/:/%3A/g; s/,/%2C/g')
+              echo "::error::[buildlog $n] $esc"
+            done < /tmp/buildmsg.txt
+          fi
+          exit $rc
+
+      - name: Upload build log (always)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-build-log
+          path: build.log
+          if-no-files-found: ignore
 
       - name: Start container and wait for /health
         run: |
