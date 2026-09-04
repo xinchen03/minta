@@ -131,19 +131,20 @@ def build_add_plan(conv: dict, sample_id: str):
 def render_answer_prompt(question: str, memories: list[str]) -> str:
     values = {
         "speaker_1_name": "speaker 1",
-        "speaker_1_memories": "\n".join(memories),
+        "speaker_1_memories": "\n".join(str(m) for m in memories),
         "speaker_2_name": "speaker 2",
         "speaker_2_memories": "",
         "question": question,
     }
     return re.sub(
         r"\{\{(speaker_1_name|speaker_1_memories|speaker_2_name|speaker_2_memories|question)\}\}",
-        lambda m: values[m.group(1)], OPEN_ENDED_ANSWER_TEMPLATE)
+        lambda m: str(values[m.group(1)]), OPEN_ENDED_ANSWER_TEMPLATE)
 
 
-def render_judge_prompt(question: str, gold: str, generated: str) -> str:
-    values = {"question": question, "gold_answer": gold,
-              "generated_answer": generated}
+def render_judge_prompt(question: str, gold, generated: str) -> str:
+    # gold answers may be numeric (JSON parses "3" as int) — coerce to str
+    values = {"question": str(question), "gold_answer": str(gold),
+              "generated_answer": str(generated)}
     return re.sub(r"\{(question|gold_answer|generated_answer)\}",
                   lambda m: values[m.group(1)], ACCURACY_PROMPT)
 
@@ -161,12 +162,20 @@ def llm_complete(client: httpx.Client, base: str, key: str, model: str,
 
 
 def parse_judge_label(response: str) -> str:
+    """Tolerant label extraction (models may emit single-quoted JSON or prose)."""
+    m = re.search(r"['\"]?label['\"]?\s*[:=]\s*['\"](CORRECT|WRONG)['\"]", response, re.I)
+    if m:
+        return m.group(1).upper()
     m = re.search(r"\{.*?\}", response, re.DOTALL)
-    payload = json.loads(m.group(0))
-    label = str(payload.get("label", "")).upper()
-    if label not in {"CORRECT", "WRONG"}:
-        raise ValueError(f"unexpected judge label: {label!r}")
-    return label
+    if m:
+        try:
+            payload = json.loads(m.group(0).replace("'", '"'))
+            label = str(payload.get("label", "")).upper()
+            if label in {"CORRECT", "WRONG"}:
+                return label
+        except json.JSONDecodeError:
+            pass
+    raise ValueError(f"judge label not found in: {response[:200]!r}")
 
 
 def main() -> None:
