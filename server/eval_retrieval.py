@@ -176,6 +176,16 @@ def retrieve(store, query: str, user_id: str, top_k: int = 100,
                         scores[r["id"]] = max(scores.get(r["id"], -1.0),
                                               0.25 + 0.35 * prox)
 
+    if exp.rerank_enabled():
+        # Local cross-encoder re-orders the top dense candidates before the
+        # window/fill stages (zero LLM). Kept as an experiment arm until proxy
+        # evidence on the hard categories says it pays.
+        from eval_rerank import rerank_scores
+
+        rs = rerank_scores(query, kept, scores, n=60)
+        if rs:
+            scores = rs
+
     # seed order
     if scores:
         seeded = sorted(kept, key=lambda r: (-scores.get(r["id"], -1.0),

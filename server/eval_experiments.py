@@ -67,6 +67,10 @@ class Experiments:
         """Query-conditioned temporal boost (resolver signals only)."""
         return os.environ.get("MINTA_EVAL_TEMPORAL", "0").lower() in ("1", "true", "on")
 
+    def rerank_enabled(self) -> bool:
+        """Local cross-encoder rerank pass (zero-LLM, off by default)."""
+        return os.environ.get("MINTA_EVAL_RERANK", "0").lower() in ("1", "true", "on")
+
     def recall_weight(self) -> float:
         try:
             return float(os.environ.get("MINTA_EVAL_RECALL_WEIGHT", "0.5"))
