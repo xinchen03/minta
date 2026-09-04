@@ -41,8 +41,14 @@ jobs:
 
       - name: Run tests
         run: |
-          python -m pytest server/tests/ -v --tb=short | tee pytest.log; \
-          rc=${PIPESTATUS[0]}; echo "PYTEST_RC=$rc"; exit $rc
+          python -m pytest server/tests/ -v --tb=short 2>&1 | tee pytest.log
+          rc=${PIPESTATUS[0]}
+          if [ $rc -ne 0 ]; then
+            tail -25 pytest.log | grep -vE '^\s*$' | \
+              sed 's/%/%25/g; s/\r/%0D/g; s/\n/%0A/g' > /tmp/failmsg.txt
+            echo "::error::CI pytest failed rc=$rc. $(cat /tmp/failmsg.txt)"
+          fi
+          exit $rc
 
       - name: Upload pytest log (always)
         if: always()
