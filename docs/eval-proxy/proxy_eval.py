@@ -151,15 +151,30 @@ def render_judge_prompt(question: str, gold, generated: str) -> str:
 
 
 def llm_complete(client: httpx.Client, base: str, key: str, model: str,
-                 prompt: str, max_tokens: int = 256) -> str:
-    r = client.post(base.rstrip("/") + "/chat/completions",
-                    headers={"Authorization": f"Bearer {key}"},
-                    json={"model": model,
-                          "messages": [{"role": "user", "content": prompt}],
-                          "temperature": 0},
-                    timeout=120)
-    r.raise_for_status()
-    return r.json()["choices"][0]["message"]["content"].strip()
+                 prompt: str, max_tokens: int = 256, attempts: int = 3) -> str:
+    """Chat-completions call with bounded retry on 429/5xx (parallel runs
+    share the provider's rate limit; a retry makes concurrency survivable)."""
+    import time
+
+    last: Exception | None = None
+    for i in range(attempts):
+        try:
+            r = client.post(base.rstrip("/") + "/chat/completions",
+                            headers={"Authorization": f"Bearer {key}"},
+                            json={"model": model,
+                                  "messages": [{"role": "user", "content": prompt}],
+                                  "temperature": 0},
+                            timeout=120)
+            r.raise_for_status()
+            return r.json()["choices"][0]["message"]["content"].strip()
+        except Exception as exc:  # noqa: BLE001 — retry transport & 429/5xx
+            last = exc
+            status = getattr(exc, "response", None)
+            code = getattr(status, "status_code", None)
+            if code not in (429, 500, 502, 503, 504) and not isinstance(exc, httpx.TransportError):
+                raise
+            time.sleep(2 ** (i + 1))
+    raise last  # type: ignore[misc]
 
 
 def parse_judge_label(response: str) -> str:
