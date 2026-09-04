@@ -149,7 +149,11 @@ def main() -> None:
                 assert r.status_code == 200, (si, ci, r.text)
             sr = client.post("/search", json={
                 "query": query, "user_id": f"clb:{si}", "top_k": args.top_k})
-            hits = sr.json()["data"]
+            payload = sr.json()
+            if "data" not in payload:
+                print(f"  search error si={si}: {sr.status_code} {str(payload)[:200]}", flush=True)
+                payload = {"data": []}
+            hits = payload["data"]
             items.append({
                 "id": str(si), "question": query[:2000],
                 "rubrics": s.get("rubrics", []),
