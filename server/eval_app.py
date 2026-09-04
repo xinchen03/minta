@@ -104,22 +104,29 @@ def create_eval_app(db_url: str | None = None, embed_fn=None) -> FastAPI:
     import numpy as _np
 
     injected_embed = embed_fn
-    embed_state = {"off": False, "bytes_fn": None}
+    embed_state = {"off": False, "single": None, "batch": None}
 
     def _to_bytes(content: str) -> bytes:
         return _np.asarray(injected_embed(content), dtype=_np.float32).tobytes()
+
+    def _to_bytes_batch(contents: list[str]) -> list[bytes]:
+        # injected embedders are single-text callables; batch = loop here
+        return [_to_bytes(c) for c in contents]
 
     def _init_local_embedder() -> bool:
         """Load the local model once; returns True when vectors are usable."""
         if embed_state["off"]:
             return False
         try:
-            from eval_embed import embed_text
+            from eval_embed import embed_text, embed_texts
             from eval_experiments import set_embed_fn as _register
 
             _register(embed_text)
-            embed_state["bytes_fn"] = lambda c: _np.asarray(
+            embed_state["single"] = lambda c: _np.asarray(
                 embed_text(c), dtype=_np.float32).tobytes()
+            embed_state["batch"] = lambda cs: [
+                _np.asarray(v, dtype=_np.float32).tobytes()
+                for v in embed_texts(list(cs))]
             return True
         except Exception:
             embed_state["off"] = True
@@ -129,26 +136,30 @@ def create_eval_app(db_url: str | None = None, embed_fn=None) -> FastAPI:
             return False
 
     def resolve_embed():
-        """Embed callable for this Add, or None (store losslessly, no vectors)."""
+        """(single, batch) embed callables for this Add, or None when off."""
         if injected_embed is not None:
-            return _to_bytes
-        if embed_state["bytes_fn"] is not None:
-            return embed_state["bytes_fn"]
+            return _to_bytes, _to_bytes_batch
+        if embed_state["single"] is not None:
+            return embed_state["single"], embed_state["batch"]
         if os.environ.get("MINTA_EVAL_EMBED", "1").lower() in ("0", "false", "off"):
             embed_state["off"] = True
-            return None
-        return embed_state["bytes_fn"] if _init_local_embedder() else None
+            return None, None
+        if not _init_local_embedder():
+            return None, None
+        return embed_state["single"], embed_state["batch"]
 
     @app.post("/add")
     def add(payload: AddRequestModel) -> AddResponse:
         try:
+            single_fn, batch_fn = resolve_embed()
             status, _n = store.add_batch(
                 payload.request_id,
                 payload.user_id,
                 payload.session_id,
                 [{"role": m.role, "content": m.content, "timestamp": m.timestamp}
                  for m in payload.messages],
-                embed_fn=resolve_embed(),
+                embed_fn=single_fn,
+                embed_batch_fn=batch_fn,
             )
         except HTTPException:
             raise

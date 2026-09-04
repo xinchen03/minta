@@ -29,8 +29,7 @@ def _resolve_path() -> str:
             or "sentence-transformers/all-mpnet-base-v2")
 
 
-def embed_text(text: str) -> np.ndarray:
-    """Encode one text to a normalized float32 vector (768d for mpnet)."""
+def _ensure_model():
     global _model, _model_path
     path = _resolve_path()
     if _model is None or _model_path != path:
@@ -41,9 +40,27 @@ def embed_text(text: str) -> np.ndarray:
                 logger.info("loading eval embedder: %s", path)
                 _model = SentenceTransformer(path)
                 _model_path = path
-    v = _model.encode(text, normalize_embeddings=True)
-    arr = np.asarray(v, dtype=np.float32)
+    return _model
+
+
+def embed_text(text: str) -> np.ndarray:
+    """Encode one text to a normalized float32 vector (768d for mpnet)."""
+    arr = _ensure_model().encode(text, normalize_embeddings=True)
+    arr = np.asarray(arr, dtype=np.float32)
     n = float(np.linalg.norm(arr))
     if n > 0:
         arr = arr / n
     return arr
+
+
+def embed_texts(texts: list[str]) -> list[np.ndarray]:
+    """Batch encode (much faster than per-text calls under load)."""
+    if not texts:
+        return []
+    arrs = _ensure_model().encode(list(texts), normalize_embeddings=True,
+                                  batch_size=32)
+    out = []
+    for v in np.asarray(arrs, dtype=np.float32):
+        n = float(np.linalg.norm(v))
+        out.append(v / n if n > 0 else v)
+    return out

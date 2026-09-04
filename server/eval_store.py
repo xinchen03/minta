@@ -109,14 +109,17 @@ class EvalStore:
     # ── write path ─────────────────────────────────────────────────────────
 
     def add_batch(self, request_id: str, user_id: str, session_id: str,
-                  messages: list[dict], embed_fn=None) -> tuple[str, int]:
+                  messages: list[dict], embed_fn=None,
+                  embed_batch_fn=None) -> tuple[str, int]:
         """Atomically ingest one Add request. Returns (status, n_memories).
 
         status is "created" for a fresh request_id or "duplicate" when the same
         request_id already completed (caller echoes 200 in both cases).
         `embed_fn(content) -> bytes` runs for EVERY message BEFORE any row is
         written, so a mid-batch embedding failure leaves zero rows and the
-        platform retry starts clean.
+        platform retry starts clean. `embed_batch_fn(contents) -> list[bytes]`
+        is preferred when available (batch encode is far faster under the
+        platform's Add concurrency).
         """
         payload_hash = hashlib.sha256(
             json.dumps(messages, ensure_ascii=False, sort_keys=True).encode("utf-8")
@@ -128,8 +131,12 @@ class EvalStore:
                     return "duplicate", 0
 
                 embeds: list = []
-                if embed_fn is not None:
-                    embeds = [embed_fn(m.get("content", "")) for m in messages]
+                if embed_fn is not None or embed_batch_fn is not None:
+                    if embed_batch_fn is not None and len(messages) > 1:
+                        embeds = embed_batch_fn(
+                            [m.get("content", "") for m in messages])
+                    else:
+                        embeds = [embed_fn(m.get("content", "")) for m in messages]
 
                 db.add(AddRequest(
                     request_id=request_id,
