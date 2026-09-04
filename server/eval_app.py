@@ -150,6 +150,7 @@ def create_eval_app(db_url: str | None = None, embed_fn=None) -> FastAPI:
         return SearchResponse(data=hits)
 
     @app.get("/health")
+    @app.get("/ping")
     def health() -> dict:
         return {"ok": True}
 
