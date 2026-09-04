@@ -179,9 +179,10 @@ def _log_activity(db: Session, user_id: int, event_type: str, detail: str = None
 
 def _seed_starter_context(db: Session, user):
     """Auto-write starter context + inbox example for new users."""
+    starters = []
     try:
         # Context 1: Welcome
-        db.add(ContextObject(
+        c1 = ContextObject(
             id=str(uuid.uuid4()),
             user_id=user.id,
             type="preference",
@@ -192,9 +193,11 @@ def _seed_starter_context(db: Session, user):
             source="manual",
             confidence=5,
             owner_name=user.username,
-        ))
+        )
+        db.add(c1)
+        starters.append(c1)
         # Context 2: Knowledge Base intro
-        db.add(ContextObject(
+        c2 = ContextObject(
             id=str(uuid.uuid4()),
             user_id=user.id,
             type="ai_brief",
@@ -205,9 +208,11 @@ def _seed_starter_context(db: Session, user):
             source="manual",
             confidence=5,
             owner_name=user.username,
-        ))
+        )
+        db.add(c2)
+        starters.append(c2)
         # Context 3: Autopilot guide
-        db.add(ContextObject(
+        c3 = ContextObject(
             id=str(uuid.uuid4()),
             user_id=user.id,
             type="workflow",
@@ -218,7 +223,9 @@ def _seed_starter_context(db: Session, user):
             source="manual",
             confidence=5,
             owner_name=user.username,
-        ))
+        )
+        db.add(c3)
+        starters.append(c3)
         # Inbox: sample counter-example
         db.add(InboxItem(
             user_id=user.id,
@@ -229,6 +236,11 @@ def _seed_starter_context(db: Session, user):
             status="pending",
         ))
         db.commit()
+        # Best-effort vector indexing for the starter objects (search visibility)
+        from services import vector_ops
+        for c in starters:
+            vector_ops.index_object(c.id, vector_ops.compose_text(c.title, c.summary, c.body),
+                                    user.id, c.type, c.status)
     except Exception:
         db.rollback()
 

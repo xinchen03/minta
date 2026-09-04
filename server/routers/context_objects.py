@@ -11,6 +11,7 @@ from models.context_object import ContextObject
 from models.context_retrieval_log import ContextRetrievalLog
 from models.activity_log import ActivityLog
 from routers.auth import get_current_user, User
+from services import vector_ops
 
 router = APIRouter(prefix="/api/contextObjects", tags=["context_objects"])
 
@@ -136,6 +137,8 @@ def create_object(payload: dict, user: User = Depends(get_current_user), db: Ses
     db.add(obj)
     db.commit()
     db.refresh(obj)
+    vector_ops.index_object(obj.id, vector_ops.compose_text(obj.title, obj.summary, obj.body),
+                            user.id, obj.type, obj.status)
     return obj.to_dict()
 
 
@@ -174,6 +177,8 @@ def update_object(obj_id: str, payload: dict, user: User = Depends(get_current_u
 
     db.commit()
     db.refresh(obj)
+    vector_ops.index_object(obj.id, vector_ops.compose_text(obj.title, obj.summary, obj.body),
+                            user.id, obj.type, obj.status)
     return obj.to_dict()
 
 
@@ -184,4 +189,5 @@ def delete_object(obj_id: str, user: User = Depends(get_current_user), db: Sessi
         raise HTTPException(status_code=404, detail="not found")
     db.delete(obj)
     db.commit()
+    vector_ops.drop_object(obj_id)
     return {"success": True, "id": obj_id}

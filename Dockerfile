@@ -21,6 +21,9 @@ RUN python scripts/fetch_eval_models.py \
         --repo ${MINTA_EVAL_MODEL_REPO} \
         --dest /models/${MINTA_EVAL_MODEL_REPO}
 ENV MINTA_EVAL_EMBED_MODEL=/models/${MINTA_EVAL_MODEL_REPO}
+# Business app embedding uses the same baked weights (fixes the previous
+# Windows-path default that broke semantic search inside containers).
+ENV MINTA_EMBEDDING_MODEL=/models/${MINTA_EVAL_MODEL_REPO}
 
 VOLUME /data
 ENV MINTA_DATABASE_URL=sqlite:////data/minta.db

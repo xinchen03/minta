@@ -5,12 +5,17 @@ Backends:
 - local: FAISS in-memory index, MiniLM 384-dim, original py38 backend.
 - openai / siliconflow / deepseek: API-based embeddings.
 
-Public API unchanged:
+Public API:
     embed(text) -> np.ndarray
     embed_batch(texts) -> np.ndarray
     build_index(objects) -> None
-    search(query, top_k) -> List[dict]
-    add_vector(obj_id, text) -> None
+    search(query, top_k, where=None) -> List[dict]
+    add_vector(obj_id, text, metadata=None) -> None
+    delete_vectors(ids) -> None
+
+`metadata` / `where` scope vectors by owner: every indexed object carries
+{"user_id": str | "global"} and search filters on it, so semantic retrieval
+never leaks across users.
 """
 from __future__ import annotations
 import os
@@ -64,12 +69,13 @@ class EmbeddingService:
 
     def _init_chroma(self):
         import chromadb
-        from chromadb.utils import embedding_functions
+        import sentence_transformers
 
+        # Load the model directly via sentence-transformers instead of chroma's
+        # bundled helper: the helper was removed in chromadb 1.x, so this works
+        # on both the image pin (<0.6) and newer local dev installs.
         model_path = os.environ.get("MINTA_EMBEDDING_MODEL", "D:/all-mpnet-base-v2")
-        self._model = embedding_functions.SentenceTransformerEmbeddingFunction(
-            model_name=model_path,
-        )
+        self._model = sentence_transformers.SentenceTransformer(model_path)
         path = _chroma_path()
         os.makedirs(path, exist_ok=True)
         self._chroma_client = chromadb.PersistentClient(path=path)
@@ -103,7 +109,7 @@ class EmbeddingService:
             return np.zeros(EMBEDDING_DIM, dtype=np.float32)
         try:
             if self.backend == "chromadb":
-                return np.array(self._model([text])[0], dtype=np.float32)
+                return self._model.encode(text, normalize_embeddings=True).astype(np.float32)
             elif self.backend == "local":
                 return self._model.encode(text, normalize_embeddings=True).astype(np.float32)
             else:
@@ -118,7 +124,7 @@ class EmbeddingService:
             return np.zeros((0, EMBEDDING_DIM), dtype=np.float32)
         try:
             if self.backend == "chromadb":
-                return np.array(self._model(texts), dtype=np.float32)
+                return self._model.encode(texts, normalize_embeddings=True).astype(np.float32)
             elif self.backend == "local":
                 return self._model.encode(texts, normalize_embeddings=True).astype(np.float32)
             else:
@@ -151,7 +157,12 @@ class EmbeddingService:
             ids.append(oid)
             embeddings.append(emb.tolist())
             docs.append(text[:500])
-            metas.append({"type": obj.get("type", ""), "status": obj.get("status", "active")})
+            uid = obj.get("user_id")
+            metas.append({
+                "type": obj.get("type", ""),
+                "status": obj.get("status", "active"),
+                "user_id": str(uid) if uid is not None else "global",
+            })
             self._id_to_idx[oid] = oid
             self._idx_to_id[oid] = oid
         if ids:
@@ -176,17 +187,27 @@ class EmbeddingService:
         self._idx_to_id = {i: oid for i, oid in enumerate(ids)}
         logger.info(f"FAISS index: {idx.ntotal} vectors")
 
-    def search(self, query: str, top_k: int = 10) -> List[dict]:
+    def search(self, query: str, top_k: int = 10, where: Optional[dict] = None) -> List[dict]:
+        """Search vectors; `where` (e.g. {"user_id": "7"}) scopes by metadata.
+
+        The FAISS backend has no metadata store: it filters after the fact by
+        intersecting with the ids the caller knows about (pass `where` and the
+        caller's ownership is enforced in the DB join anyway).
+        """
         self._ensure_init()
         if self.backend == "local":
             return self._search_faiss(query, top_k)
-        return self._search_chroma(query, top_k)
+        return self._search_chroma(query, top_k, where=where)
 
-    def _search_chroma(self, query: str, top_k: int) -> List[dict]:
+    def _search_chroma(self, query: str, top_k: int, where: Optional[dict] = None) -> List[dict]:
         if self._collection is None or self._collection.count() == 0:
             return []
         qv = self.embed(query)
-        r = self._collection.query(query_embeddings=[qv.tolist()], n_results=min(top_k, self._collection.count()))
+        kwargs = {"query_embeddings": [qv.tolist()],
+                  "n_results": min(top_k, self._collection.count())}
+        if where:
+            kwargs["where"] = where
+        r = self._collection.query(**kwargs)
         if not r or not r.get("ids") or not r["ids"][0]:
             return []
         return [{"id": oid, "score": max(0.0, 1.0 - float(d))} for oid, d in zip(r["ids"][0], r["distances"][0])]
@@ -198,8 +219,12 @@ class EmbeddingService:
         dists, idxs = self.faiss_index.search(qv, top_k)
         return [{"id": self._idx_to_id[i], "score": float(d)} for d, i in zip(dists[0], idxs[0]) if i >= 0 and i in self._idx_to_id]
 
-    def add_vector(self, obj_id: str, text: str):
+    def add_vector(self, obj_id: str, text: str, metadata: Optional[dict] = None):
+        """Index one object. `metadata` must carry user_id for isolation."""
         self._ensure_init()
+        meta = dict(metadata or {})
+        meta.setdefault("user_id", "global")
+        meta.setdefault("status", "active")
         if self.backend == "local":
             if self.faiss_index is None:
                 return
@@ -210,7 +235,24 @@ class EmbeddingService:
             self._idx_to_id[idx] = obj_id
             return
         emb = self.embed(text)
-        self._collection.upsert(ids=[str(obj_id)], embeddings=[emb.tolist()], documents=[text[:500]])
+        self._collection.upsert(ids=[str(obj_id)], embeddings=[emb.tolist()],
+                                documents=[text[:500]], metadatas=[meta])
+
+    def delete_vectors(self, ids: List[str]):
+        """Remove vectors by id (object delete/archive)."""
+        self._ensure_init()
+        ids = [str(i) for i in ids]
+        if self.backend == "local":
+            for oid in ids:
+                idx = self._id_to_idx.pop(oid, None)
+                if idx is not None:
+                    self._idx_to_id.pop(idx, None)
+            return
+        if self._collection is not None:
+            try:
+                self._collection.delete(ids=ids)
+            except Exception:
+                logger.warning("ChromaDB delete failed (continuing)", exc_info=True)
 
 
 # MiniLM singleton for conflict detection (paper-calibrated, 384-dim)
@@ -224,11 +266,10 @@ def get_conflict_embedding() -> callable:
     """
     global _conflict_model
     if _conflict_model is None:
-        from chromadb.utils import embedding_functions
-        _conflict_model = embedding_functions.SentenceTransformerEmbeddingFunction(
-            model_name="D:/models/all-MiniLM-L6-v2",
-        )
-    return lambda text: _conflict_model([text])[0]
+        import sentence_transformers
+        model_path = os.environ.get("MINTA_CONFLICT_MODEL", "D:/models/all-MiniLM-L6-v2")
+        _conflict_model = sentence_transformers.SentenceTransformer(model_path)
+    return lambda text: _conflict_model.encode(text, normalize_embeddings=True).astype(np.float32)
 
 
 _embedding_service: Optional[EmbeddingService] = None

@@ -65,6 +65,7 @@ def archive_items(payload: dict, user: User = Depends(get_current_user), db: Ses
 
     items = db.query(InboxItem).filter(InboxItem.id.in_(indices), InboxItem.user_id == user.id).all()
     created_objects = 0
+    created_objs: list = []
 
     for item in items:
         item.status = "archived"
@@ -93,9 +94,14 @@ def archive_items(payload: dict, user: User = Depends(get_current_user), db: Ses
                 confidence=int(item.confidence * 5) if item.confidence else 3,
             )
             db.add(obj)
+            created_objs.append(obj)
             created_objects += 1
 
     db.commit()
+    from services import vector_ops
+    for obj in created_objs:
+        vector_ops.index_object(obj.id, vector_ops.compose_text(obj.title, obj.summary, obj.body),
+                                user.id, obj.type, obj.status)
     return {"success": True, "count": len(items), "createdObjects": created_objects}
 
 

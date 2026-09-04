@@ -10,7 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, Response
 from sqlalchemy import text
-from routers import inbox, context_objects, upload, skills, auth, api_keys, verification, comments, admin, user_data, slots, session as session_router
+from routers import inbox, context_objects, upload, skills, auth, api_keys, verification, comments, admin, user_data, slots, session as session_router, search as search_router
 from routers.autopilot import router as autopilot_router
 from routers.experiment import router as experiment_router
 from routers.lifecycle import router as lifecycle_router
@@ -146,6 +146,7 @@ app.include_router(slots.router)
 app.include_router(session_router.router)
 app.include_router(lifecycle_router)
 app.include_router(debt_router)
+app.include_router(search_router.router)
 
 # ── Auto-scan endpoints (registered at app level to avoid cache issues) ──
 from services.lifecycle_auto_scanner import get_state, set_enabled, set_interval
