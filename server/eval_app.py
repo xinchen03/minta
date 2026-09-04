@@ -152,6 +152,12 @@ def create_eval_app(db_url: str | None = None, embed_fn=None) -> FastAPI:
     def add(payload: AddRequestModel) -> AddResponse:
         try:
             single_fn, batch_fn = resolve_embed()
+            # Batch path is DISABLED by default: measured stall on full runs
+            # after the first conversation (threads/encode deadlock). Single
+            # per-message encode is slower but proven over 861-question runs.
+            # Re-enable for experiments with MINTA_EVAL_EMBED_BATCH=1.
+            if os.environ.get("MINTA_EVAL_EMBED_BATCH", "0").lower() not in ("1", "true", "on"):
+                batch_fn = None
             status, _n = store.add_batch(
                 payload.request_id,
                 payload.user_id,
