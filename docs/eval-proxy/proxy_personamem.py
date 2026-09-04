@@ -46,6 +46,13 @@ ROWS_FILE = os.path.join(DATA, "val_rows_selected.json")
 LETTERS = "ABCD"
 
 
+def _paths_from_args(args):
+    """Resolve chat dir / rows file (cloud runs use explicit paths)."""
+    chat_dir = args.chat_dir or CHAT_DIR
+    rows_file = args.rows_file or ROWS_FILE
+    return chat_dir, rows_file
+
+
 def _as_obj(value):
     if isinstance(value, dict):
         return value
@@ -112,7 +119,10 @@ def main() -> None:
     ap.add_argument("--outdir", default=os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "runs", "personamem"))
     ap.add_argument("--personas", type=int, default=24)
+    ap.add_argument("--chat-dir", default="")
+    ap.add_argument("--rows-file", default="")
     args = ap.parse_args()
+    CHAT_DIR, ROWS_FILE = _paths_from_args(args)  # noqa: F841  (used below)
 
     base_url = os.environ.get("PROXY_LLM_BASE", "")
     api_key = os.environ.get("PROXY_LLM_KEY", "")
@@ -177,8 +187,8 @@ def main() -> None:
                 sr = client.post("/search", json={
                     "query": question, "user_id": f"pm:{pid}", "top_k": args.top_k})
                 hits = sr.json()["data"]
-                is_change = bool(r.get("prev_pref")) or bool(r.get("updated")) \
-                    or str(r.get("updated", "")).lower() not in ("", "false", "nan")
+                upd = str(r.get("updated") or "").strip().lower()
+                is_change = bool(r.get("prev_pref")) or upd not in ("", "false", "nan", "none", "null")
                 q_items.append({
                     "id": f"{pid}:{rng.getrandbits(32):x}", "persona": pid,
                     "question": question, "gold_letter": gold_letter,
