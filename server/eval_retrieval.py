@@ -141,6 +141,18 @@ def retrieve(store, query: str, user_id: str, top_k: int = 100,
             w = exp.recall_weight()
             for mid, s in rs.items():
                 scores[mid] = (1.0 - w) * scores.get(mid, 0.0) + w * s
+    if exp.options_enabled() and options:
+        # MC option expansion: union of per-option dense scores. This only
+        # widens evidence recall — it never judges which option is right.
+        for opt in options:
+            if not opt:
+                continue
+            ovec = exp.query_vector(opt)
+            if ovec is None:
+                continue
+            for mid, s in _dense_scores(kept, ovec).items():
+                if s > 0:  # only real option affinity lifts evidence
+                    scores[mid] = max(scores.get(mid, -1.0), s)
 
     # seed order
     if scores:

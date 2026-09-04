@@ -282,3 +282,56 @@ def test_dedupe_suppression_at_retrieval(client, monkeypatch):
 def test_search_empty_query_422(client):
     assert client.post("/search", json={"query": "", "user_id": "u", "top_k": 10}
                        ).status_code == 422
+
+
+# ── experiment arms (env-gated, all default off) ───────────────────────────
+
+def test_options_expansion_off_by_default(client, monkeypatch):
+    monkeypatch.setenv("MINTA_EVAL_ENVELOPE", "off")
+    monkeypatch.delenv("MINTA_EVAL_OPTIONS", raising=False)
+    client.post("/add", json=add_payload(
+        "r1", "u1", "s",
+        [("user", "I prefer tea over coffee"),   # idx 0 (older)
+         ("user", "I prefer coffee every morning")]))  # idx 1 (newer)
+    r = client.post("/search", json={
+        "query": "Which drink does the user prefer?",
+        "options": ["A. tea", "B. coffee"],
+        "user_id": "u1", "top_k": 5})
+    # no overlap between query and docs -> recency fallback -> newest first
+    assert "coffee every morning" in r.json()["data"][0]["content"]
+
+
+def test_options_expansion_on_widens_evidence(client, monkeypatch):
+    """The arm widens recall to option-relevant evidence (never judges)."""
+    monkeypatch.setenv("MINTA_EVAL_ENVELOPE", "off")
+    monkeypatch.setenv("MINTA_EVAL_OPTIONS", "1")
+    client.post("/add", json=add_payload(
+        "r1", "u1", "s",
+        [("user", "she drinks tea leaves"),        # idx 0
+         ("user", "she brews coffee beans"),       # idx 1
+         ("user", "she hikes mountain trails")]))  # idx 2 (newest, unrelated)
+    r = client.post("/search", json={
+        "query": "Which topic is discussed most often?",
+        "options": ["A. tea", "B. coffee"],
+        "user_id": "u1", "top_k": 5})
+    hits = r.json()["data"]
+    # tea/coffee memories get option-driven scores > 0; the query itself has
+    # zero overlap with any memory, so the unrelated newest stays at 0.0
+    assert hits[0]["content"] in ("she drinks tea leaves", "she brews coffee beans")
+    assert hits[1]["content"] in ("she drinks tea leaves", "she brews coffee beans")
+    assert hits[0]["score"] is not None and hits[0]["score"] > 0
+    assert hits[-1]["content"] == "she hikes mountain trails"
+    assert hits[-1]["score"] == 0.0
+
+
+def test_recall_query_offline_degrades_gracefully(client, monkeypatch):
+    """RECALL_QUERY on but LLM endpoint down -> channel skipped, still 200."""
+    monkeypatch.setenv("MINTA_EVAL_RECALL_QUERY", "1")
+    monkeypatch.setenv("MINTA_EVAL_LLM_BASE", "http://127.0.0.1:9")
+    monkeypatch.setenv("MINTA_EVAL_LLM_KEY", "test-key")
+    monkeypatch.setenv("MINTA_EVAL_ENVELOPE", "off")
+    client.post("/add", json=add_payload(
+        "r1", "u1", "s", [("user", "sushi in tokyo is great")]))
+    r = client.post("/search", json={"query": "sushi", "user_id": "u1", "top_k": 5})
+    assert r.status_code == 200
+    assert r.json()["data"][0]["content"] == "sushi in tokyo is great"

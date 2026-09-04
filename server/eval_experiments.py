@@ -59,6 +59,10 @@ class Experiments:
         return os.environ.get("MINTA_EVAL_RECALL_QUERY", "0").lower() in ("1", "true", "on") \
             and self._llm_ready()
 
+    def options_enabled(self) -> bool:
+        """MC option-query expansion (union of per-option dense scores)."""
+        return os.environ.get("MINTA_EVAL_OPTIONS", "0").lower() in ("1", "true", "on")
+
     def recall_weight(self) -> float:
         try:
             return float(os.environ.get("MINTA_EVAL_RECALL_WEIGHT", "0.5"))
