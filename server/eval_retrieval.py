@@ -17,6 +17,7 @@ from __future__ import annotations
 import hashlib
 import logging
 import os
+import re
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -281,6 +282,12 @@ def retrieve(store, query: str, user_id: str, top_k: int = 100,
                 break
             _add(r)
 
+    if exp.timeorder_enabled() and _is_order_query(query):
+        # Ordering-type questions ("list the order in which ...") need
+        # chronological evidence, not relevance order. Conditional branch:
+        # every other query is untouched.
+        selected = sorted(selected, key=lambda r: r.get("timestamp_ms") or 0)
+
     hits = []
     for r in selected:
         hits.append({
@@ -290,6 +297,16 @@ def retrieve(store, query: str, user_id: str, top_k: int = 100,
             "created_at": _created_at_iso(r),
         })
     return hits
+
+
+_ORDER_MARKERS = re.compile(
+    r"\b(in order|order in which|chronolog|sequence|timeline|先后|依次"
+    r"|earliest|first .{0,40}(then|later|after)|what order)\b",
+    re.IGNORECASE)
+
+
+def _is_order_query(query: str) -> bool:
+    return bool(_ORDER_MARKERS.search(query or ""))
 
 
 def _fuse_bm25(rows: list[dict], query: str, scores: dict[str, float]) -> dict[str, float]:

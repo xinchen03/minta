@@ -71,6 +71,13 @@ class Experiments:
         """Local cross-encoder rerank pass (zero-LLM, off by default)."""
         return os.environ.get("MINTA_EVAL_RERANK", "0").lower() in ("1", "true", "on")
 
+    def timeorder_enabled(self) -> bool:
+        """Ordering-type questions only: return evidence chronologically.
+
+        All other queries keep relevance order untouched.
+        """
+        return os.environ.get("MINTA_EVAL_TIMEORDER", "0").lower() in ("1", "true", "on")
+
     def recencyq_enabled(self) -> bool:
         """Query-tense aware latest-first (Minta governance, evidence level).
 
