@@ -51,3 +51,19 @@ baseline 0.7329 → **+temporal 0.7375**(时序类 0.778→0.806,+2.8pt;单跳
 ```
 默认 = radius=1 · envelope on · temporal on · fill min(top_k,100) · BM25 off · recall off · 零 LLM
 ```
+
+## 追加(当晚):BEAM / PersonaMem / 重排进展
+
+**BEAM(本地 4 对话,80 probes):acc 0.762**
+- knowledge_update 1.000 · contradiction_resolution 1.000 · temporal_reasoning 1.000
+  → **D/C 轴治理类直考满分**(证据层治理验证)
+- abstention 0.750(H 轴)· event_ordering 0.375(短板,见下)
+
+**event_ordering 归因(已分析)**:错题全是"按顺序列出先后提到的 N 个要点"——需跨批次按时间重构;我们按相关度返回、时间线索在 envelope,答题模型重构困难。结构性限制,9/18 前不改(动排序语义伤其他类),记为已知短板(赛后优化项)。
+
+**PersonaMem(云端 100 人设,4 选 1,猜中率 25%)**:
+- 普通题 0.410 ✅ 远高于瞎猜;偏好变化题 **0.136 ❌ 低于瞎猜**
+  → D 轴"最新态必须赢"短板量化坐实(旧偏好压过新偏好)
+  → 对策:recencyq 臂对照实验(云端跑,结果待回填)
+
+**本地全量重排(861)反复卡死 → 移交云端**:根因=批处理嵌入在第二对话起死锁(已默认关闭,env 可开);单对话冒烟正常但全量本地仍偶发卡顿(单机环境不稳),最终云端执行。
