@@ -1,0 +1,19 @@
+# Build context hygiene — the eval image only needs server/ + run.py + scripts
+.git/
+.gitignore
+web/
+assets/
+skills/
+runtime/
+dsh-plugin/
+docs/
+.github/
+node_modules
+*.db
+*.sqlite
+*.log
+__pycache__/
+*.pyc
+start_minta_open.bat
+auto_scan_config.json
+docker-compose*.yml

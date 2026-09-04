@@ -17,7 +17,12 @@ from __future__ import annotations
 import os
 import re
 
-_EVAL_SRC_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "eval")
+# The eval adapter lives in server/*.py (eval_app/eval_store/eval_retrieval/...),
+# NOT in a server/eval/ subdir — the tripwires must scan the real code.
+_EVAL_SRC_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".")
+_EVAL_ONLY = ("eval_app.py", "eval_store.py", "eval_retrieval.py",
+              "eval_experiments.py", "eval_embed.py", "eval_rerank.py",
+              "eval_recall.py", "eval_inventory.py")
 _FORBIDDEN_PATTERNS = [
     # quoted literals that would name a specific sample/question/dataset
     r'"(?:conv|sample|qa)[-_][A-Za-z0-9_-]*"',
@@ -32,8 +37,11 @@ _FORBIDDEN_RAW = ["sk-", "OPENAI_API_KEY=", "DEEPSEEK_API_KEY="]
 def _eval_files():
     for root, _dirs, files in os.walk(_EVAL_SRC_DIR):
         for f in files:
-            if f.endswith(".py"):
-                yield os.path.join(root, f)
+            if root != _EVAL_SRC_DIR or not f.endswith(".py"):
+                continue
+            if os.path.basename(f) not in _EVAL_ONLY:
+                continue  # only the eval adapter plane (never tests/business)
+            yield os.path.join(root, f)
 
 
 def test_no_dataset_or_question_literals():

@@ -67,3 +67,8 @@ server/eval.db
 
 # User-specific memory exports (never publish personal context)
 web/public/data/contextObjects.json
+
+# Local machine helpers — never publish paths/usernames
+start_minta_open.bat
+docs/eval-proxy/run_matrix.sh
+auto_scan_config.json

@@ -18,9 +18,12 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import os
 import sys
 import threading
+
+logger = logging.getLogger("minta.eval.store")
 from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import (
@@ -127,7 +130,14 @@ class EvalStore:
 
         with self._lock:
             with self._Session() as db:
-                if db.get(AddRequest, request_id) is not None:
+                existing = db.get(AddRequest, request_id)
+                if existing is not None:
+                    # Replay with the SAME payload is a safe retry; a different
+                    # payload under one request_id must never silently swallow
+                    # data — warn loudly so the operator can investigate.
+                    if existing.payload_hash != payload_hash:
+                        logger.warning(
+                            "request_id collision with different payload: %s", request_id)
                     return "duplicate", 0
 
                 embeds: list = []

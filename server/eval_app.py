@@ -27,6 +27,8 @@ import sys
 from typing import List, Literal, Optional
 
 from fastapi import FastAPI, HTTPException
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 _SERVER_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -64,7 +66,7 @@ class SearchRequestModel(BaseModel):
     query: str = Field(min_length=1, max_length=20_000)
     options: Optional[List[str]] = None
     user_id: str = Field(min_length=1, max_length=256)
-    top_k: int = Field(default=100, ge=1)  # clamped to 100 internally
+    top_k: int = Field(default=100, ge=1, le=100)  # contract ceiling
 
 
 class SearchHit(BaseModel):
@@ -191,5 +193,24 @@ def create_eval_app(db_url: str | None = None, embed_fn=None) -> FastAPI:
     @app.get("/ping")
     def health() -> dict:
         return {"ok": True}
+
+    # Contract error shape: the platform expects {"detail":{"reason":"..."}}
+    # for business errors. Pydantic 422 bodies (list) and uncaught 500 bodies
+    # (string) would not match — normalize every error to one shape.
+    @app.exception_handler(HTTPException)
+    async def _httpx_handler(_, exc: HTTPException) -> JSONResponse:
+        return JSONResponse(status_code=exc.status_code,
+                            content={"detail": {"reason": str(exc.detail)}})
+
+    @app.exception_handler(RequestValidationError)
+    async def _validation_handler(_, exc: RequestValidationError) -> JSONResponse:
+        return JSONResponse(status_code=422,
+                            content={"detail": {"reason": str(exc.errors())[:400]}})
+
+    @app.exception_handler(Exception)
+    async def _any_handler(_, _exc: Exception) -> JSONResponse:
+        logger.exception("unhandled error (normalized)")
+        return JSONResponse(status_code=500,
+                            content={"detail": {"reason": "internal error"}})
 
     return app

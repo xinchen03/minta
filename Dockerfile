@@ -10,7 +10,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl \
 COPY requirements.txt .
 # CPU torch first — otherwise pip resolves the CUDA build (2GB+) via the
 # sentence-transformers dependency graph and the build stalls/overflows.
-RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu \
+# --extra-index-url (NOT --index-url): the latter REPLACES PyPI, and torch's
+# deps (typing-extensions/flit_core sdist build) are not on the pytorch index
+# — a bare --index-url build fails with "No matching distribution flit_core".
+RUN pip install --no-cache-dir torch --extra-index-url https://download.pytorch.org/whl/cpu \
     && pip install --no-cache-dir -r requirements.txt
 
 COPY server/ ./server/

@@ -5,10 +5,10 @@ candidates by a fine-grained relevance model before the neighbour-window /
 fill stages, so evidence buried mid-list has a chance to surface near the top
 (the answer model reads the returned list in order).
 
-Model: MINTA_EVAL_RERANK_MODEL, default D:/models/bge-reranker-v2-m3 (local);
-fall back to the smaller ms-marco model if the big one is missing.
-Enabled only via MINTA_EVAL_RERANK=1 — the competition default keeps the
-dense-only baseline until the proxy evidence says otherwise.
+Model: MINTA_EVAL_RERANK_MODEL; the baked container default matches the
+Dockerfile (88MB ms-marco-MiniLM-L-6-v2) so a bare start never silently
+drops the rerank channel. Enabled via MINTA_EVAL_RERANK=1 (Dockerfile ships
+it ON — proxy 0.7422 over dense-only 0.7329, n=861).
 """
 from __future__ import annotations
 
@@ -27,7 +27,10 @@ def _get_model():
         return _model
     try:
         from sentence_transformers import CrossEncoder
-        path = os.environ.get("MINTA_EVAL_RERANK_MODEL", "D:/models/bge-reranker-v2-m3")
+        # Container default matches the Dockerfile bake; never a Windows path.
+        path = os.environ.get(
+            "MINTA_EVAL_RERANK_MODEL",
+            "/models/cross-encoder/ms-marco-MiniLM-L-6-v2")
         _model = CrossEncoder(path, max_length=512)
         logger.info("reranker loaded: %s", path)
     except Exception:

@@ -256,4 +256,4 @@ def test_conflict_embedding_384_populated_on_write(monkeypatch):
     assert r.status_code == 200
     with sessionmaker(bind=app_engine)() as db:
         row = db.query(ContextObject).filter(ContextObject.id == obj["id"]).first()
-        assert row.embedding_384 and "updated conflicting detail" or True
+        assert row.embedding_384 and row.summary == "updated conflicting detail"
