@@ -109,7 +109,7 @@ python -c "import secrets; print('MINTA_API_KEY=minta_'+secrets.token_hex(32))" 
 
 | 层 | 特性 | 你得到什么 |
 |---|---|---|
-| 记忆 | 混合检索(向量+BM25+实体+FTS) | 选中正确的记忆,不是碰巧相关的 |
+| 记忆 | 语义检索 — `POST /api/search`(本地向量、按用户隔离、compact → full → pack 渐进披露) | 每次写入自动建索引;找到你的记忆,不是别人的 |
 | 记忆 | 生命周期引擎(衰减/冲突/冗余/碎片化) | 质量检查按计划跑,不靠运气 |
 | 纠错环 | 收件箱 + 反例捕获(钩子:SessionStart → UserPromptSubmit → PostToolUse → Stop) | 你纠正的会成为规则——在你确认之后 |
 | 专家域 | 多域规则(踝/膝/颈椎损伤、ISO9001、PRISMA…)+ CUMCM 阶段工作流 | 带信任指标的领域推理 |

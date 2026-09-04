@@ -113,7 +113,7 @@ Agent integration per editor → [`docs/mcp-integration.md`](docs/mcp-integratio
 
 | Layer | Feature | What you get |
 |---|---|---|
-| Memory | Hybrid retrieval (vector + BM25 + entities + FTS) | Picks the right memory, not the most |
+| Memory | Semantic search — `POST /api/search` (local-vector, per-user isolated, compact → full → pack disclosure) | Auto-indexed on every write; finds *your* memory, not somebody else’s |
 | Memory | Lifecycle engine (decay/conflict/redundancy/fragmentation) | Quality checks run *on schedule*, not on faith |
 | Correction loop | Inbox + counter-example capture (hooks: SessionStart → UserPromptSubmit → PostToolUse → Stop) | What you correct becomes a rule — after your confirm |
 | Expert domains | Multi-domain rules (ankle/knee/c-spine injury, ISO9001, PRISMA…) + CUMCM staged workflow | Domain-typed reasoning with trust metrics |
