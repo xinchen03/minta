@@ -50,7 +50,8 @@ description: >
 
 ### Step 1 — 全量扫描
 ```bash
-python ~/.claude/projects/C--Users-Lenovo/memory/build_kb.py --check
+# Builds the KB index for this user's memory dir (location varies by user)
+python build_kb.py --check   # run from the memory dir that holds build_kb.py
 ```
 捕获 build_kb.py 内置的审计输出（陈旧度、重复 topic_id、canonical 冲突等）。
 

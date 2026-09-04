@@ -64,3 +64,6 @@ draft/
 docs/eval-proxy/runs/
 eval.db
 server/eval.db
+
+# User-specific memory exports (never publish personal context)
+web/public/data/contextObjects.json

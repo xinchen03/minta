@@ -167,9 +167,11 @@ def minta_write_context(username: str, password: str, title: str, type: str,
         import traceback
         tb = traceback.format_exc()
         try:
-            with open("C:/Users/Lenovo/.claude/projects/C--Users-Lenovo/memory/logs/mcp_debug.log", "a", encoding="utf-8") as f:
-                f.write(f"=== minta_write_context CRASH ===\n{tb}\n")
-        except:
+            _dbg = os.environ.get("MINTA_MCP_DEBUG_LOG", "")
+            if _dbg:
+                with open(_dbg, "a", encoding="utf-8") as f:
+                    f.write(f"=== minta_write_context CRASH ===\n{tb}\n")
+        except Exception:
             pass
         return json.dumps({"error": f"write_context exception: {e}\n{tb}"})
 

@@ -1,4 +1,6 @@
 """Nature-style grouped bar chart: Minta vs competitors on Memory Quality metrics."""
+import os
+
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -141,7 +143,11 @@ fig.text(
 plt.tight_layout()
 
 # ── Export ──
-out_base = 'C:/Users/Lenovo/Desktop/minta-public/assets/benchmark_comparison'
+# Output goes next to the script (repo assets dir) by default; the arg is
+# `--out` for anywhere else. Never hardcode a machine-specific path.
+out_base = os.environ.get(
+    "MINT_BENCH_FIG_OUT",
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), "benchmark_comparison"))
 plt.savefig(out_base + '.pdf', bbox_inches='tight')
 plt.savefig(out_base + '.png', dpi=300, bbox_inches='tight')
 print(f'Saved: {out_base}.pdf + .png')
