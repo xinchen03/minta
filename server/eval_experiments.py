@@ -63,6 +63,10 @@ class Experiments:
         """MC option-query expansion (union of per-option dense scores)."""
         return os.environ.get("MINTA_EVAL_OPTIONS", "0").lower() in ("1", "true", "on")
 
+    def temporal_enabled(self) -> bool:
+        """Query-conditioned temporal boost (resolver signals only)."""
+        return os.environ.get("MINTA_EVAL_TEMPORAL", "0").lower() in ("1", "true", "on")
+
     def recall_weight(self) -> float:
         try:
             return float(os.environ.get("MINTA_EVAL_RECALL_WEIGHT", "0.5"))

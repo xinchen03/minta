@@ -35,7 +35,8 @@ import time
 from collections import Counter, defaultdict
 from datetime import datetime, timezone
 
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
+if sys.stdout.encoding and "utf-8" not in sys.stdout.encoding.lower():
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
 _SERVER = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "server")
 if _SERVER not in sys.path:
     sys.path.insert(0, _SERVER)

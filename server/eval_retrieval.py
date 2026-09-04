@@ -153,6 +153,28 @@ def retrieve(store, query: str, user_id: str, top_k: int = 100,
             for mid, s in _dense_scores(kept, ovec).items():
                 if s > 0:  # only real option affinity lifts evidence
                     scores[mid] = max(scores.get(mid, -1.0), s)
+    if exp.temporal_enabled():
+        # Minta-native arm: query-conditioned temporal boost (retrieval
+        # signal only — content is never rewritten). Active only when the
+        # query carries a time expression that resolves to a range.
+        from datetime import datetime as _dt, timezone as _tz
+        from services.temporal_resolver import has_time_expression, resolve_time_range
+        if has_time_expression(query):
+            tr = resolve_time_range(query)
+            if tr is not None:
+                start, end = tr
+                for r in kept:
+                    ts = r.get("timestamp_ms")
+                    if ts is None:
+                        continue
+                    try:
+                        d = _dt.fromtimestamp(ts / 1000.0, tz=_tz.utc).replace(tzinfo=None)
+                    except (OverflowError, OSError, ValueError):
+                        continue
+                    if start <= d <= end:
+                        prox = max(0.0, 1.0 - abs((d - start).days) / 90.0)
+                        scores[r["id"]] = max(scores.get(r["id"], -1.0),
+                                              0.25 + 0.35 * prox)
 
     # seed order
     if scores:
