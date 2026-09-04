@@ -6,6 +6,7 @@ fastapi>=0.110.0
 uvicorn[standard]>=0.27.0
 sse-starlette>=1.8.0
 python-multipart>=0.0.9
+httpx>=0.27.0   # TestClient & eval proxy share the same client
 
 # Database (SQLite by default; MySQL/Postgres optional)
 sqlalchemy>=2.0.20

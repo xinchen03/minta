@@ -44,11 +44,13 @@ ENV MINTA_ENV=production
 ENV MINTA_EXPERT_ENABLED=true
 ENV MINTA_AUTOPILOT_ENABLED=true
 
-EXPOSE 8772 18721
+EXPOSE 8000
 
-# Main app exposes /ping (the Dockerfile previously probed /health which only
-# the MCP app and the eval app expose — the data API was always "unhealthy").
+# AMC submission container: the eval adapter (Add/Search) is the ONLY entry
+# point — the business app (run.py, 8772/18730/18721) is not part of the
+# evaluated surface and must not occupy this container.
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
-    CMD curl -f http://localhost:8772/ping || exit 1
+    CMD curl -f http://localhost:8000/health || exit 1
 
-CMD ["python", "run.py"]
+CMD ["python", "-m", "uvicorn", "server.eval_app:create_eval_app",
+     "--factory", "--host", "0.0.0.0", "--port", "8000"]
