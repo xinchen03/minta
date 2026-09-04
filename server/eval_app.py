@@ -100,23 +100,44 @@ def create_eval_app(db_url: str | None = None, embed_fn=None) -> FastAPI:
     app.state.store = store
 
     # Canonical embed interface: fn(content) -> np.float32 vector. Storage
-    # needs bytes, retrieval needs the array — bridge here. When no embedder
-    # is injected, attach the lazy local model on first use (disable with
-    # MINTA_EVAL_EMBED=0 for a fully offline baseline).
+    # needs bytes, retrieval needs the array — bridge here.
     import numpy as _np
 
     injected_embed = embed_fn
+    embed_state = {"off": False, "bytes_fn": None}
 
-    def store_embed(content: str) -> bytes:
+    def _to_bytes(content: str) -> bytes:
+        return _np.asarray(injected_embed(content), dtype=_np.float32).tobytes()
+
+    def _init_local_embedder() -> bool:
+        """Load the local model once; returns True when vectors are usable."""
+        if embed_state["off"]:
+            return False
+        try:
+            from eval_embed import embed_text
+            from eval_experiments import set_embed_fn as _register
+
+            _register(embed_text)
+            embed_state["bytes_fn"] = lambda c: _np.asarray(
+                embed_text(c), dtype=_np.float32).tobytes()
+            return True
+        except Exception:
+            embed_state["off"] = True
+            logger.exception(
+                "embedder init failed — embeddings disabled for this run "
+                "(Add stays lossless; Search uses recency fallback)")
+            return False
+
+    def resolve_embed():
+        """Embed callable for this Add, or None (store losslessly, no vectors)."""
         if injected_embed is not None:
-            return _np.asarray(injected_embed(content), dtype=_np.float32).tobytes()
+            return _to_bytes
+        if embed_state["bytes_fn"] is not None:
+            return embed_state["bytes_fn"]
         if os.environ.get("MINTA_EVAL_EMBED", "1").lower() in ("0", "false", "off"):
-            raise RuntimeError("embedding disabled")
-        from eval_embed import embed_text
-        from eval_experiments import set_embed_fn as _register
-
-        _register(embed_text)
-        return _np.asarray(embed_text(content), dtype=_np.float32).tobytes()
+            embed_state["off"] = True
+            return None
+        return embed_state["bytes_fn"] if _init_local_embedder() else None
 
     @app.post("/add")
     def add(payload: AddRequestModel) -> AddResponse:
@@ -127,7 +148,7 @@ def create_eval_app(db_url: str | None = None, embed_fn=None) -> FastAPI:
                 payload.session_id,
                 [{"role": m.role, "content": m.content, "timestamp": m.timestamp}
                  for m in payload.messages],
-                embed_fn=store_embed,
+                embed_fn=resolve_embed(),
             )
         except HTTPException:
             raise

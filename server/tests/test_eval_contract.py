@@ -284,6 +284,31 @@ def test_search_empty_query_422(client):
                        ).status_code == 422
 
 
+# ── insurance path: embeddings disabled must never break Add/Search ────────
+
+def test_offline_mode_still_serves(tmp_path, monkeypatch):
+    """MINTA_EVAL_EMBED=0: lossless Add + recency-fallback Search, no 503."""
+    monkeypatch.setenv("MINTA_EVAL_EMBED", "0")
+    db_url = f"sqlite:///{(tmp_path / 'offline.db').as_posix()}"
+    app = create_eval_app(db_url=db_url)  # no embedder injected
+    with TestClient(app) as c:
+        r = c.post("/add", json=add_payload(
+            "off1", "u1", "s", [("user", "first note"), ("user", "second note")]))
+        assert r.status_code == 200, r.text
+        # second Add triggers the resolve path again (state must stay off)
+        r = c.post("/add", json=add_payload(
+            "off2", "u1", "s", [("user", "third note")]))
+        assert r.status_code == 200
+        store = EvalStore(db_url)
+        assert store.count_memories("u1") == 3          # lossless
+        rows = store.memories_for_user("u1")
+        assert all(rr["embedding"] is None for rr in rows)  # no vectors
+        sr = c.post("/search", json={"query": "note", "user_id": "u1", "top_k": 10})
+        assert sr.status_code == 200
+        assert len(sr.json()["data"]) == 3              # recency fallback serves
+        assert all(h["score"] is None for h in sr.json()["data"])
+
+
 # ── experiment arms (env-gated, all default off) ───────────────────────────
 
 def test_options_expansion_off_by_default(client, monkeypatch):
