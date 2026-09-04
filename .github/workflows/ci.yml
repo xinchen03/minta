@@ -44,9 +44,16 @@ jobs:
           python -m pytest server/tests/ -v --tb=short 2>&1 | tee pytest.log
           rc=${PIPESTATUS[0]}
           if [ $rc -ne 0 ]; then
-            tail -25 pytest.log | grep -vE '^\s*$' | \
-              sed 's/%/%25/g; s/\r/%0D/g; s/\n/%0A/g' > /tmp/failmsg.txt
-            echo "::error::CI pytest failed rc=$rc. $(cat /tmp/failmsg.txt)"
+            # publish the failure cause as annotations (public, API-readable).
+            # One ::error:: per ~260 chars — the API truncates per annotation.
+            tail -45 pytest.log | grep -vE '^\s*$' | tr '\n' ' ' | \
+              fold -w 260 > /tmp/failmsg.txt
+            n=0
+            while IFS= read -r line; do
+              n=$((n+1))
+              esc=$(printf '%s' "$line" | sed 's/%/%25/g; s/:/%3A/g; s/,/%2C/g')
+              echo "::error::[pytlog $n] $esc"
+            done < /tmp/failmsg.txt
           fi
           exit $rc
 
