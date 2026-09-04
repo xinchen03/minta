@@ -71,6 +71,16 @@ class Experiments:
         """Local cross-encoder rerank pass (zero-LLM, off by default)."""
         return os.environ.get("MINTA_EVAL_RERANK", "0").lower() in ("1", "true", "on")
 
+    def recencyq_enabled(self) -> bool:
+        """Query-tense aware latest-first (Minta governance, evidence level).
+
+        'now/currently/latest' questions surface the NEWEST member of each
+        same-fact cluster; 'before/used to/previously' surface the OLDEST.
+        Nothing is deleted or rewritten — memory-debt's 'old accounts stay
+        audit-ready' applied to ranking only.
+        """
+        return os.environ.get("MINTA_EVAL_RECENCYQ", "0").lower() in ("1", "true", "on")
+
     def recall_weight(self) -> float:
         try:
             return float(os.environ.get("MINTA_EVAL_RECALL_WEIGHT", "0.5"))

@@ -99,6 +99,49 @@ def _recency_key(row: dict):
             row["request_id"], row["msg_index"])
 
 
+def _apply_query_tense_recency(query: str, kept: list[dict], scores: dict) -> None:
+    """Minta governance at the evidence level: query-tense aware latest-first.
+
+    Group memories into same-fact clusters (token-Jaccard on raw content);
+    for 'current' questions nudge the newest member up, for 'past' questions
+    nudge the oldest member up. Pure re-ranking — nothing is rewritten,
+    deleted or hidden (memory-debt: old accounts stay audit-ready).
+    """
+    import re
+
+    ql = query.lower()
+    current = any(t in ql for t in ("now", "currently", "current", "prefers",
+                                    "latest", "these days", "still", "is the"))
+    past = any(t in ql for t in ("before", "used to", "previously",
+                                 "originally", "earlier", "ago", "was the",
+                                 "past", "old "))
+    if not (current or past):
+        return
+
+    def toks(s: str) -> set:
+        return {w for w in re.findall(r"[a-z0-9']+", s.lower()) if len(w) > 2}
+
+    clusters: list[list[dict]] = []
+    for r in kept:
+        rt = toks(r["raw_content"])
+        if not rt:
+            continue
+        for cl in clusters:
+            j = len(rt & toks(cl[0]["raw_content"])) / max(len(rt) + len(toks(cl[0]["raw_content"])) - len(rt & toks(cl[0]["raw_content"])), 1)
+            if j >= 0.6:
+                cl.append(r)
+                break
+        else:
+            clusters.append([r])
+    boost = 0.12
+    for cl in clusters:
+        if len(cl) < 2:
+            continue
+        cl_sorted = sorted(cl, key=lambda r: -(r.get("timestamp_ms") or 0))
+        target = cl_sorted[0] if current else cl_sorted[-1]
+        scores[target["id"]] = scores.get(target["id"], 0.0) + boost
+
+
 # ── mainline ───────────────────────────────────────────────────────────────
 
 def retrieve(store, query: str, user_id: str, top_k: int = 100,
@@ -185,6 +228,11 @@ def retrieve(store, query: str, user_id: str, top_k: int = 100,
         rs = rerank_scores(query, kept, scores, n=60)
         if rs:
             scores = rs
+    if exp.recencyq_enabled():
+        # Minta governance at the evidence level (memory-debt semantics):
+        # 'current' questions surface the newest member of each same-fact
+        # cluster, 'past' questions surface the oldest. Ranking only.
+        _apply_query_tense_recency(query, kept, scores)
 
     # seed order
     if scores:
