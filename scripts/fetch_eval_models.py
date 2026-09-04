@@ -23,7 +23,8 @@ import os
 import sys
 import urllib.request
 
-REQUIRED = {
+# sentence-transformers bi-encoder (has Pooling/modules layout)
+REQUIRED_ST = {
     "config.json",
     "config_sentence_transformers.json",
     "modules.json",
@@ -33,6 +34,15 @@ REQUIRED = {
     "vocab.txt",
     "model.safetensors",
     "1_Pooling/config.json",
+}
+# cross-encoder (e.g. ms-marco-MiniLM-L-6-v2): no modules/Pooling layout
+REQUIRED_CE = {
+    "config.json",
+    "tokenizer.json",
+    "tokenizer_config.json",
+    "special_tokens_map.json",
+    "vocab.txt",
+    "model.safetensors",
 }
 _UA = {"User-Agent": "minta-eval-build/1.0 (fetch_eval_models)"}
 MIRRORS = ["https://huggingface.co", "https://hf-mirror.com"]
@@ -54,8 +64,10 @@ def resolve_repo_files(repo: str, api_root: str) -> list[str]:
     return [s["rfilename"] for s in meta.get("siblings", [])]
 
 
-def fetch(repo: str, dest: str, only_check: bool = False) -> None:
+def fetch(repo: str, dest: str, only_check: bool = False,
+          kind: str = "st") -> None:
     os.makedirs(dest, exist_ok=True)
+    required = REQUIRED_ST if kind == "st" else REQUIRED_CE
     files: list[str] | None = None
     for mirror in _endpoints():
         try:
@@ -66,7 +78,7 @@ def fetch(repo: str, dest: str, only_check: bool = False) -> None:
     if files is None:
         raise SystemExit("could not resolve model file list on any mirror")
 
-    missing = REQUIRED - set(files)
+    missing = required - set(files)
     if missing:
         raise SystemExit(f"repo {repo} lacks required files: {missing}")
     if only_check:
@@ -76,12 +88,12 @@ def fetch(repo: str, dest: str, only_check: bool = False) -> None:
 
     wanted = sorted(
         f for f in files
-        if f in REQUIRED
+        if f in required
         or (f.startswith("1_Pooling/") and f.endswith(".json"))
         or (f.startswith("tokenizer/"))
         or (f == "pytorch_model.bin" and "model.safetensors" not in files))
     for f in wanted:
-        if f.endswith(_EXCLUDED_SUFFIXES) and f not in REQUIRED:
+        if f.endswith(_EXCLUDED_SUFFIXES) and f not in required:
             continue
         target = os.path.join(dest, f)
         os.makedirs(os.path.dirname(target), exist_ok=True)
@@ -104,7 +116,7 @@ def fetch(repo: str, dest: str, only_check: bool = False) -> None:
         if not ok:
             raise SystemExit(f"download failed: {f}")
 
-    missing = [f for f in REQUIRED if not os.path.exists(os.path.join(dest, f))]
+    missing = [f for f in required if not os.path.exists(os.path.join(dest, f))]
     if missing:
         raise SystemExit(f"missing required files after fetch: {missing}")
     print(f"model ready at {dest}", flush=True)
@@ -116,8 +128,11 @@ def main() -> None:
     ap.add_argument("--dest", required=True)
     ap.add_argument("--only-check", action="store_true",
                     help="verify the file list without downloading")
+    ap.add_argument("--kind", choices=("st", "ce"), default="st",
+                    help="st = sentence-transformers bi-encoder (default), "
+                         "ce = cross-encoder (ms-marco reranker, no Pooling)")
     args = ap.parse_args()
-    fetch(args.repo, args.dest, only_check=args.only_check)
+    fetch(args.repo, args.dest, only_check=args.only_check, kind=args.kind)
 
 
 if __name__ == "__main__":
