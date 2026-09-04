@@ -27,6 +27,23 @@
 3. **recall 臂上线条件不变**:代码路线无 LLM 凭据 → 仅当自托管或平台注
    凭据时才可能启用;启用前必须用 **gpt-4o-mini**(条款口径)重新测量。
 
-## 下一轮(确认中)
+## 第二轮(确认,2026-09-04 14:16-14:44)
 
-baseline vs recall,5 对话 × 199 题(n≈995/臂,CI ≈ ±3pt),跑完更新本文档。
+baseline vs recall(DeepSeek 改写),5 对话 × ~895 有效题/臂(n≈900,CI ≈ ±3pt):
+
+| 臂 | acc | Δ | single-hop | multi-hop | temporal | open-domain | adversarial |
+|---|---|---|---|---|---|---|---|
+| **base(定案)** | **0.5866** | — | 0.359 | 0.346 | 0.370 | 0.794 | 0.534 |
+| recall | 0.5832 | **−0.3pt** | 0.373 | 0.365 | 0.391 | 0.775 | 0.526 |
+
+**结论:recall-query 臂在大样本下无增益(净 −0.3pt;仅 temporal/single-hop 微正,
+open-domain/adversarial 微负)→ 不上默认配置。** 与零 LLM baseline 路线一致;
+若未来自托管 + gpt-4o-mini 口径可再复测,不作为本周期提交配置。
+
+## 定案(9/18 冻结配置)
+
+```
+默认 = radius=1 · envelope on · fill min(top_k,100) · BM25 off · recall off · 零 LLM
+K 单调增益(fill-100)、envelope 为硬依赖(去之 multi-hop→0.019)、
+BM25/窗口/recall 均在噪声带且方向不支持启用。
+```
