@@ -41,4 +41,13 @@ jobs:
 
       - name: Run tests
         run: |
-          python -m pytest server/tests/ -v --tb=short
+          python -m pytest server/tests/ -v --tb=short | tee pytest.log; \
+          rc=${PIPESTATUS[0]}; echo "PYTEST_RC=$rc"; exit $rc
+
+      - name: Upload pytest log (always)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-log
+          path: pytest.log
+          if-no-files-found: ignore
