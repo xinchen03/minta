@@ -40,10 +40,14 @@ baseline vs recall(DeepSeek 改写),5 对话 × ~895 有效题/臂(n≈900,CI �
 open-domain/adversarial 微负)→ 不上默认配置。** 与零 LLM baseline 路线一致;
 若未来自托管 + gpt-4o-mini 口径可再复测,不作为本周期提交配置。
 
-## 定案(9/18 冻结配置)
+## 第三轮定案(官方 LoCoMo-Refined 文本子集,n=861,DeepSeek 裁判)
+
+baseline 0.7329 → **+temporal 0.7375**(时序类 0.778→0.806,+2.8pt;单跳
+0.442→0.468)。时序臂零 LLM、纯检索重排、增益集中在设计目标类目 →
+**默认开启**(Dockerfile `MINTA_EVAL_TEMPORAL=1`,env 可关,留作 Full#2 兜底)。
+
+## 冻结配置(9/18)
 
 ```
-默认 = radius=1 · envelope on · fill min(top_k,100) · BM25 off · recall off · 零 LLM
-K 单调增益(fill-100)、envelope 为硬依赖(去之 multi-hop→0.019)、
-BM25/窗口/recall 均在噪声带且方向不支持启用。
+默认 = radius=1 · envelope on · temporal on · fill min(top_k,100) · BM25 off · recall off · 零 LLM
 ```

@@ -24,6 +24,10 @@ ENV MINTA_EVAL_EMBED_MODEL=/models/${MINTA_EVAL_MODEL_REPO}
 # Business app embedding uses the same baked weights (fixes the previous
 # Windows-path default that broke semantic search inside containers).
 ENV MINTA_EMBEDDING_MODEL=/models/${MINTA_EVAL_MODEL_REPO}
+# AMC cycle-2 default config (round-3 evidence, refined textual n=861):
+# temporal boost ON — zero-LLM retrieval re-rank; temporal cat +2.8pt,
+# overall +0.5pt; env-off-able for A/B or Full#2 fallback.
+ENV MINTA_EVAL_TEMPORAL=1
 
 VOLUME /data
 ENV MINTA_DATABASE_URL=sqlite:////data/minta.db
