@@ -19,7 +19,7 @@ if not defined PY (
 
 rem -- engine: skip if 8772 already up --
 set "CODE="
-call set "CODE=%%curl -s -o nul -w "%%{http_code}" http://localhost:8772/ping%%"
+for /f "delims=" %%a in ('curl -s -o nul -w "%%{http_code}" http://localhost:8772/ping 2^>nul') do set "CODE=%%a"
 if "%CODE%"=="200" (
   echo   [OK] Minta engine already running.
 ) else (
