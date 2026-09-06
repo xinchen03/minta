@@ -13,6 +13,8 @@
 #    （自动装依赖 + 起引擎 8772 + 弹网页 + 菜单选你的编辑器）
 #    macOS/Linux： python minta_cli.py start
 # 3. 弹窗菜单里选 1/2/3/4 = 自动连接并启动对应编辑器
+#    第一次用 MCP 前：打开 http://localhost:8772 → 注册你自己的本地账号
+#    （账号只存在你自己电脑上，不会同步任何地方）
 #    需要手动时：
 #    DSH:    dsh plugin --profile web add @xxinchen/dsh-plugin
 #    Claude Code: python minta_cli.py connect --claude
