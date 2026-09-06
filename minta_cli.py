@@ -340,6 +340,7 @@ def cmd_init():
     print()
     print("  Ready! Run 'minta start' to begin.")
     print("  Dashboard: http://localhost:8772")
+    print("  First-time tour: skills/minta-quickstart (3 minutes)")
 
     # Optional anonymous usage stats (default OFF — file-based, engine reads
     # it live; only install/version/active time, never memory content).
