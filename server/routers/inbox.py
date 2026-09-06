@@ -107,6 +107,47 @@ def archive_items(payload: dict, user: User = Depends(get_current_user), db: Ses
     return {"success": True, "count": len(items), "createdObjects": created_objects}
 
 
+@router.post("/{item_id}/confirm")
+def confirm_item(item_id: int, payload: dict, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Confirm one inbox item → Context Object (MCP minta_confirm_inbox path)."""
+    assigned_type = payload.get("type", "lesson_learned")
+    if assigned_type not in VALID_TYPES:
+        return {"success": False, "reason": "invalid_type"}
+    item = db.query(InboxItem).filter(InboxItem.id == item_id, InboxItem.user_id == user.id).first()
+    if not item:
+        return {"success": False, "reason": "not_found"}
+    from services import vector_ops
+
+    text = item.text or ""
+    first_line = text.split("\n")[0][:200] if text else "Untitled"
+    rest = "\n".join(text.split("\n")[1:]) if text and "\n" in text else ""
+    base_id = _slugify(first_line)
+    ts_suffix = str(int(time.time()))[-4:]
+    obj_id = f"{base_id}-{ts_suffix}"
+
+    obj = ContextObject(
+        id=obj_id,
+        user_id=user.id,
+        type=assigned_type,
+        title=first_line[:200],
+        summary=rest[:300] if rest else first_line[:300],
+        body=text,
+        tags=item.tags or [],
+        source="counter_example",
+        status="active",
+        confidence=int(item.confidence * 5) if item.confidence else 3,
+    )
+    db.add(obj)
+    vector_ops.apply_conflict_embedding(obj)  # 384-d conflict input
+    item.status = "archived"
+    item.type = assigned_type
+    db.commit()
+    from services import vector_ops
+    vector_ops.index_object(obj.id, vector_ops.compose_text(obj.title, obj.summary, obj.body),
+                            user.id, obj.type, obj.status)
+    return {"success": True, "contextId": obj.id}
+
+
 @router.post("/discard")
 def discard_items(indices: List[int], user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     items = db.query(InboxItem).filter(InboxItem.id.in_(indices), InboxItem.user_id == user.id).all()
