@@ -3,7 +3,9 @@ version: "3.8"
 
 services:
   minta:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.web
     container_name: minta
     ports:
       - "8772:8772"   # Data API + Dashboard

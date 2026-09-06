@@ -15,7 +15,7 @@
   <a href="#license"><img src="https://img.shields.io/badge/license-Apache--2.0-blue"></a>
   <a href="#quick-start"><img src="https://img.shields.io/badge/python-3.9%2B-green"></a>
   <a href="#deepseek-harness"><img src="https://img.shields.io/badge/DeepSeek%20Harness-verified-purple"></a>
-  <a href="#benchmarks"><img src="https://img.shields.io/badge/MCP-19%20tools-orange"></a>
+  <a href="#benchmarks"><img src="https://img.shields.io/badge/MCP-13%20core%20tools-orange"></a>
 </p>
 
 > ⭐ New (2026-08): **open-core v2** — memory engine + research compliance engine + expert domain pack, now with **DeepSeek Harness integration (verified)**.
@@ -83,6 +83,8 @@ python minta_cli.py start          # API :8772 · Autopilot :18730 · MCP :18721
 
 Or Docker: `docker compose up -d`. Then connect your agent:
 
+> `docker compose` 固定构建 `Dockerfile.web`（业务服务：8772/18721）；仓库根 `Dockerfile` 默认目标为 AMC 评测容器（见 `README_AMC.md`），两者互不影响。
+
 ```bash
 # any MCP-capable editor/agent — Claude Code / Codex / Cursor / dsh
 python minta_cli.py connect claude
@@ -119,7 +121,7 @@ Agent integration per editor → [`docs/mcp-integration.md`](docs/mcp-integratio
 | Expert domains | Multi-domain rules (ankle/knee/c-spine injury, ISO9001, PRISMA…) + CUMCM staged workflow | Domain-typed reasoning with trust metrics |
 | Research | Manuscript inventory + compliance rule evaluator | "Does this draft meet the venue checklist?" — before submission |
 | Metacognition | Conformal confidence (calibrated, data-locked) | The agent says what it knows with a coverage guarantee |
-| Delivery | Dist web UI + MCP (19 tools, stdio + HTTP) + DSH plugin verified | Three entry points, one memory |
+| Delivery | Dist web UI + MCP (13 core tools; expert/dialogue layer enterprise-side) + DSH plugin verified | Three entry points, one memory |
 
 ## Open-Core: Open Code, Locked Assets
 
@@ -131,6 +133,12 @@ Agent integration per editor → [`docs/mcp-integration.md`](docs/mcp-integratio
 | Web dist · MCP · DSH integration · 12 guides | Data flywheel: calibration sets, weights, rule bases |
 
 The hosted tiers above are roadmap features — the open core is always a complete, runnable memory system.
+
+> Tool surface note: the open-edition MCP server registers the same 19 tool
+> names as the full engine, but the 6 expert/dialogue ones (`minta_expert_*`,
+> `minta_chat`) depend on the enterprise-side backends (`/api/expert/*`,
+> `/api/dialogue`) which are **not included in this repo** — they serve as
+> extension points for the full/enterprise deployment, not as working tools here.
 
 ## Benchmarks
 

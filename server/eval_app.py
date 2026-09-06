@@ -101,6 +101,24 @@ def create_eval_app(db_url: str | None = None, embed_fn=None) -> FastAPI:
     app = FastAPI(title="Minta — AMC eval adapter", docs_url=None, redoc_url=None)
     app.state.store = store
 
+    # Env-gated credential gate (AML contract: auth may be required by the
+    # platform; smoke checks authentication). OFF by default — set
+    # MINTA_EVAL_API_KEY to require `x-api-key` or `Authorization: Bearer`
+    # on /add and /search; /health stays no-auth liveness.
+    _eval_key = os.environ.get("MINTA_EVAL_API_KEY", "").strip()
+
+    @app.middleware("http")
+    async def _credential_gate(request, call_next):
+        if not _eval_key or request.url.path in ("/health", "/ping"):
+            return await call_next(request)
+        supplied = (request.headers.get("x-api-key")
+                    or request.headers.get("Authorization", "")
+                    .removeprefix("Bearer ").strip())
+        if supplied != _eval_key:
+            return JSONResponse(status_code=401,
+                                content={"detail": {"reason": "invalid credential"}})
+        return await call_next(request)
+
     # Canonical embed interface: fn(content) -> np.float32 vector. Storage
     # needs bytes, retrieval needs the array — bridge here.
     import numpy as _np

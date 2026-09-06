@@ -1,0 +1,46 @@
+# Minta — business server container (Data API :8772 + MCP HTTP :18721 +
+# Autopilot :18730). This is what `docker compose up -d` builds.
+#
+# Kept as a separate file on purpose: the root Dockerfile is the AML/AMC
+# evaluation container (Add/Search only) for the competition submission, so
+# the public-edition business runtime must not touch that entry point.
+FROM python:3.10-slim
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt .
+# CPU torch first — otherwise pip resolves the CUDA build (2GB+) via the
+# sentence-transformers dependency graph and the build stalls/overflows.
+RUN pip install --no-cache-dir torch --extra-index-url https://download.pytorch.org/whl/cpu \
+    && pip install --no-cache-dir -r requirements.txt
+
+COPY server/ ./server/
+COPY run.py .
+COPY scripts/fetch_eval_models.py ./scripts/fetch_eval_models.py
+COPY web/dist ./web/dist
+
+# Bake the embedding model so the container runs offline (mirror fallback:
+# huggingface.co -> hf-mirror.com). Override the repo via --build-arg.
+ARG MINTA_EVAL_MODEL_REPO=sentence-transformers/all-mpnet-base-v2
+RUN python scripts/fetch_eval_models.py \
+        --repo ${MINTA_EVAL_MODEL_REPO} \
+        --dest /models/${MINTA_EVAL_MODEL_REPO}
+ENV MINTA_EVAL_EMBED_MODEL=/models/${MINTA_EVAL_MODEL_REPO}
+ENV MINTA_EMBEDDING_MODEL=/models/${MINTA_EVAL_MODEL_REPO}
+
+VOLUME /data
+ENV MINTA_DATABASE_URL=sqlite:////data/minta.db
+ENV MINTA_EVAL_DB=sqlite:////data/eval.db
+ENV MINTA_ENV=production
+ENV MINTA_EXPERT_ENABLED=true
+ENV MINTA_AUTOPILOT_ENABLED=true
+
+EXPOSE 8772 18721 18730
+
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
+    CMD curl -f http://localhost:8772/health || exit 1
+
+CMD ["python", "run.py"]

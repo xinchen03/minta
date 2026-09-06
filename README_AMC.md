@@ -25,6 +25,7 @@ Models are baked during build — no runtime network dependency.
 | `POST /add` | Synchronous ingest; request-id idempotent; echoes `success` / `request_id` / `user_id` / `session_id`; HTTP 200 only after persistence + immediate retrievability |
 | `POST /search` | User-id-scoped only; `top_k ≤ 100`; returns ordered `data[]` with `id` / `content` / optional `score` / `created_at`; no answer generation |
 | `GET /health` | No-auth liveness (same origin as `/add`, port 8000) |
+| Auth | Optional env-gated key: set `MINTA_EVAL_API_KEY` → `x-api-key` or `Authorization: Bearer` required on `/add` & `/search` (401 otherwise); unset = no auth. `/health` always open |
 | Errors | `{"detail":{"reason":"..."}}` shape for business errors; no 202 / status endpoints / memory_ids |
 
 ## Model / Method Disclosure (originality statement)
@@ -47,6 +48,9 @@ Models are baked during build — no runtime network dependency.
   rehearsal.
 - Full evaluation results will be reported by the platform; no private
   benchmark data, gold answers or credentials are included in this repository.
+- Benchmark numbers that appear in repo docs (A/B matrices, proxy tables) are
+  **local proxy-caliber methodology records** (DeepSeek judge, relative-only)
+  — they describe configuration choices, not official standings.
 
 ## Data / Privacy
 
