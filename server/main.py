@@ -54,6 +54,11 @@ def _on_startup():
     """Initialize Expert CPGs and start lifecycle auto-scan scheduler."""
     _ensure_default_experts()
     _start_auto_scanner()
+    # Optional anonymous usage heartbeat (default OFF; only fires on opt-in
+    # via MINTA_TELEMETRY=1 + MINTA_TELEMETRY_POSTHOG_KEY — metadata-only,
+    # see services/telemetry.py).
+    from services.telemetry import start_daily_loop
+    start_daily_loop()
 
 
 @app.on_event("shutdown")
