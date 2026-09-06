@@ -1,5 +1,9 @@
 # @xxinchen/dsh-plugin
 
+> **One command → 19 memory tools → your agent stops re-explaining the project.**
+> Memories are governed, not hoarded: stale/conflict/redundancy checks, and
+> nothing becomes permanent until *you* confirm it in the inbox.
+
 Minta — context quality layer for DeepSeek Harness.
 
 Installing this package composes two Cordis rows into a DSH profile:
