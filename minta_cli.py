@@ -341,6 +341,23 @@ def cmd_init():
     print("  Ready! Run 'minta start' to begin.")
     print("  Dashboard: http://localhost:8772")
 
+    # Optional anonymous usage stats (default OFF — file-based, engine reads
+    # it live; only install/version/active time, never memory content).
+    if os.environ.get("MINTA_TELEMETRY_POSTHOG_KEY"):
+        consent_file = ROOT / "runtime" / ".telemetry_consent"
+        if not consent_file.exists():
+            try:
+                ans = input(
+                    "  Allow anonymous usage stats (version/active time only,"
+                    " never memory content)? [y/N] ").strip().lower()
+                consent_file.parent.mkdir(parents=True, exist_ok=True)
+                consent_file.write_text("1" if ans in ("y", "yes") else "0",
+                                        encoding="utf-8")
+                print("  [OK] usage stats " +
+                      ("enabled" if ans in ("y", "yes") else "left off"))
+            except Exception:
+                pass
+
 
 # --- Connect ---
 

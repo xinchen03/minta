@@ -31,8 +31,33 @@ _CAPTURE_URL = os.environ.get(
     "MINTA_TELEMETRY_HOST", "https://us.i.posthog.com/capture")
 
 
-def _enabled() -> bool:
+_CONSENT_FILE = _RUNTIME / ".telemetry_consent"
+
+
+def _env_enabled() -> bool:
     return os.environ.get("MINTA_TELEMETRY", "").lower() in ("1", "true", "on", "yes")
+
+
+def consent_set() -> bool | None:
+    """File-based consent: None = not asked; True/False = user's choice."""
+    try:
+        val = _CONSENT_FILE.read_text(encoding="utf-8").strip().lower()
+    except OSError:
+        return None
+    return val == "1"
+
+
+def set_consent(enabled: bool) -> None:
+    _CONSENT_FILE.parent.mkdir(parents=True, exist_ok=True)
+    _CONSENT_FILE.write_text("1" if enabled else "0", encoding="utf-8")
+
+
+def _enabled() -> bool:
+    """File-based consent is authoritative; fallback = env opt-in."""
+    fc = consent_set()
+    if fc is not None:
+        return fc
+    return _env_enabled()
 
 
 def _key() -> str:

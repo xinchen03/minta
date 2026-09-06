@@ -52,6 +52,33 @@ def test_payload_is_metadata_only(monkeypatch):
     assert "content" not in p  # no memory content, ever
 
 
+def test_file_consent_enables_sends(monkeypatch, tmp_path):
+    import requests as real_requests
+    out: list = []
+    monkeypatch.setattr(real_requests, "post", _fake_post(out))
+    monkeypatch.setenv("MINTA_TELEMETRY", "0")  # env says off
+    monkeypatch.setenv("MINTA_TELEMETRY_POSTHOG_KEY", "phc_test")
+    monkeypatch.setenv("MINTA_TELEMETRY_INSTALL_ID", "x")
+    f = tmp_path / ".telemetry_consent"
+    f.write_text("1", encoding="utf-8")
+    monkeypatch.setattr(telemetry, "_CONSENT_FILE", f)
+    telemetry.heartbeat()
+    assert len(out) == 1  # file consent overrides env
+
+
+def test_file_optout_wins_no_send(monkeypatch, tmp_path):
+    import requests as real_requests
+    out: list = []
+    monkeypatch.setattr(real_requests, "post", _fake_post(out))
+    monkeypatch.setenv("MINTA_TELEMETRY", "1")  # env says on
+    monkeypatch.setenv("MINTA_TELEMETRY_POSTHOG_KEY", "phc_test")
+    f = tmp_path / ".telemetry_consent"
+    f.write_text("0", encoding="utf-8")
+    monkeypatch.setattr(telemetry, "_CONSENT_FILE", f)
+    telemetry.heartbeat()
+    assert out == []  # user opt-out wins
+
+
 def test_missing_key_sends_nothing(monkeypatch):
     import requests as real_requests
     out: list = []
