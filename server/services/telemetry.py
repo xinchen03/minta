@@ -26,7 +26,9 @@ logger = logging.getLogger("minta.telemetry")
 _RUNTIME = Path(__file__).resolve().parent.parent.parent / "runtime"
 _INSTALL_ID_FILE = _RUNTIME / ".minta_install_id"
 
-_CAPTURE_URL = "https://eu.i.posthog.com/capture"  # EU instance
+# US cloud project (default). Override for EU runs via MINTA_TELEMETRY_HOST.
+_CAPTURE_URL = os.environ.get(
+    "MINTA_TELEMETRY_HOST", "https://us.i.posthog.com/capture")
 
 
 def _enabled() -> bool:
