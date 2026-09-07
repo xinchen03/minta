@@ -93,6 +93,8 @@ python minta_cli.py connect claude
 
 The web UI opens at `http://127.0.0.1:8772` — memory health dashboard, 3D knowledge graph, inbox review, expert panels.
 
+> On first memory write/search, sentence-transformers loads the default embedding model (`all-MiniLM-L6-v2`, auto-downloaded). Point `MINTA_EMBEDDING_MODEL` at a local model path, or switch `MINTA_EMBEDDING_BACKEND` to an API backend.
+
 ### Configuration & Keys (first run)
 
 ```bash

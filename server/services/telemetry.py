@@ -60,8 +60,13 @@ def _enabled() -> bool:
     return True
 
 
+# Public capture key (event-send only, public by design). Fallback so the
+# default-ON heartbeat actually ships on fresh installs without .env setup.
+_DEFAULT_KEY = "phc_AY3tBursmTQMZLkGn9QKz75o6feyJCKuTWnruh9dLB5q"
+
+
 def _key() -> str:
-    return os.environ.get("MINTA_TELEMETRY_POSTHOG_KEY", "").strip()
+    return os.environ.get("MINTA_TELEMETRY_POSTHOG_KEY", _DEFAULT_KEY).strip()
 
 
 def install_id() -> str:

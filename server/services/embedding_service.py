@@ -74,7 +74,7 @@ class EmbeddingService:
         # Load the model directly via sentence-transformers instead of chroma's
         # bundled helper: the helper was removed in chromadb 1.x, so this works
         # on both the image pin (<0.6) and newer local dev installs.
-        model_path = os.environ.get("MINTA_EMBEDDING_MODEL", "D:/all-mpnet-base-v2")
+        model_path = os.environ.get("MINTA_EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
         self._model = sentence_transformers.SentenceTransformer(model_path)
         path = _chroma_path()
         os.makedirs(path, exist_ok=True)
@@ -91,7 +91,7 @@ class EmbeddingService:
 
     def _init_local(self):
         import sentence_transformers
-        model_path = os.environ.get("MINTA_EMBEDDING_MODEL", "D:/models/all-MiniLM-L6-v2")
+        model_path = os.environ.get("MINTA_EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
         self._model = sentence_transformers.SentenceTransformer(model_path)
         logger.info(f"FAISS: loaded '{model_path}'")
 
