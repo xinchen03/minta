@@ -89,6 +89,8 @@ python minta_cli.py connect claude
 Web 界面自动打开于 `http://127.0.0.1:8772` — 记忆健康仪表盘、3D 知识图谱、收件箱审核、专家面板。
 
 > 首次写入/检索记忆时会加载嵌入模型(默认 `all-MiniLM-L6-v2`,由 sentence-transformers 自动下载);可设 `MINTA_EMBEDDING_MODEL` 指向本地模型路径,或用 `MINTA_EMBEDDING_BACKEND` 切换 API 后端。
+>
+> 💡 **中国大陆加速**:pip 换国内源(`-i https://pypi.tuna.tsinghua.edu.cn/simple`);模型下载设 `HF_ENDPOINT=https://hf-mirror.com`(或直接 `MINTA_EMBEDDING_MODEL` 指向本地模型);有 Docker 优先用 `docker compose up -d`,依赖已预烘焙、无需逐个下载。
 
 ### 配置与密钥(首次运行)
 

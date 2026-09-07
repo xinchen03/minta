@@ -69,6 +69,8 @@ python minta_cli.py start          # API :8772 · Autopilot :18730 · MCP :18721
 
 または Docker: `docker compose up -d`。あなたのエージェントを接続:
 
+> 初回のメモリ書き込み/検索時に、sentence-transformers が既定の埋め込みモデル(`all-MiniLM-L6-v2`、自動ダウンロード)をロードします。ローカルのモデルパスに `MINTA_EMBEDDING_MODEL` を、API バックエンドに切り替える場合は `MINTA_EMBEDDING_BACKEND` を設定してください。ダウンロードが遅い場合は `HF_ENDPOINT=https://hf-mirror.com` を、Docker をお使いなら `docker compose up -d`(依存を全て同梱済み)を優先してください。
+
 ```bash
 # 任意の MCP 対応エディタ/エージェント — Claude Code / Codex / Cursor / dsh
 python minta_cli.py connect claude

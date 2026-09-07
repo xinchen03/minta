@@ -94,6 +94,8 @@ python minta_cli.py connect claude
 The web UI opens at `http://127.0.0.1:8772` — memory health dashboard, 3D knowledge graph, inbox review, expert panels.
 
 > On first memory write/search, sentence-transformers loads the default embedding model (`all-MiniLM-L6-v2`, auto-downloaded). Point `MINTA_EMBEDDING_MODEL` at a local model path, or switch `MINTA_EMBEDDING_BACKEND` to an API backend.
+>
+> 💡 **China-Mainland speedup**: use a pip mirror (`-i https://pypi.tuna.tsinghua.edu.cn/simple`) and `HF_ENDPOINT=https://hf-mirror.com` for model downloads (or point `MINTA_EMBEDDING_MODEL` at a local model). With Docker, `docker compose up -d` ships all baked dependencies — no per-package downloads.
 
 ### Configuration & Keys (first run)
 
