@@ -178,7 +178,7 @@ We welcome good-first-issue PRs: `entity_linker` English patterns, richer demo s
 
 ## Data & Privacy
 
-- Local-first: database, vectors and logs stay on your machine. No telemetry by default.
+- Local-first: database, vectors and logs stay on your machine. Anonymous telemetry (install id / version / OS / event name only, never content) is **on by default**; disable with `MINTA_TELEMETRY=0` or `runtime/.telemetry_consent` set to `0`.
 - Data export / delete: `GET /api/user/export-data` · `DELETE /api/user/delete-data` (authenticated).
 - Secrets: generated on first run into `.minta_api_key` (never committed); privileged APIs are off by default unless explicitly configured.
 - See `SECURITY.md` for disclosure policy.

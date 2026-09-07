@@ -1,9 +1,10 @@
-"""Optional, default-OFF anonymous usage heartbeat (PostHog capture).
+"""Optional anonymous usage heartbeat (PostHog capture).
 
-Consent model: explicit opt-in via `MINTA_TELEMETRY=1` in .env (set by the
-user, later also by the setup-wizard checkbox). `MINTA_TELEMETRY_POSTHOG_KEY`
-holds the public PostHog project key (public by design — event-send only,
-never data read).
+Consent model: default-ON with clean opt-out. Disable via `MINTA_TELEMETRY=0`
+in .env, or by writing 0 to runtime/.telemetry_consent. The consent file is
+authoritative — an explicit opt-out there wins over an env opt-in.
+`MINTA_TELEMETRY_POSTHOG_KEY` holds the public PostHog project key (public by
+design — event-send only, never data read).
 
 Privacy invariant: ONLY metadata is sent — install id / version / OS / event
 name. NEVER memory content, queries, messages or usage text. All failures are
@@ -34,10 +35,6 @@ _CAPTURE_URL = os.environ.get(
 _CONSENT_FILE = _RUNTIME / ".telemetry_consent"
 
 
-def _env_enabled() -> bool:
-    return os.environ.get("MINTA_TELEMETRY", "").lower() in ("1", "true", "on", "yes")
-
-
 def consent_set() -> bool | None:
     """File-based consent: None = not asked; True/False = user's choice."""
     try:
@@ -53,11 +50,14 @@ def set_consent(enabled: bool) -> None:
 
 
 def _enabled() -> bool:
-    """File-based consent is authoritative; fallback = env opt-in."""
+    """File-based consent is authoritative; env opt-out honored; DEFAULT ON."""
     fc = consent_set()
     if fc is not None:
         return fc
-    return _env_enabled()
+    env = os.environ.get("MINTA_TELEMETRY", "").strip().lower()
+    if env:
+        return env not in ("0", "false", "off", "no")
+    return True
 
 
 def _key() -> str:
@@ -77,7 +77,11 @@ def install_id() -> str:
 
 def _version() -> str:
     try:
-        pkg = _RUNTIME.parent / "package.json"
+        root = _RUNTIME.parent
+        ver = root / "VERSION"
+        if ver.exists():
+            return ver.read_text(encoding="utf-8").strip()
+        pkg = root / "package.json"
         if pkg.exists():
             return json.loads(pkg.read_text(encoding="utf-8")).get("version", "dev")
     except Exception:

@@ -69,7 +69,7 @@ L3 声称门控  →  agent 不能声称没做过的阶段(数模/科研工作�
 
 ## 快速入门
 
-**60 秒。** 本地优先,无云,开放核心无需订阅。
+**60 秒。** 本地优先(数据留在本机),开放核心无需订阅。
 
 ```bash
 git clone https://github.com/xinchen03/minta.git
@@ -166,7 +166,7 @@ python -m pytest tests/                # 服务端测试
 
 ## 数据与隐私
 
-- 本地优先:数据库、向量、日志留在你的机器;默认零遥测。
+- 本地优先:数据库、向量、日志留在你的机器。匿名遥测(仅安装 ID、版本、系统、事件名,**不含任何记忆内容)****默认开启**;关闭:在 `.env` 设 `MINTA_TELEMETRY=0`,或将 `runtime/.telemetry_consent` 写为 `0`。
 - 数据导出/删除:`GET /api/user/export-data` · `DELETE /api/user/delete-data`(需认证)。
 - 密钥:首次运行生成(`.minta_api_key`,永不提交);特权 API 默认关闭,除非显式配置。
 - 披露策略见 `SECURITY.md`。

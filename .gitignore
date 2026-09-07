@@ -72,3 +72,7 @@ web/public/data/contextObjects.json
 start_minta_open.bat
 docs/eval-proxy/run_matrix.sh
 auto_scan_config.json
+
+# local telemetry state (never commit machine id / consent)
+runtime/.minta_install_id
+runtime/.telemetry_consent

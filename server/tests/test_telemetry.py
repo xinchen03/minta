@@ -1,4 +1,4 @@
-"""Telemetry module tests: opt-in gating + metadata-only payload."""
+"""Telemetry module tests: default-ON gating + metadata-only payload."""
 from __future__ import annotations
 
 import os
@@ -32,7 +32,7 @@ def test_disabled_sends_nothing(monkeypatch):
     monkeypatch.setenv("MINTA_TELEMETRY", "0")
     monkeypatch.setenv("MINTA_TELEMETRY_POSTHOG_KEY", "phc_test")
     telemetry.heartbeat()
-    assert out == []  # default off — even with a key set
+    assert out == []  # explicit env opt-out — even with a key set
 
 
 def test_payload_is_metadata_only(monkeypatch):
@@ -87,3 +87,23 @@ def test_missing_key_sends_nothing(monkeypatch):
     monkeypatch.delenv("MINTA_TELEMETRY_POSTHOG_KEY", raising=False)
     telemetry.heartbeat()
     assert out == []
+
+
+def test_default_on_without_consent(monkeypatch, tmp_path):
+    """No consent file, no env var → default ON (opt-out telemetry)."""
+    import requests as real_requests
+    out: list = []
+    monkeypatch.setattr(real_requests, "post", _fake_post(out))
+    monkeypatch.delenv("MINTA_TELEMETRY", raising=False)
+    monkeypatch.setenv("MINTA_TELEMETRY_POSTHOG_KEY", "phc_test")
+    monkeypatch.setattr(telemetry, "_CONSENT_FILE", tmp_path / ".telemetry_consent")  # absent
+    telemetry.heartbeat({"source": "test"})
+    assert len(out) == 1
+
+
+def test_version_from_file(monkeypatch, tmp_path):
+    root = tmp_path / "repo"
+    (root / "runtime").mkdir(parents=True)
+    (root / "VERSION").write_text("9.9.9\n", encoding="utf-8")
+    monkeypatch.setattr(telemetry, "_RUNTIME", root / "runtime")
+    assert telemetry._version() == "9.9.9"
