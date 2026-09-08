@@ -23,6 +23,7 @@ BETA = 1.30
 GAMMA = 0.40
 THETA_C = 0.46       # decision threshold for conflict classification
 THETA_R = 0.85        # redundancy threshold (cosine similarity)
+DUPLICATE_COS = 0.995  # cosine ≥ this = same content: duplicate (D_V/redundancy business), never conflict
 
 # Negation bypass — lexical patterns indicating polarity reversal (Section 4.5, B_ij)
 # English: word-boundary patterns
@@ -178,6 +179,14 @@ def detect_conflicts(
         for j in range(i + 1, n):
             pi, pj = parsed[i], parsed[j]
 
+            # Gate 0.5: exact-duplicate short-circuit — read similarity once;
+            # two identical texts cannot conflict with each other. Without this,
+            # a negation keyword inside identical content trips the bypass below
+            # and the P(γ) base rate re-flags duplicates as "ambiguous conflict".
+            sim = cosine_similarity(pi["emb"], pj["emb"])
+            if sim >= DUPLICATE_COS:
+                continue
+
             # Gate 0: Negation bypass (B_ij) — check before redundancy gate
             b_ij = check_negation_bypass(
                 (pi.get("title") or "") + " " + (pi.get("body") or ""),
@@ -185,7 +194,6 @@ def detect_conflicts(
             )
 
             # Gate 1: Redundancy — skip near-duplicates unless negation detected
-            sim = cosine_similarity(pi["emb"], pj["emb"])
             if sim > THETA_R and not b_ij:
                 continue
 
