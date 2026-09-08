@@ -20,7 +20,7 @@
 
 <p align="center">
   <a href="https://watcha.cn/products/minta?utm_source=product-badge&amp;utm_content=invite" target="_blank" rel="noopener">
-    <img src="https://tos.watcha.cn/public/images/invite-0-white.png" alt="Minta 在观猹上的真实用户评价" width="360">
+    <img src="https://tos.watcha.cn/public/images/invite-0-white.png" alt="Minta 观猹徽章" width="360" style="display:block;width:360px;max-width:100%;">
   </a>
   <br>
   <sub>观猹上的<a href="https://watcha.cn/products/minta?utm_source=product-badge&amp;utm_content=invite">真实用户评价</a> —— 真正跑过 Minta 的人怎么说,欢迎留下你的猹评。</sub>
