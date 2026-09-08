@@ -79,14 +79,17 @@ def test_file_optout_wins_no_send(monkeypatch, tmp_path):
     assert out == []  # user opt-out wins
 
 
-def test_missing_key_sends_nothing(monkeypatch):
+def test_missing_key_uses_default_project_key(monkeypatch):
+    """No env key → built-in default project key ships the heartbeat
+    (fallback added for fresh installs without .env setup)."""
     import requests as real_requests
     out: list = []
     monkeypatch.setattr(real_requests, "post", _fake_post(out))
     monkeypatch.setenv("MINTA_TELEMETRY", "1")
     monkeypatch.delenv("MINTA_TELEMETRY_POSTHOG_KEY", raising=False)
     telemetry.heartbeat()
-    assert out == []
+    assert len(out) == 1
+    assert out[0]["api_key"] == telemetry._DEFAULT_KEY
 
 
 def test_default_on_without_consent(monkeypatch, tmp_path):
