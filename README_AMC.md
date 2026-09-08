@@ -1,10 +1,16 @@
-# Minta — Agent Memory Challenge (Cycle 2) Submission
+# Minta — Second Agent Memory Challenge (2026) Submission
+
+This document describes the competition-specific evaluation snapshot. The
+regular `main` branch remains the continuously updated public product line;
+the immutable competition tag is created only after the candidate passes its
+final smoke and reproducibility checks.
 
 ## System
 
 - **Name**: Minta — the context quality layer for AI agents
-- **Version**: `amc-2026-cycle2-v1`
+- **Candidate version**: `amc-2026-cycle2-v2`
 - **Repository**: https://github.com/xinchen03/minta
+- **Track / division**: Textual Memory / Academic Methods
 - **Submission type**: code submission (platform builds and deploys per the
   Docker instructions below)
 
@@ -25,7 +31,7 @@ Models are baked during build — no runtime network dependency.
 | `POST /add` | Synchronous ingest; request-id idempotent; echoes `success` / `request_id` / `user_id` / `session_id`; HTTP 200 only after persistence + immediate retrievability |
 | `POST /search` | User-id-scoped only; `top_k ≤ 100`; returns ordered `data[]` with `id` / `content` / optional `score` / `created_at`; no answer generation |
 | `GET /health` | No-auth liveness (same origin as `/add`, port 8000) |
-| Auth | Optional env-gated key: set `MINTA_EVAL_API_KEY` → `x-api-key` or `Authorization: Bearer` required on `/add` & `/search` (401 otherwise); unset = no auth. `/health` always open |
+| Auth | Optional env-gated key: set `MINTA_EVAL_API_KEY` → `X-Api-Key`, `Authorization: Bearer`, or `Authorization: Token` is required on `/add` and `/search` (401 otherwise); unset = no auth. `/health` always remains open. |
 | Errors | `{"detail":{"reason":"..."}}` shape for business errors; no 202 / status endpoints / memory_ids |
 
 ## Model / Method Disclosure (originality statement)
@@ -41,6 +47,15 @@ Models are baked during build — no runtime network dependency.
 - **Third-party**: SQLAlchemy / FastAPI / sentence-transformers / apscheduler
   (standard public libraries, used per their licenses).
 
+### Pre-submission rule confirmation
+
+The second-event notice states that participants implement memory Add/Search
+while the platform controls Answer and Eval, and does not prescribe the
+internal database, index, vector model, or architecture. The live Full
+checklist also contains a `gpt-4o-mini` item. This candidate therefore remains
+zero-LLM and **must not be submitted for Full until the organizer confirms in
+writing which requirement governs the second event**.
+
 ## Known Boundaries
 
 - Long-document exact-entity reference (CLBench-style) and ordering-type
@@ -54,6 +69,10 @@ Models are baked during build — no runtime network dependency.
 
 ## Data / Privacy
 
-- Evaluation data is held in-memory per container; 30-day TTL default,
-  log discipline: no request bodies, memory content, queries or keys logged.
+- Evaluation data is persisted in the container's SQLite evaluation database
+  so synchronous Add results remain immediately searchable. A 720-hour
+  (30-day) TTL cleanup is enabled by default; destroying the evaluation
+  container/volume deletes the run data sooner.
+- Log discipline: no request bodies, memory content, queries or keys are
+  logged.
 - Red-line self-checks are enforced by tests shipped in `server/tests/`.

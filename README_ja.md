@@ -153,8 +153,8 @@ Minta はもともと研究ワークフローのメモリ層として始まり�
 ## ビルドとコントリビュート
 
 ```bash
-python scripts/build_open_release.py
-python -m pytest tests/
+python -m pytest server/tests/
+python scripts/check_public_boundary.py
 ```
 
 good-first-issue PR 歓迎: `entity_linker` の英語パターン、実在感のあるデモシナリオ。詳細は `CONTRIBUTING.md`。

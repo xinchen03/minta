@@ -166,8 +166,8 @@ Minta 最初就是科研工作流的记忆层——文献笔记、稿件清单�
 ## 构建与贡献
 
 ```bash
-python scripts/build_open_release.py   # 同步发布线(A 级)
-python -m pytest tests/                # 服务端测试
+python -m pytest server/tests/          # 服务端测试
+python scripts/check_public_boundary.py # 检查公开源码边界
 ```
 
 欢迎 good-first-issue PR:`entity_linker` 英文模式、更真实的演示场景。详见 `CONTRIBUTING.md`。

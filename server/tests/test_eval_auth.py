@@ -48,6 +48,8 @@ def test_gate_enforced_when_key_set(tmp_path):
                   headers={"x-api-key": "secret"}).status_code == 200
     assert c.post("/search", json=_SEARCH,
                   headers={"Authorization": "Bearer secret"}).status_code == 200
+    assert c.post("/search", json=_SEARCH,
+                  headers={"Authorization": "Token secret"}).status_code == 200
 
 
 def test_health_always_open(tmp_path):

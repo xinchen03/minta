@@ -111,9 +111,13 @@ def create_eval_app(db_url: str | None = None, embed_fn=None) -> FastAPI:
     async def _credential_gate(request, call_next):
         if not _eval_key or request.url.path in ("/health", "/ping"):
             return await call_next(request)
-        supplied = (request.headers.get("x-api-key")
-                    or request.headers.get("Authorization", "")
-                    .removeprefix("Bearer ").strip())
+        supplied = request.headers.get("x-api-key", "").strip()
+        if not supplied:
+            authorization = request.headers.get("Authorization", "").strip()
+            for scheme in ("Bearer ", "Token "):
+                if authorization.lower().startswith(scheme.lower()):
+                    supplied = authorization[len(scheme):].strip()
+                    break
         if supplied != _eval_key:
             return JSONResponse(status_code=401,
                                 content={"detail": {"reason": "invalid credential"}})

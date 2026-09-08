@@ -176,8 +176,8 @@ Verified integration (2026-08): `dsh plugin --profile web add @xxinchen/dsh-plug
 ## Building & contributing
 
 ```bash
-python scripts/build_open_release.py   # sync publish lineage (A-level only)
-python -m pytest tests/                # server test suite
+python -m pytest server/tests/          # server test suite
+python scripts/check_public_boundary.py # verify the public-source boundary
 ```
 
 We welcome good-first-issue PRs: `entity_linker` English patterns, richer demo scenarios. More in `CONTRIBUTING.md`.
