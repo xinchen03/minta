@@ -15,7 +15,7 @@
   <a href="#license"><img src="https://img.shields.io/badge/license-Apache--2.0-blue"></a>
   <a href="#クイックスタート"><img src="https://img.shields.io/badge/python-3.9%2B-green"></a>
   <a href="#deepseek-harness"><img src="https://img.shields.io/badge/DeepSeek%20Harness-verified-purple"></a>
-  <a href="#ベンチマーク"><img src="https://img.shields.io/badge/MCP-19%20tools-orange"></a>
+  <a href="#ベンチマーク"><img src="https://img.shields.io/badge/MCP-13%20tools-orange"></a>
 </p>
 
 <p align="center">
@@ -114,7 +114,7 @@ python -c "import secrets; print('MINTA_API_KEY=minta_'+secrets.token_hex(32))"
 | 専門ドメイン | マルチドメインルール(足首/膝/頚椎、ISO9001、PRISMA…) + CUMCM 段階ワークフロー | 信頼度つきドメイン推論 |
 | 研究 | 原稿インベントリ + コンプライアンス評価 | 投稿前チェック |
 | メタ認知 | 共形信頼度(校正・データロック) | カバレッジ保証つきの「知っている」 |
-| 提供 | Web dist + MCP(19 ツール)+ DSH プラグイン検証済み | 3 つの入口、1 つの記憶 |
+| 提供 | Web dist + MCP(13 個の動作するツール)+ DSH プラグイン検証済み | 3 つの入口、1 つの記憶 |
 
 ## オープンコア(Open Code, Locked Assets)
 
@@ -148,7 +148,7 @@ Minta はもともと研究ワークフローのメモリ層として始まり�
 
 ## DeepSeek Harness
 
-検証済み統合 (2026-08): `dsh plugin --profile web add @xxinchen/dsh-plugin` で接続 — プラグインが公式 `dsh-mcp-client` 行を自動合成します(エンジンは別途デプロイされ、19 個の `minta_*` ツールを提供)。手動 `cordis.patch.yml` 挿入にも対応。詳細は `docs/dsh-integration.md`。プラグイン 0.2.0 には `minta` コピー済みプリセット(毎ターン記憶プロトコル)も同梱 — `dsh-plugin/presets/minta` を `~/.dsh/.agent-presets/` にコピーするとセッション選択で利用できます。
+検証済み統合 (2026-08): `dsh plugin --profile web add @xxinchen/dsh-plugin` で接続 — プラグインが公式 `dsh-mcp-client` 行を自動合成します(エンジンは別途デプロイされ、13 個の動作する Community ツールを提供)。手動 `cordis.patch.yml` 挿入にも対応。詳細は `docs/dsh-integration.md`。プラグインには `minta` プリセット(毎ターン記憶プロトコル)も同梱 — `dsh-plugin/presets/minta` を `~/.dsh/.agent-presets/` にコピーするとセッション選択で利用できます。
 
 ## ビルドとコントリビュート
 
@@ -165,7 +165,7 @@ good-first-issue PR 歓迎: `entity_linker` の英語パターン、実在感の
 
 ## データとプライバシー
 
-- ローカルファースト: データベース・ベクトル・ログはマシン内に留まる。デフォルトでテレメトリなし。
+- ローカルファースト: データベース・ベクトル・ログはマシン内に留まる。匿名テレメトリ(インストール ID / バージョン / OS / イベント名のみ、記憶コンテンツは送信しない)は**デフォルトで有効**;無効化: `.env` で `MINTA_TELEMETRY=0`、または `runtime/.telemetry_consent` に `0` を書き込む。
 - エクスポート/削除: `GET /api/user/export-data` · `DELETE /api/user/delete-data`(認証済み)。
 - シークレット: 初回実行時に生成(`.minta_api_key`、コミット回避)。特権 API は明示的に設定しない限り無効。
 - 開示ポリシーは `SECURITY.md`。
