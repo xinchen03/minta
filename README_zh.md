@@ -18,6 +18,14 @@
   <a href="#基准测试"><img src="https://img.shields.io/badge/MCP-19%20tools-orange"></a>
 </p>
 
+<p align="center">
+  <a href="https://watcha.cn/products/minta?utm_source=product-badge&amp;utm_content=invite" target="_blank" rel="noopener">
+    <img src="https://tos.watcha.cn/public/images/invite-0-white.png" alt="Minta 在观猹上的真实用户评价" width="360">
+  </a>
+  <br>
+  <sub>观猹上的<a href="https://watcha.cn/products/minta?utm_source=product-badge&amp;utm_content=invite">真实用户评价</a> —— 真正跑过 Minta 的人怎么说,欢迎留下你的猹评。</sub>
+</p>
+
 > ⭐ 新消息(2026-08):**开放核心 v2** —— 记忆引擎 + 科研合规引擎 + 专家域包,并已接入 **DeepSeek Harness(验证通过)**。
 
 ---

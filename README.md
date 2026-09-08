@@ -18,6 +18,14 @@
   <a href="#benchmarks"><img src="https://img.shields.io/badge/MCP-13%20core%20tools-orange"></a>
 </p>
 
+<p align="center">
+  <a href="https://watcha.cn/products/minta?utm_source=product-badge&amp;utm_content=invite" target="_blank" rel="noopener">
+    <img src="https://tos.watcha.cn/public/images/invite-0-white.png" alt="Real user reviews of Minta on Watcha (观猹)" width="360">
+  </a>
+  <br>
+  <sub>Real user reviews on <a href="https://watcha.cn/products/minta?utm_source=product-badge&amp;utm_content=invite">观猹</a> — what the people who run Minta actually say.</sub>
+</p>
+
 > ⭐ New (2026-08): **open-core v2** — memory engine + research compliance engine + expert domain pack, now with **DeepSeek Harness integration (verified)**.
 
 ---

@@ -18,6 +18,14 @@
   <a href="#ベンチマーク"><img src="https://img.shields.io/badge/MCP-19%20tools-orange"></a>
 </p>
 
+<p align="center">
+  <a href="https://watcha.cn/products/minta?utm_source=product-badge&amp;utm_content=invite" target="_blank" rel="noopener">
+    <img src="https://tos.watcha.cn/public/images/invite-0-white.png" alt="Minta の観猹 (Watcha) での実際のユーザーレビュー" width="360">
+  </a>
+  <br>
+  <sub><a href="https://watcha.cn/products/minta?utm_source=product-badge&amp;utm_content=invite">観猹</a> での実際のユーザーレビュー — Minta を実際に使った人の声。</sub>
+</p>
+
 > ⭐ 新着 (2026-08): **オープンコア v2** — メモリエンジン + 研究コンプライアンスエンジン + 専門ドメインパック、**DeepSeek Harness 統合(検証済み)**。
 
 ---
