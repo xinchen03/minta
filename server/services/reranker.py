@@ -19,7 +19,7 @@ _RERANKER = None  # lazy load
 
 _RERANKER_MODEL = os.environ.get(
     "MINTA_RERANKER_MODEL",
-    "D:/models/bge-reranker-v2-m3",
+    "cross-encoder/ms-marco-MiniLM-L-6-v2",
 )
 
 

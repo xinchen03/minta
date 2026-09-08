@@ -25,6 +25,8 @@ def ingest_image(
     db_session=None,
     embedding_service=None,
     save_dir: str = "data/raw",
+    extract_text: bool = True,
+    generate_desc: bool = True,
 ) -> Dict:
     """Process an uploaded image end-to-end.
 
@@ -44,10 +46,10 @@ def ingest_image(
         f.write(image_bytes)
 
     # 2. OCR
-    ocr_text = extract_text_from_bytes(image_bytes)
+    ocr_text = extract_text_from_bytes(image_bytes) if extract_text else ""
 
     # 3. Caption
-    caption = generate_caption(image_bytes)
+    caption = generate_caption(image_bytes) if generate_desc else ""
 
     # 4. Build fact record
     title = f"[Image] {filename[:60]}"

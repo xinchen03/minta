@@ -1,6 +1,6 @@
 {
   "name": "@xxinchen/dsh-plugin",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Minta for DeepSeek Harness — bundles the MCP wiring, a real Cordis plugin (runtime skill + session-start prewarm), and the minta agent preset (per-turn preflight/postflight protocol) over the Minta memory engine.",
   "repository": {
     "type": "git",

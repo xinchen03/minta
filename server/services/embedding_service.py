@@ -50,6 +50,8 @@ class EmbeddingService:
         self.faiss_index = None
         self._id_to_idx: dict = {}
         self._idx_to_id: dict = {}
+        self._metadata_by_id: dict = {}
+        self._documents_by_id: dict = {}
         self._initialized = False
 
     # ── Init ──
@@ -177,6 +179,13 @@ class EmbeddingService:
             text = f"{obj.get('summary', '')} {obj.get('body', '')}"[:2000]
             ids.append(oid)
             embs.append(self.embed(text))
+            uid = obj.get("user_id")
+            self._metadata_by_id[oid] = {
+                "type": obj.get("type", ""),
+                "status": obj.get("status", "active"),
+                "user_id": str(uid) if uid is not None else "global",
+            }
+            self._documents_by_id[oid] = text[:500]
         if not embs:
             return
         arr = np.array(embs, dtype=np.float32)
@@ -196,7 +205,7 @@ class EmbeddingService:
         """
         self._ensure_init()
         if self.backend == "local":
-            return self._search_faiss(query, top_k)
+            return self._search_faiss(query, top_k, where=where)
         return self._search_chroma(query, top_k, where=where)
 
     def _search_chroma(self, query: str, top_k: int, where: Optional[dict] = None) -> List[dict]:
@@ -212,12 +221,25 @@ class EmbeddingService:
             return []
         return [{"id": oid, "score": max(0.0, 1.0 - float(d))} for oid, d in zip(r["ids"][0], r["distances"][0])]
 
-    def _search_faiss(self, query: str, top_k: int) -> List[dict]:
+    def _search_faiss(self, query: str, top_k: int,
+                      where: Optional[dict] = None) -> List[dict]:
         if self.faiss_index is None:
             return []
         qv = self.embed(query).reshape(1, -1).astype(np.float32)
-        dists, idxs = self.faiss_index.search(qv, top_k)
-        return [{"id": self._idx_to_id[i], "score": float(d)} for d, i in zip(dists[0], idxs[0]) if i >= 0 and i in self._idx_to_id]
+        candidate_count = self.faiss_index.ntotal if where else top_k
+        dists, idxs = self.faiss_index.search(qv, candidate_count)
+        rows = []
+        for distance, index in zip(dists[0], idxs[0]):
+            if index < 0 or index not in self._idx_to_id:
+                continue
+            object_id = self._idx_to_id[index]
+            metadata = self._metadata_by_id.get(object_id, {})
+            if where and any(str(metadata.get(k)) != str(v) for k, v in where.items()):
+                continue
+            rows.append({"id": object_id, "score": float(distance)})
+            if len(rows) >= top_k:
+                break
+        return rows
 
     def add_vector(self, obj_id: str, text: str, metadata: Optional[dict] = None):
         """Index one object. `metadata` must carry user_id for isolation."""
@@ -233,6 +255,8 @@ class EmbeddingService:
             idx = self.faiss_index.ntotal - 1
             self._id_to_idx[obj_id] = idx
             self._idx_to_id[idx] = obj_id
+            self._metadata_by_id[obj_id] = meta
+            self._documents_by_id[obj_id] = text[:500]
             return
         emb = self.embed(text)
         self._collection.upsert(ids=[str(obj_id)], embeddings=[emb.tolist()],
@@ -243,16 +267,91 @@ class EmbeddingService:
         self._ensure_init()
         ids = [str(i) for i in ids]
         if self.backend == "local":
-            for oid in ids:
-                idx = self._id_to_idx.pop(oid, None)
-                if idx is not None:
-                    self._idx_to_id.pop(idx, None)
+            self._rebuild_local_without(set(ids))
             return
         if self._collection is not None:
             try:
                 self._collection.delete(ids=ids)
             except Exception:
                 logger.warning("ChromaDB delete failed (continuing)", exc_info=True)
+
+    def _rebuild_local_without(self, remove_ids: set[str]) -> int:
+        if self.faiss_index is None or not remove_ids:
+            return 0
+        ordered = [
+            (index, object_id) for index, object_id in self._idx_to_id.items()
+            if object_id not in remove_ids
+        ]
+        ordered.sort()
+        vectors = [self.faiss_index.reconstruct(index) for index, _ in ordered]
+        replacement = type(self.faiss_index)(self.faiss_index.d)
+        if vectors:
+            replacement.add(np.asarray(vectors, dtype=np.float32))
+        removed = len(self._idx_to_id) - len(ordered)
+        self.faiss_index = replacement
+        self._id_to_idx = {object_id: index for index, (_, object_id) in enumerate(ordered)}
+        self._idx_to_id = {index: object_id for index, (_, object_id) in enumerate(ordered)}
+        for object_id in remove_ids:
+            self._metadata_by_id.pop(object_id, None)
+            self._documents_by_id.pop(object_id, None)
+        return removed
+
+    @staticmethod
+    def _normalise_vector(value):
+        return value.tolist() if hasattr(value, "tolist") else list(value)
+
+    def export_user(self, user_id) -> List[dict]:
+        """Export vectors and source metadata owned by one user."""
+        self._ensure_init()
+        if self.backend == "local":
+            rows = []
+            for index, object_id in sorted(self._idx_to_id.items()):
+                metadata = self._metadata_by_id.get(object_id, {})
+                if str(metadata.get("user_id")) != str(user_id):
+                    continue
+                rows.append({
+                    "id": object_id,
+                    "document": self._documents_by_id.get(object_id, ""),
+                    "metadata": metadata,
+                    "embedding": self._normalise_vector(
+                        self.faiss_index.reconstruct(index)),
+                })
+            return rows
+        if self._collection is None:
+            return []
+        result = self._collection.get(
+            where={"user_id": str(user_id)},
+            include=["documents", "metadatas", "embeddings"],
+        )
+        ids = result.get("ids") or []
+        documents = result.get("documents") or [""] * len(ids)
+        metadatas = result.get("metadatas") or [{}] * len(ids)
+        embeddings = result.get("embeddings")
+        if embeddings is None:
+            embeddings = [[] for _ in ids]
+        return [{
+            "id": object_id,
+            "document": documents[index],
+            "metadata": metadatas[index],
+            "embedding": self._normalise_vector(embeddings[index]),
+        } for index, object_id in enumerate(ids)]
+
+    def delete_user(self, user_id) -> int:
+        """Remove every vector owned by a user and return the exact count."""
+        self._ensure_init()
+        if self.backend == "local":
+            remove_ids = {
+                object_id for object_id, metadata in self._metadata_by_id.items()
+                if str(metadata.get("user_id")) == str(user_id)
+            }
+            return self._rebuild_local_without(remove_ids)
+        if self._collection is None:
+            return 0
+        result = self._collection.get(where={"user_id": str(user_id)}, include=[])
+        ids = result.get("ids") or []
+        if ids:
+            self._collection.delete(ids=ids)
+        return len(ids)
 
 
 # MiniLM singleton for conflict detection (paper-calibrated, 384-dim)
@@ -267,7 +366,8 @@ def get_conflict_embedding() -> callable:
     global _conflict_model
     if _conflict_model is None:
         import sentence_transformers
-        model_path = os.environ.get("MINTA_CONFLICT_MODEL", "D:/models/all-MiniLM-L6-v2")
+        model_path = os.environ.get(
+            "MINTA_CONFLICT_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
         _conflict_model = sentence_transformers.SentenceTransformer(model_path)
     return lambda text: _conflict_model.encode(text, normalize_embeddings=True).astype(np.float32)
 

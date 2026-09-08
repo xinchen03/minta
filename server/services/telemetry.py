@@ -1,8 +1,8 @@
 """Optional anonymous usage heartbeat (PostHog capture).
 
-Consent model: default-ON with clean opt-out. Disable via `MINTA_TELEMETRY=0`
-in .env, or by writing 0 to runtime/.telemetry_consent. The consent file is
-authoritative — an explicit opt-out there wins over an env opt-in.
+Consent model: default-OFF, explicit opt-in. Enable via `MINTA_TELEMETRY=1`
+and a PostHog project key, or by writing 1 to runtime/.telemetry_consent.
+The consent file is authoritative.
 `MINTA_TELEMETRY_POSTHOG_KEY` holds the public PostHog project key (public by
 design — event-send only, never data read).
 
@@ -50,23 +50,18 @@ def set_consent(enabled: bool) -> None:
 
 
 def _enabled() -> bool:
-    """File-based consent is authoritative; env opt-out honored; DEFAULT ON."""
+    """File-based consent is authoritative; telemetry defaults to off."""
     fc = consent_set()
     if fc is not None:
         return fc
     env = os.environ.get("MINTA_TELEMETRY", "").strip().lower()
     if env:
         return env not in ("0", "false", "off", "no")
-    return True
-
-
-# Public capture key (event-send only, public by design). Fallback so the
-# default-ON heartbeat actually ships on fresh installs without .env setup.
-_DEFAULT_KEY = "phc_AY3tBursmTQMZLkGn9QKz75o6feyJCKuTWnruh9dLB5q"
+    return False
 
 
 def _key() -> str:
-    return os.environ.get("MINTA_TELEMETRY_POSTHOG_KEY", _DEFAULT_KEY).strip()
+    return os.environ.get("MINTA_TELEMETRY_POSTHOG_KEY", "").strip()
 
 
 def install_id() -> str:

@@ -35,8 +35,6 @@ const SKILL_MEMORY_GOVERNANCE = {
     '6. Redundancy ("这个和上次说的一样") → suggest a merge via the lifecycle scan rather than storing duplicates.',
     '7. If the engine is unreachable, say memory is unavailable — never fabricate remembered content.',
     '8. You propose, the user decides: the inbox is the only write path.',
-    '',
-    '**Expert domains**: for ankle/knee/cervical injury, ISO/prisma or compliance standards questions, call `minta_expert_infer` / `minta_expert_consult` so the domain engine (phase- and rule-aware) answers with calibrated confidence.',
   ].join('\n'),
 };
 
@@ -46,9 +44,13 @@ async function prewarm(ctx) {
   // Engine health + recent memory overview. Fail-open: an unreachable engine
   // must never break a session.
   try {
-    const status = await fetch(`${API_BASE}/api/autopilot/status`, {
+    const statusResponse = await fetch(`${API_BASE}/api/autopilot/status`, {
       headers: { 'x-api-key': process.env.MINTA_API_KEY ?? '' },
-    }).then((r) => r.json());
+    });
+    if (!statusResponse.ok) {
+      throw new Error(`engine status HTTP ${statusResponse.status}; set MINTA_API_KEY`);
+    }
+    const status = await statusResponse.json();
     const freshest = await fetch(`${API_BASE}/api/contextObjects/public?limit=5`).then((r) => r.json());
     const titles = Array.isArray(freshest)
       ? freshest.map((o) => o.title ?? o.id ?? '?').join(' | ')

@@ -3,9 +3,8 @@
 Model resolution order:
     MINTA_EVAL_EMBED_MODEL > MINTA_EMBEDDING_MODEL > sentence-transformers/all-mpnet-base-v2
 
-The Docker image pins the model to a baked /models path at build time; local
-proxy runs set MINTA_EVAL_EMBED_MODEL=D:/all-mpnet-base-v2 (the weights used by
-Minta-next's historical LoCoMo numbers, so proxy scores stay comparable).
+The Docker image pins the model to a baked /models path at build time. Local
+runs may point ``MINTA_EVAL_EMBED_MODEL`` at an operator-owned model directory.
 Loading happens once, on the first call, behind a lock.
 """
 from __future__ import annotations

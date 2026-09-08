@@ -146,11 +146,9 @@ Agent integration per editor → [`docs/mcp-integration.md`](docs/mcp-integratio
 
 The hosted tiers above are roadmap features — the open core is always a complete, runnable memory system.
 
-> Tool surface note: the open-edition MCP server registers the same 19 tool
-> names as the full engine, but the 6 expert/dialogue ones (`minta_expert_*`,
-> `minta_chat`) depend on the enterprise-side backends (`/api/expert/*`,
-> `/api/dialogue`) which are **not included in this repo** — they serve as
-> extension points for the full/enterprise deployment, not as working tools here.
+> Tool surface note: the open-edition MCP server exposes 13 working Community
+> tools. Expert/dialogue tools are registered only by deployments that include
+> their corresponding backends, so Community users never see dead tools.
 
 ## Benchmarks
 
@@ -173,7 +171,7 @@ Companion execution skills (Apache-2.0, separate repo): [nature-skills](https://
 
 ## DeepSeek Harness
 
-Verified integration (2026-08): `dsh plugin --profile web add @xxinchen/dsh-plugin` wires Minta into DSH in 2 minutes — the plugin composes the official `dsh-mcp-client` row for the locally-run engine (which provides the 19 `minta_*` tools). A manual `cordis.patch.yml` insert is also supported; see `docs/dsh-integration.md`. The plugin also ships the `minta` agent preset (per-turn memory protocol): copy `dsh-plugin/presets/minta` into `~/.dsh/.agent-presets/` and pick it in the session picker.
+Verified integration (2026-08): `dsh plugin --profile web add @xxinchen/dsh-plugin` wires Minta into DSH in 2 minutes — the plugin composes the official `dsh-mcp-client` row for the locally-run engine (which provides 13 working Community tools). A manual `cordis.patch.yml` insert is also supported; see `docs/dsh-integration.md`. The plugin also ships the `minta` agent preset (per-turn memory protocol): copy `dsh-plugin/presets/minta` into `~/.dsh/.agent-presets/` and pick it in the session picker.
 
 ## Building & contributing
 
@@ -190,7 +188,7 @@ We welcome good-first-issue PRs: `entity_linker` English patterns, richer demo s
 
 ## Data & Privacy
 
-- Local-first: database, vectors and logs stay on your machine. Anonymous telemetry (install id / version / OS / event name only, never content) is **on by default**; disable with `MINTA_TELEMETRY=0` or `runtime/.telemetry_consent` set to `0`.
+- Local-first: database, vectors and logs stay on your machine. Anonymous telemetry is **off by default**; explicit opt-in sends only install id, version, OS and event name—never memory content.
 - Data export / delete: `GET /api/user/export-data` · `DELETE /api/user/delete-data` (authenticated).
 - Secrets: generated on first run into `.minta_api_key` (never committed); privileged APIs are off by default unless explicitly configured.
 - See `SECURITY.md` for disclosure policy.

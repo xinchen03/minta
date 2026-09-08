@@ -1,6 +1,6 @@
 # @xxinchen/dsh-plugin
 
-> **One command → 19 memory tools → your agent stops re-explaining the project.**
+> **One command → 13 working memory tools → your agent stops re-explaining the project.**
 > Memories are governed, not hoarded: stale/conflict/redundancy checks, and
 > nothing becomes permanent until *you* confirm it in the inbox.
 
@@ -9,7 +9,7 @@ Minta — context quality layer for DeepSeek Harness.
 Installing this package composes two Cordis rows into a DSH profile:
 
 - `mcp-client-minta` — official `@deepseek-ai/dsh-mcp-client` wired to the local
-  Minta engine's streamable-HTTP endpoint (its 19 `minta_*` tools reach the agent).
+  Minta engine's streamable-HTTP endpoint (its 13 Community `minta_*` tools reach the agent).
 - `minta-plugin` — this package as a real Cordis plugin. At mount it registers a
   runtime skill (`minta-memory-governance`, content derived from the Minta
   interaction guide) and a `agent/session-start` hook that prewarms engine
@@ -34,7 +34,7 @@ dsh plugin --profile web add @xxinchen/dsh-plugin
 
 Restart `dsh web`. The MCP client row is composed automatically — no manual
 config editing. Verify in a new session: "list all tools whose name contains
-minta" → the 19 `mcp__minta__*` tools.
+minta" → the 13 `mcp__minta__*` Community tools.
 
 Note: the engine must be running before the tools respond; `failOnStartupError:
 false` means a stopped engine does not break DSH sessions.
@@ -43,7 +43,7 @@ false` means a stopped engine does not break DSH sessions.
 
 1. **Keep the engine running** — `python minta_cli.py start` (or Docker).
 2. After `dsh plugin add` + one restart of `dsh web`, start a new session and
-   ask: *"list all tools whose name contains minta"* — expect the 19
+   ask: *"list all tools whose name contains minta"* — expect the 13
    `mcp__minta__*` tools. If they are absent, restart `dsh web` once more.
 3. **First session**: call `minta_login` (your Minta credentials) so the tools
    operate with your identity.

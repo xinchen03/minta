@@ -9,8 +9,6 @@ from __future__ import annotations
 import logging
 from typing import List, Tuple, Dict, Optional
 
-from services.synthesis_engine import synthesize_context_pack
-
 logger = logging.getLogger(__name__)
 
 MAX_PACK_CHARS = 3500
@@ -111,6 +109,8 @@ def build_context_pack_v2(
     total_objects: int = 0,
 ) -> str:
     """Build Context Pack V2 — with gap analysis (distilled from GBrain)."""
+    from services.synthesis_engine import synthesize_context_pack
+
     pack = build_context_pack(slots, scene, expert_directory)
     if not retrieved_contexts:
         return pack

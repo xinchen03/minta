@@ -14,14 +14,6 @@ from services.autopilot.schemas import (
 
 MINTA_API = os.environ.get("MINTA_API_URL", "http://127.0.0.1:8772")
 
-# Try config module first (in-process), then env var
-try:
-    from config import MINTA_API_KEY as _CONFIG_KEY
-    _ENV_KEY = os.environ.get("MINTA_API_KEY", "") or _CONFIG_KEY
-except ImportError:
-    _ENV_KEY = os.environ.get("MINTA_API_KEY", "")
-
-
 import logging
 
 _AUTOPILOT_LOG = logging.getLogger("minta.autopilot")
@@ -29,8 +21,8 @@ _AUTOPILOT_LOG = logging.getLogger("minta.autopilot")
 
 def _api_key(override=None):
     # type: (Optional[str]) -> str
-    """Get API key: override > env var/config > empty."""
-    key = override or _ENV_KEY or ""
+    """Return only the caller-provided API key; never borrow a server key."""
+    key = override or ""
     if not key:
         _AUTOPILOT_LOG.warning("No API key available for autopilot executor")
     return key
@@ -39,22 +31,28 @@ def _api_key(override=None):
 # ── HTTP helpers ──
 
 
-def _headers(key_override=None):
-    """Build auth headers using API key."""
+def _headers(key_override=None, auth_headers=None):
+    """Build headers from the authenticated caller's credentials only."""
     h = {"Content-Type": "application/json"}
+    for name, value in (auth_headers or {}).items():
+        lower = name.lower()
+        if lower == "authorization" and value:
+            h["Authorization"] = value
+        elif lower == "x-api-key" and value:
+            h["X-API-Key"] = value
     k = _api_key(key_override)
-    if k:
+    if k and "X-API-Key" not in h:
         h["X-API-Key"] = k
     return h
 
 
-def _api_get(path, api_key_override=None):
+def _api_get(path, api_key_override=None, auth_headers=None):
     # type: (str, Optional[str]) -> Optional[Dict[str, Any]]
     """GET request to Minta API."""
     try:
         req = urllib.request.Request(
             "%s%s" % (MINTA_API, path),
-            headers=_headers(api_key_override),
+            headers=_headers(api_key_override, auth_headers),
         )
         with urllib.request.urlopen(req, timeout=10) as resp:
             return json.loads(resp.read())
@@ -62,7 +60,7 @@ def _api_get(path, api_key_override=None):
         return None
 
 
-def _api_post(path, body, api_key_override=None):
+def _api_post(path, body, api_key_override=None, auth_headers=None):
     # type: (str, dict, Optional[str]) -> Optional[Dict[str, Any]]
     """POST request to Minta API."""
     try:
@@ -70,7 +68,7 @@ def _api_post(path, body, api_key_override=None):
         req = urllib.request.Request(
             "%s%s" % (MINTA_API, path),
             data=data,
-            headers=_headers(api_key_override),
+            headers=_headers(api_key_override, auth_headers),
             method="POST",
         )
         with urllib.request.urlopen(req, timeout=10) as resp:
@@ -86,7 +84,7 @@ def _api_post(path, body, api_key_override=None):
 # ── Read execution ──
 
 
-def execute_read(policy_result, user_id, api_key_override=None):
+def execute_read(policy_result, user_id, api_key_override=None, auth_headers=None):
     # type: (PolicyResult, str, Optional[str]) -> Dict[str, Any]
     """Execute read decisions from policy result.
     Reads memory context from existing Minta APIs.
@@ -110,7 +108,7 @@ def execute_read(policy_result, user_id, api_key_override=None):
     key = api_key_override
 
     # Read user preferences and project context from contextObjects
-    context_objects = _api_get("/api/contextObjects", key)
+    context_objects = _api_get("/api/contextObjects", key, auth_headers)
     if context_objects and isinstance(context_objects, list):
         for obj in context_objects:
             obj_type = obj.get("type", "")
@@ -128,7 +126,7 @@ def execute_read(policy_result, user_id, api_key_override=None):
                 })
 
     # Read counterexamples from inbox
-    inbox = _api_get("/api/inbox", key)
+    inbox = _api_get("/api/inbox", key, auth_headers)
     if inbox and isinstance(inbox, dict):
         archived = inbox.get("archived", [])
         for item in archived[:10]:
@@ -138,7 +136,7 @@ def execute_read(policy_result, user_id, api_key_override=None):
             })
 
     # Read skills
-    skills = _api_get("/api/skills", key)
+    skills = _api_get("/api/skills", key, auth_headers)
     if skills and isinstance(skills, list):
         memory_context["skills"] = [
             {"name": s.get("name"), "group": s.get("group")}
@@ -156,7 +154,7 @@ def execute_read(policy_result, user_id, api_key_override=None):
 # ── Write execution ──
 
 
-def execute_write(policy_result, user_id, api_key_override=None):
+def execute_write(policy_result, user_id, api_key_override=None, auth_headers=None):
     # type: (PolicyResult, str, Optional[str]) -> Dict[str, Any]
     """Execute write decisions. Creates inbox items for user review."""
     write_dec = policy_result.write
@@ -183,7 +181,10 @@ def execute_write(policy_result, user_id, api_key_override=None):
         )
 
         # Write to inbox via API
-        result = _inbox_append(text, confidence=0.7, tags=tags_str.split(","), api_key_override=key)
+        result = _inbox_append(
+            text, confidence=0.7, tags=tags_str.split(","),
+            api_key_override=key, auth_headers=auth_headers,
+        )
         if result and result.get("success"):
             inbox_ids.append(result.get("id"))
 
@@ -193,7 +194,7 @@ def execute_write(policy_result, user_id, api_key_override=None):
     }
 
 
-def execute_counter_capture(policy_result, user_id, api_key_override=None):
+def execute_counter_capture(policy_result, user_id, api_key_override=None, auth_headers=None):
     # type: (PolicyResult, str, Optional[str]) -> Dict[str, Any]
     """Execute counter-capture decisions. Creates counter inbox items."""
     counter_dec = policy_result.counter_capture
@@ -216,7 +217,10 @@ def execute_counter_capture(policy_result, user_id, api_key_override=None):
             counterexample[:800],
         )
 
-        result = _inbox_append(text, confidence=0.8, tags=tags_str.split(","), api_key_override=key)
+        result = _inbox_append(
+            text, confidence=0.8, tags=tags_str.split(","),
+            api_key_override=key, auth_headers=auth_headers,
+        )
         if result and result.get("success"):
             counter_ids.append(result.get("id"))
 
@@ -226,7 +230,7 @@ def execute_counter_capture(policy_result, user_id, api_key_override=None):
     }
 
 
-def execute_update(policy_result, user_id, api_key_override=None):
+def execute_update(policy_result, user_id, api_key_override=None, auth_headers=None):
     # type: (PolicyResult, str, Optional[str]) -> Dict[str, Any]
     """Execute update decisions. Creates review items in inbox."""
     update_dec = policy_result.update
@@ -244,7 +248,10 @@ def execute_update(policy_result, user_id, api_key_override=None):
         update_dec.reason,
     )
 
-    result = _inbox_append(text, confidence=0.6, tags=["update-review", "autopilot", operation], api_key_override=key)
+    result = _inbox_append(
+        text, confidence=0.6, tags=["update-review", "autopilot", operation],
+        api_key_override=key, auth_headers=auth_headers,
+    )
     review_id = result.get("id") if result and result.get("success") else None
 
     return {
@@ -256,7 +263,7 @@ def execute_update(policy_result, user_id, api_key_override=None):
 # ── Internal helpers ──
 
 
-def _inbox_append(text, confidence=0.7, tags=None, api_key_override=None):
+def _inbox_append(text, confidence=0.7, tags=None, api_key_override=None, auth_headers=None):
     # type: (str, float, Optional[List[str]], Optional[str]) -> Optional[Dict[str, Any]]
     """Append an item to the Minta inbox via API."""
     if not text:
@@ -266,16 +273,15 @@ def _inbox_append(text, confidence=0.7, tags=None, api_key_override=None):
         confidence,
     )
     body = tags or []
-    result = _api_post("/api/inbox/append%s" % qs, body, api_key_override=api_key_override)
-    if result is None:
-        # Try once more with env key as fallback
-        fallback_key = os.environ.get("MINTA_API_KEY", "")
-        if fallback_key and not api_key_override:
-            result = _api_post("/api/inbox/append%s" % qs, body, api_key_override=fallback_key)
-    return result
+    return _api_post(
+        "/api/inbox/append%s" % qs,
+        body,
+        api_key_override=api_key_override,
+        auth_headers=auth_headers,
+    )
 
 
-def execute_all(policy_result, user_id, api_key_override=None):
+def execute_all(policy_result, user_id, api_key_override=None, auth_headers=None):
     # type: (PolicyResult, str, Optional[str]) -> Dict[str, Any]
     """Execute all decisions from a policy result.
     This is the main entry point for the executor."""
@@ -283,10 +289,10 @@ def execute_all(policy_result, user_id, api_key_override=None):
     result = {
         "user_id": user_id,
         "phase": policy_result.phase,
-        "read": execute_read(policy_result, user_id, api_key_override=key),
-        "write": execute_write(policy_result, user_id, api_key_override=key),
-        "counter_capture": execute_counter_capture(policy_result, user_id, api_key_override=key),
-        "update": execute_update(policy_result, user_id, api_key_override=key),
+        "read": execute_read(policy_result, user_id, api_key_override=key, auth_headers=auth_headers),
+        "write": execute_write(policy_result, user_id, api_key_override=key, auth_headers=auth_headers),
+        "counter_capture": execute_counter_capture(policy_result, user_id, api_key_override=key, auth_headers=auth_headers),
+        "update": execute_update(policy_result, user_id, api_key_override=key, auth_headers=auth_headers),
     }
 
     result["summary"] = {

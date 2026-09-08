@@ -39,8 +39,8 @@ SERVICES = [
 PROCS = []
 
 # --- Editor MCP configs ---
-# stdio mode (Claude, Cursor, Codex): editor spawns Minta process on demand
-# HTTP mode (VS Code): requires Minta server running on localhost:18721
+# stdio mode (Claude, Cursor): editor spawns Minta process on demand.
+# HTTP mode (Codex, VS Code): requires Minta server on localhost:18721.
 _MCP_STDIO = {
     "command": sys.executable,
     "args": [str(SERVER_DIR / "minta_mcp.py")],
@@ -64,10 +64,10 @@ EDITORS = {
     },
     "codex": {
         "name": "Codex CLI",
-        "config_path": Path.home() / ".codex" / "mcp.json",
-        "mcp_key": "mcpServers",
-        "entry": _MCP_STDIO,
-        "launch_hint": "Run 'codex' in your terminal. Minta auto-starts on demand.",
+        "config_path": Path.home() / ".codex" / "config.toml",
+        "mcp_key": None,
+        "entry": _MCP_HTTP,
+        "launch_hint": "Start Minta, then restart Codex so it loads the HTTP MCP server.",
     },
     "vscode": {
         "name": "VS Code / Copilot",
@@ -130,6 +130,44 @@ def _read_json(path: Path) -> dict:
 def _write_json(path: Path, data: dict):
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(data, indent=2))
+
+
+def _write_codex_mcp(path: Path) -> None:
+    """Upsert Minta's HTTP MCP block without disturbing other Codex config."""
+    text = path.read_text(encoding="utf-8") if path.exists() else ""
+    output = []
+    skipping_minta = False
+
+    for line in text.splitlines(keepends=True):
+        stripped = line.strip()
+        if stripped.startswith("[") and stripped.endswith("]"):
+            section = stripped[1:-1].strip()
+            if section == "mcp_servers.minta" or section.startswith("mcp_servers.minta."):
+                skipping_minta = True
+                continue
+            skipping_minta = False
+        if not skipping_minta:
+            output.append(line)
+
+    cleaned = "".join(output).rstrip()
+    block = '[mcp_servers.minta]\nurl = "http://127.0.0.1:18721/mcp"\n'
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text((cleaned + "\n\n" if cleaned else "") + block, encoding="utf-8")
+
+
+def _codex_mcp_configured(path: Path) -> bool:
+    if not path.exists():
+        return False
+    text = path.read_text(encoding="utf-8")
+    in_minta = False
+    for line in text.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("[") and stripped.endswith("]"):
+            in_minta = stripped[1:-1].strip() == "mcp_servers.minta"
+            continue
+        if in_minta and stripped.replace(" ", "") == 'url="http://127.0.0.1:18721/mcp"':
+            return True
+    return False
 
 
 # --- Commands ---
@@ -294,8 +332,11 @@ def cmd_verify():
     print("--- Editor Configs ---")
     for key, info in EDITORS.items():
         total += 1
-        cfg = _read_json(info["config_path"])
-        minta_entry = cfg.get(info["mcp_key"], {}).get("minta")
+        if key == "codex":
+            minta_entry = _codex_mcp_configured(info["config_path"])
+        else:
+            cfg = _read_json(info["config_path"])
+            minta_entry = cfg.get(info["mcp_key"], {}).get("minta")
         if minta_entry:
             print(f"  [OK] {info['name']} ->{info['config_path']}")
             ok += 1
@@ -435,9 +476,12 @@ def _setup_editor(editor_key: str) -> bool:
         return False
 
     info = EDITORS[editor_key]
-    cfg = _read_json(info["config_path"])
-    cfg.setdefault(info["mcp_key"], {})["minta"] = info["entry"]
-    _write_json(info["config_path"], cfg)
+    if editor_key == "codex":
+        _write_codex_mcp(info["config_path"])
+    else:
+        cfg = _read_json(info["config_path"])
+        cfg.setdefault(info["mcp_key"], {})["minta"] = info["entry"]
+        _write_json(info["config_path"], cfg)
 
     print(f"  [OK] {info['name']} -> {info['config_path']}")
 
@@ -460,8 +504,8 @@ def cmd_connect(target: str = "claude"):
         for key in EDITORS:
             _setup_editor(key)
         print(f"\n[Minta] All editors configured.")
-        print("  stdio editors (Claude, Cursor, Codex): auto-start on demand.")
-        print("  HTTP editor (VS Code): run 'minta start' first.")
+        print("  stdio editors (Claude, Cursor): auto-start on demand.")
+        print("  HTTP editors (Codex, VS Code): run 'minta start' first.")
         print("  Restart your AI editor to pick up the new config.")
     else:
         info = EDITORS[target]

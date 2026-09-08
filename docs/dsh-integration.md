@@ -1,6 +1,6 @@
 # DSH × Minta 接入指南(已验证)
 
-> 2026-08-23 全链路验证通过: Minta MCP(18721, streamable-http) → DSH `mcp-client` → 会话 19 工具(`mcp__minta__*`)
+> 2026-08-23 全链路验证通过: Minta MCP(18721, streamable-http) → DSH `mcp-client` → Community 会话 13 工具(`mcp__minta__*`)
 
 ## 前置条件
 
@@ -19,7 +19,7 @@ dsh plugin --profile web add @xxinchen/dsh-plugin
 重启 web: `Ctrl+C` 后重新 `npx @deepseek-ai/dsh web`。
 
 验证: 新会话问一句 "列出所有名字带 minta 的工具"。
-预期: 19 个 `mcp__minta__*` 工具(login / read/write/search_context / get_pack / get_slot / update_slot / append/list/confirm/discard_inbox / autopilot_preflight / autopilot_postflight / chat / expert_list / infer / consult / trust / feedback)。
+预期:13 个 `mcp__minta__*` Community 工具(login / read/write/search_context / get_pack / get_slot / update_slot / append/list/confirm/discard_inbox / autopilot_preflight / autopilot_postflight)。
 
 > 插件包只做一件事: 把下面的 mcp-client 行合入 profile。引擎(单独部署)提供全部能力。
 > 想检查合成结果: `npx @deepseek-ai/dsh --profile web --dump-config | grep mcp-client-minta`

@@ -8,8 +8,8 @@ Vovk et al. (2005) Inductive Conformal Prediction:
 Uses existing RuleMatcher.match_score() as the nonconformity scoring function
 and calibration pairs (78 labeled pairs across ankle/knee/c-spine) for calibration.
 
-Calibration results are persisted to D:/minta-expert-data/conformal/{domain}.json
-so recalibration is not needed on every inference.
+Calibration results are persisted under ``MINTA_CONFORMAL_DIR`` so
+recalibration is not needed on every inference.
 """
 from __future__ import annotations
 import json
@@ -23,6 +23,7 @@ import numpy as np
 logger = logging.getLogger(__name__)
 
 CONFORMAL_DIR = Path(os.environ.get("MINTA_CONFORMAL_DIR", ".minta-data/conformal"))
+EXPERT_DATA_DIR = Path(os.environ.get("MINTA_EXPERT_DATA_DIR", ".minta-data/expert"))
 DEFAULT_ALPHA = 0.05  # 95% confidence
 
 
@@ -68,13 +69,13 @@ def _calibration_path(domain: str) -> Path:
 def _load_calibration_pairs(domain: str) -> List[Dict]:
     """Load labeled calibration pairs for a domain.
 
-    Looks in D:/minta-expert-data/calibration/{domain}_pairs.json
-    and the older merged calibration file.
+    Looks under ``MINTA_EXPERT_DATA_DIR/calibration`` and supports the older
+    merged calibration file at the data-root level.
     """
     paths = [
-        Path(rf"D:\minta-expert-data\calibration\{domain}_pairs.json"),
-        Path(rf"D:\minta-expert-data\calibration\{domain}_calibration.json"),
-        Path(r"D:\minta-expert-data\calibration_pairs.json"),
+        EXPERT_DATA_DIR / "calibration" / f"{domain}_pairs.json",
+        EXPERT_DATA_DIR / "calibration" / f"{domain}_calibration.json",
+        EXPERT_DATA_DIR / "calibration_pairs.json",
     ]
     for p in paths:
         if p.exists():
@@ -135,7 +136,7 @@ class ConformalPredictor:
         1. Load labeled calibration pairs
         2. Compute nonconformity = 1 - match_score(compiled, GT).score
         3. q_hat = ⌈(n+1)(1-α)⌉-th largest nonconformity
-        4. Persist to D:/minta-expert-data/conformal/{domain}.json
+        4. Persist under MINTA_CONFORMAL_DIR
 
         Returns default if no calibration data exists (never throws).
         """

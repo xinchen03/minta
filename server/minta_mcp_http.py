@@ -34,10 +34,14 @@ def create_mcp_app():
 
     app = FastAPI(title="Minta MCP HTTP Server", version="1.0.0")
 
+    allowed_origins = os.environ.get(
+        "MINTA_CORS_ORIGINS",
+        "http://127.0.0.1:8772,http://localhost:8772",
+    ).split(",")
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],
-        allow_credentials=True,
+        allow_origins=[origin.strip() for origin in allowed_origins if origin.strip()],
+        allow_credentials=False,
         allow_methods=["*"],
         allow_headers=["*"],
     )

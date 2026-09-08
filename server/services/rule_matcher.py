@@ -17,8 +17,10 @@ import re
 import logging
 from typing import List, Dict, Tuple, Optional
 import numpy as np
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
+EXPERT_DATA_DIR = Path(os.environ.get("MINTA_EXPERT_DATA_DIR", ".minta-data/expert"))
 
 # Clinical synonym dictionary
 CLINICAL_SYNONYMS = {
@@ -105,10 +107,7 @@ class RuleMatcher:
         Falls back to DEFAULT_WEIGHTS if the domain or file is not found.
         """
         import json as _json
-        registry_paths = [
-            os.path.join(os.path.dirname(__file__), '..', '..', '..', '..', 'minta-expert-data', 'domain_weights.json'),
-            r'D:\minta-expert-data\domain_weights.json',
-        ]
+        registry_paths = [str(EXPERT_DATA_DIR / "domain_weights.json")]
         for rp in registry_paths:
             rp = os.path.normpath(rp)
             if os.path.exists(rp):
@@ -416,7 +415,8 @@ class RuleMatcher:
         """Persist current weights to the domain_weights.json registry."""
         import json as _json
         if registry_path is None:
-            registry_path = r'D:\minta-expert-data\domain_weights.json'
+            registry_path = str(EXPERT_DATA_DIR / "domain_weights.json")
+        os.makedirs(os.path.dirname(os.path.abspath(registry_path)), exist_ok=True)
         if os.path.exists(registry_path):
             with open(registry_path, 'r', encoding='utf-8') as f:
                 registry = _json.load(f)

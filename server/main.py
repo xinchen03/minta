@@ -5,10 +5,10 @@ import time
 import logging
 from datetime import datetime
 from pathlib import Path
-from fastapi import FastAPI, Request, Query, Depends
+from fastapi import FastAPI, HTTPException, Request, Query, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse, Response
+from fastapi.responses import FileResponse, JSONResponse, Response
 from sqlalchemy import text
 from routers import inbox, context_objects, upload, skills, auth, api_keys, verification, comments, admin, user_data, slots, session as session_router, search as search_router
 from routers.autopilot import router as autopilot_router
@@ -87,9 +87,15 @@ from fastapi import Request as _FRequest
 async def limit_request_size(request: _FRequest, call_next):
     max_size = 10 * 1024 * 1024  # 10 MB
     content_length = request.headers.get("content-length")
-    if content_length and int(content_length) > max_size:
-        from fastapi.responses import JSONResponse
-        return JSONResponse({"detail": "Request body too large"}, status_code=413)
+    if content_length:
+        try:
+            declared_size = int(content_length)
+        except ValueError:
+            return JSONResponse({"detail": "Invalid Content-Length"}, status_code=400)
+        if declared_size < 0:
+            return JSONResponse({"detail": "Invalid Content-Length"}, status_code=400)
+        if declared_size > max_size:
+            return JSONResponse({"detail": "Request body too large"}, status_code=413)
     return await call_next(request)
 
 
@@ -115,7 +121,7 @@ else:
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],
-        allow_credentials=True,
+        allow_credentials=False,
         allow_methods=["*"],
         allow_headers=["*"],
     )
@@ -199,6 +205,8 @@ async def serve_story():
 @app.post("/api/admin/seed-demo")
 def seed_demo_data(user = Depends(get_current_user)):
     """Seed demo data into the database. One-time setup for showcase."""
+    if MINTA_ENV in ("production", "prod"):
+        raise HTTPException(status_code=404, detail="Not found")
     try:
         import subprocess
         result = subprocess.run(
@@ -218,6 +226,8 @@ if DIST_DIR.exists():
 
     @app.get("/{full_path:path}")
     async def serve_frontend(full_path: str):
+        if full_path == "api" or full_path.startswith("api/"):
+            return JSONResponse({"detail": "Not found"}, status_code=404)
         file_path = DIST_DIR / full_path
         if file_path.exists() and file_path.is_file():
             return FileResponse(str(file_path))

@@ -1,6 +1,5 @@
 """Autopilot Service — combines Policy Engine + Executor + Decision Logger.
 Provides preflight() and postflight() as the two main entry points."""
-import os
 import time
 from typing import Any, Dict, Optional
 
@@ -9,44 +8,11 @@ from services.autopilot.memory_policy import decide_policy
 from services.autopilot.memory_executor import execute_all
 from services.autopilot import decision_logger
 
-try:
-    from config import MINTA_API_KEY as CONFIG_API_KEY
-    API_KEY = os.environ.get("MINTA_API_KEY", "") or CONFIG_API_KEY
-except ImportError:
-    API_KEY = os.environ.get("MINTA_API_KEY", "")
-
-
-def _resolve_user_id(headers=None):
-    # type: (Optional[Dict[str, str]]) -> str
-    """Resolve user_id from API key or headers.
-    Falls back to 'unknown' if not resolvable."""
-    key = API_KEY or (headers or {}).get("x-api-key", "")
-    if key:
-        # Try to resolve via API
-        import urllib.request
-        import json
-
-        try:
-            api_url = os.environ.get("MINTA_API_URL", "http://127.0.0.1:8772")
-            req = urllib.request.Request(
-                "%s/api/auth/me" % api_url,
-                headers={"X-API-Key": key},
-            )
-            with urllib.request.urlopen(req, timeout=5) as resp:
-                data = json.loads(resp.read())
-                return str(data.get("id", "unknown"))
-        except Exception:
-            pass
-    return "unknown"
-
-
-def preflight(user_message, project_id=None, agent=None, headers=None):
-    # type: (str, Optional[str], Optional[str], Optional[Dict[str, str]]) -> Dict[str, Any]
+def preflight(user_message, project_id=None, agent=None, headers=None, user_id="unknown"):
+    # type: (str, Optional[str], Optional[str], Optional[Dict[str, str]], str) -> Dict[str, Any]
     """Pre-turn: decide what memory to read before answering.
     Returns memory_context and decision log."""
-    user_id = _resolve_user_id(headers)
     hdrs = headers or {}
-    api_key = hdrs.get("x-api-key", "") or hdrs.get("X-API-Key", "") or hdrs.get("X-Api-Key", "")
 
     inp = PolicyInput(
         user_id=user_id,
@@ -60,13 +26,13 @@ def preflight(user_message, project_id=None, agent=None, headers=None):
     policy = decide_policy(inp)
 
     # Step 2: execute (read only) with API key from headers
-    result = execute_all(policy, user_id, api_key_override=api_key)
+    result = execute_all(policy, user_id, auth_headers=hdrs)
 
     # Step 3: log decision
     log_entry = {
         "user_id": user_id,
         "phase": "pre_turn",
-        "user_message_excerpt": user_message[:200],
+        "user_message_chars": len(user_message),
         "project_id": project_id,
         "agent": agent,
         "decision": {
@@ -93,13 +59,11 @@ def preflight(user_message, project_id=None, agent=None, headers=None):
     }
 
 
-def postflight(user_message, assistant_response, project_id=None, agent=None, headers=None):
-    # type: (str, str, Optional[str], Optional[str], Optional[Dict[str, str]]) -> Dict[str, Any]
+def postflight(user_message, assistant_response, project_id=None, agent=None, headers=None, user_id="unknown"):
+    # type: (str, str, Optional[str], Optional[str], Optional[Dict[str, str]], str) -> Dict[str, Any]
     """Post-turn: decide what to write/capture/update after answering.
     Creates inbox/counter/review items. Never writes directly to memory."""
-    user_id = _resolve_user_id(headers)
     hdrs = headers or {}
-    api_key = hdrs.get("x-api-key", "") or hdrs.get("X-API-Key", "") or hdrs.get("X-Api-Key", "")
 
     inp = PolicyInput(
         user_id=user_id,
@@ -114,14 +78,14 @@ def postflight(user_message, assistant_response, project_id=None, agent=None, he
     policy = decide_policy(inp)
 
     # Step 2: execute (write/counter/update only) with API key from headers
-    result = execute_all(policy, user_id, api_key_override=api_key)
+    result = execute_all(policy, user_id, auth_headers=hdrs)
 
     # Step 3: log decision
     log_entry = {
         "user_id": user_id,
         "phase": "post_turn",
-        "user_message_excerpt": user_message[:200],
-        "assistant_response_excerpt": assistant_response[:200],
+        "user_message_chars": len(user_message),
+        "assistant_response_chars": len(assistant_response),
         "project_id": project_id,
         "agent": agent,
         "decision": {

@@ -19,14 +19,20 @@ from urllib3.util.retry import Retry
 MINTA_API = os.environ.get("MINTA_API_URL", "http://127.0.0.1:8772")
 _api_key_env = os.environ.get("MINTA_API_KEY", "")
 api_key_ready = False
-if not _api_key_env:
+
+
+def _configured_api_key(env_value: str) -> str:
+    """Load an operator-configured key from the environment or project .env."""
+    if env_value:
+        return env_value
     try:
-        from config import MINTA_API_KEY as _config_key
-        if _config_key:
-            _api_key_env = _config_key
+        from config import MINTA_API_KEY as config_key
+        return config_key or ""
     except Exception:
-        pass
-API_KEY = _api_key_env
+        return ""
+
+
+API_KEY = _configured_api_key(_api_key_env)
 
 # ── Shared session with connection pooling + retry + timeout ──
 
@@ -96,9 +102,14 @@ TOKEN_CACHE: Dict[str, Dict[str, str]] = {}  # username -> {"token": str, "expir
 def _resolve_auth(username: str, password: str) -> str:
     """Unified auth: API Key takes precedence; falls back to username/password login.
     Returns token string, or empty string on failure."""
-    # API Key mode — no username/password needed
+    global api_key_ready
+    # API Key mode — validate an explicitly configured key before claiming
+    # authentication. Server-generated internal keys are never imported here.
     if API_KEY:
-        return "__api_key__"
+        if not api_key_ready:
+            probe = _api("GET", "/api/contextObjects")
+            api_key_ready = not (isinstance(probe, dict) and "error" in probe)
+        return "__api_key__" if api_key_ready else ""
     # Username/password mode — must provide both
     if not username or not password:
         return ""
@@ -390,6 +401,10 @@ def minta_chat(username: str, password: str, message: str) -> str:
 
 
 def handle_call(tool_name: str, arguments: dict) -> str:
+    if tool_name in _ENTERPRISE_ONLY_TOOLS:
+        return json.dumps({
+            "error": f"Tool unavailable in Minta Community: {tool_name}"
+        })
     handlers = {
         "minta_login": minta_login,
         "minta_read_context": minta_read_context,
@@ -409,7 +424,8 @@ def handle_call(tool_name: str, arguments: dict) -> str:
         "minta_expert_feedback": minta_expert_feedback,
         "minta_chat": minta_chat,
     }
-    # Autopilot tools don't need auth (use API key from env)
+    # Autopilot runs inside the local MCP process. Any API write still uses the
+    # API key explicitly configured for that process.
     if tool_name in ("minta_autopilot_preflight", "minta_autopilot_postflight"):
         return autopilot_handler(tool_name, arguments)
     handler = handlers.get(tool_name)
@@ -681,76 +697,47 @@ TOOL_DEFINITIONS = [
     },
 ]
 
+# Community edition exposes only tools backed by routes in this repository.
+# Pro deployments can inject their expert/dialogue definitions separately.
+_ENTERPRISE_ONLY_TOOLS = {
+    "minta_expert_infer",
+    "minta_expert_list",
+    "minta_expert_consult",
+    "minta_expert_trust",
+    "minta_expert_feedback",
+    "minta_chat",
+}
+TOOL_DEFINITIONS = [
+    definition for definition in TOOL_DEFINITIONS
+    if definition["name"] not in _ENTERPRISE_ONLY_TOOLS
+]
+
 
 # ── Autopilot handler (lightweight inline implementation) ──
 
 
 def autopilot_handler(tool_name, arguments):
     # type: (str, dict) -> str
-    """Handle autopilot preflight/postflight.
-    Uses policy engine directly (no HTTP). For inbox writes, calls API directly."""
-    try:
-        # Ensure server directory is in path for imports
-        _mcp_ensure_path()
-        from services.autopilot.schemas import PolicyInput
-        from services.autopilot.memory_policy import decide_policy
-
-        msg = arguments.get("user_message", "")
-        project = arguments.get("project_id")
-        agent = "mcp"
-
-        api_key = os.environ.get("MINTA_API_KEY", "") or API_KEY
-        api_url = os.environ.get("MINTA_API_URL", MINTA_API)
-
-        if tool_name == "minta_autopilot_preflight":
-            inp = PolicyInput(user_id="mcp", phase="pre_turn",
-                              user_message=msg, project_id=project, agent=agent)
-            policy = decide_policy(inp)
-            result = {
-                "read_triggered": policy.read.should_run,
-                "reason": policy.read.reason,
-                "memory_context": {},
-                "log_id": "apl_mcp_%s" % str(hash(msg))[:8],
-                "degraded": False,
-            }
-            return json.dumps(result, ensure_ascii=False)
-
-        elif tool_name == "minta_autopilot_postflight":
-            assistant_resp = arguments.get("assistant_response", "")
-            inp = PolicyInput(user_id="mcp", phase="post_turn",
-                              user_message=msg, assistant_response=assistant_resp,
-                              project_id=project, agent=agent)
-            policy = decide_policy(inp)
-
-            created = {"inbox_items": [], "counter_items": [], "review_items": []}
-
-            # Write to inbox via API if triggered
-            if policy.write.should_run and api_key:
-                _autopilot_append_inbox(api_url, api_key,
-                    "[Autopilot] %s" % policy.write.reason, 0.7)
-
-            if policy.counter_capture.should_run and api_key:
-                _autopilot_append_inbox(api_url, api_key,
-                    "[Autopilot Counter] %s" % policy.counter_capture.reason, 0.8)
-
-            if policy.update.should_run and api_key:
-                _autopilot_append_inbox(api_url, api_key,
-                    "[Autopilot Update] %s" % policy.update.reason, 0.6)
-
-            result = {
-                "write_triggered": policy.write.should_run,
-                "counter_capture_triggered": policy.counter_capture.should_run,
-                "update_triggered": policy.update.should_run,
-                "created": created,
-                "reason": _autopilot_reason(policy),
-                "log_id": "apl_mcp_%s" % str(hash(msg))[:8],
-                "degraded": False,
-            }
-            return json.dumps(result, ensure_ascii=False)
-
+    """Delegate Autopilot to the authenticated API implementation."""
+    if tool_name == "minta_autopilot_preflight":
+        path = "/api/autopilot/preflight"
+        body = {
+            "user_message": arguments.get("user_message", ""),
+            "project_id": arguments.get("project_id"),
+            "agent": "mcp",
+        }
+    elif tool_name == "minta_autopilot_postflight":
+        path = "/api/autopilot/postflight"
+        body = {
+            "user_message": arguments.get("user_message", ""),
+            "assistant_response": arguments.get("assistant_response", ""),
+            "project_id": arguments.get("project_id"),
+            "agent": "mcp",
+        }
+    else:
         return json.dumps({"error": "Unknown tool: %s" % tool_name})
-    except Exception as e:
-        return json.dumps({"error": "Autopilot handler error: %s" % str(e)})
+
+    return json.dumps(_api("POST", path, body=body), ensure_ascii=False)
 
 
 def _mcp_ensure_path():

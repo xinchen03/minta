@@ -1,10 +1,10 @@
 """Image captioning — generates text descriptions for images.
 
-Dual mode:
+Opt-in modes:
+- off: no caption model call (default)
 - local: BLIP (salesforce/blip-image-captioning-base), ~1GB, CPU workable
 - api: GPT-4o-mini / Qwen-VL via OpenAI-compatible API (faster, higher quality)
-
-Auto-falls back: local model if available, else API if key present.
+- auto: explicitly requested local-first mode with API fallback
 """
 from __future__ import annotations
 import base64
@@ -58,7 +58,7 @@ def caption_api(image_bytes: bytes, api_key: str = None,
                 base_url: str = None, model: str = "gpt-4o-mini") -> str:
     """Generate caption using OpenAI-compatible Vision API."""
     if api_key is None:
-        api_key = os.environ.get("OPENAI_API_KEY")
+        api_key = os.environ.get("MINTA_IMAGE_CAPTION_API_KEY")
     if not api_key:
         logger.warning("No API key for vision captioning")
         return ""
@@ -96,14 +96,22 @@ def caption_api(image_bytes: bytes, api_key: str = None,
         return ""
 
 
-def generate_caption(image_bytes: bytes) -> str:
-    """Auto-select caption method: local BLIP first, fallback to API."""
-    caption = caption_local(image_bytes)
-    if caption:
-        return f"[BLIP] {caption}"
+def generate_caption(image_bytes: bytes, backend: str = None) -> str:
+    """Generate a caption only through an explicitly enabled backend."""
+    mode = (backend or os.environ.get("MINTA_IMAGE_CAPTION_BACKEND", "off")).strip().lower()
 
-    caption = caption_api(image_bytes)
-    if caption:
-        return f"[Vision API] {caption}"
+    if mode in ("local", "auto"):
+        caption = caption_local(image_bytes)
+        if caption:
+            return f"[BLIP] {caption}"
+
+    if mode in ("api", "auto"):
+        caption = caption_api(
+            image_bytes,
+            base_url=os.environ.get("MINTA_IMAGE_CAPTION_API_URL"),
+            model=os.environ.get("MINTA_IMAGE_CAPTION_MODEL", "gpt-4o-mini"),
+        )
+        if caption:
+            return f"[Vision API] {caption}"
 
     return "[No caption available]"

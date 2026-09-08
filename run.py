@@ -47,8 +47,9 @@ def start_service(name: str, port: int, args: list):
         return
 
     flags = subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0
+    bind_host = os.environ.get("MINTA_BIND_HOST", "127.0.0.1")
     proc = subprocess.Popen(
-        [sys.executable, "-m", "uvicorn"] + args + ["--host", "127.0.0.1", "--port", str(port)],
+        [sys.executable, "-m", "uvicorn"] + args + ["--host", bind_host, "--port", str(port)],
         cwd=str(SERVER_DIR),
         creationflags=flags,
         stdout=subprocess.DEVNULL,

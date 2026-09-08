@@ -83,6 +83,8 @@ async def ingest_image_endpoint(
         db_session=db,
         embedding_service=emb,
         save_dir=str(Path(__file__).resolve().parent.parent / "data" / "raw"),
+        extract_text=extract_text,
+        generate_desc=generate_desc,
     )
 
     return {"ok": True, **result}

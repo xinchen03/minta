@@ -17,6 +17,7 @@ Contract shape (Agent Memory Leaderboard Add contract):
 from __future__ import annotations
 
 import hashlib
+import base64
 import json
 import logging
 import os
@@ -198,6 +199,58 @@ class EvalStore:
             if user_id is not None:
                 q = q.filter(Memory.user_id == user_id)
             return q.count()
+
+    def export_user_data(self, user_id: str) -> dict:
+        """Return the complete eval-plane record set owned by one user."""
+        with self._Session() as db:
+            requests = (
+                db.query(AddRequest)
+                .filter(AddRequest.user_id == user_id)
+                .order_by(AddRequest.completed_at, AddRequest.request_id)
+                .all()
+            )
+            memories = (
+                db.query(Memory)
+                .filter(Memory.user_id == user_id)
+                .order_by(Memory.request_id, Memory.msg_index)
+                .all()
+            )
+            return {
+                "addRequests": [{
+                    "request_id": row.request_id,
+                    "user_id": row.user_id,
+                    "session_id": row.session_id,
+                    "payload_hash": row.payload_hash,
+                    "completed_at": row.completed_at.isoformat()
+                    if row.completed_at else None,
+                } for row in requests],
+                "memories": [{
+                    "id": row.id,
+                    "request_id": row.request_id,
+                    "msg_index": row.msg_index,
+                    "user_id": row.user_id,
+                    "session_id": row.session_id,
+                    "role": row.role,
+                    "raw_content": row.raw_content,
+                    "timestamp_ms": row.timestamp_ms,
+                    "created_at": row.created_at.isoformat()
+                    if row.created_at else None,
+                    "embedding_base64": base64.b64encode(row.embedding).decode("ascii")
+                    if row.embedding else None,
+                    "signals": json.loads(row.signals) if row.signals else None,
+                } for row in memories],
+            }
+
+    def delete_user_data(self, user_id: str) -> dict:
+        """Atomically remove every eval-plane row owned by one user."""
+        with self._lock:
+            with self._Session() as db:
+                memories = db.query(Memory).filter(
+                    Memory.user_id == user_id).delete(synchronize_session=False)
+                requests = db.query(AddRequest).filter(
+                    AddRequest.user_id == user_id).delete(synchronize_session=False)
+                db.commit()
+        return {"memories": memories, "addRequests": requests}
 
     # ── data hygiene ───────────────────────────────────────────────────────
 

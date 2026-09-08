@@ -15,7 +15,7 @@
   <a href="#license"><img src="https://img.shields.io/badge/license-Apache--2.0-blue"></a>
   <a href="#快速入门"><img src="https://img.shields.io/badge/python-3.9%2B-green"></a>
   <a href="#deepseek-harness"><img src="https://img.shields.io/badge/DeepSeek%20Harness-verified-purple"></a>
-  <a href="#基准测试"><img src="https://img.shields.io/badge/MCP-19%20tools-orange"></a>
+  <a href="#基准测试"><img src="https://img.shields.io/badge/MCP-13%20tools-orange"></a>
 </p>
 
 <p align="center">
@@ -127,7 +127,7 @@ python -c "import secrets; print('MINTA_API_KEY=minta_'+secrets.token_hex(32))" 
 | 专家域 | 多域规则(踝/膝/颈椎损伤、ISO9001、PRISMA…)+ CUMCM 阶段工作流 | 带信任指标的领域推理 |
 | 科研 | 手稿清单 + 合规规则评估器 | "这稿符合投稿清单吗?"——提交前 |
 | 元认知 | 共形置信度(校准、数据锁定) | agent 给出的"知道",带覆盖保证 |
-| 交付 | 编译版 Web UI + MCP(19 工具,stdio+HTTP)+ DSH 插件已验证 | 三个入口,一份记忆 |
+| 交付 | 编译版 Web UI + MCP(13 个可用工具,stdio+HTTP)+ DSH 插件已验证 | 三个入口,一份记忆 |
 
 ## 开放核心(Open Code, Locked Assets)
 
@@ -161,7 +161,7 @@ Minta 最初就是科研工作流的记忆层——文献笔记、稿件清单�
 
 ## DeepSeek Harness
 
-已验证集成(2026-08):`dsh plugin --profile web add @xxinchen/dsh-plugin` 即接入——插件自动合成官方 `dsh-mcp-client` 行(引擎单独部署,提供 19 个 `minta_*` 工具)。手动 `cordis.patch.yml` 插入同样支持,详见 `docs/dsh-integration.md`。插件 0.2.0 还内置 `minta` 副本预设(每回合记忆协议),复制 `dsh-plugin/presets/minta` 到 `~/.dsh/.agent-presets/` 即可在会话选择器里选用。
+已验证集成(2026-08):`dsh plugin --profile web add @xxinchen/dsh-plugin` 即接入——插件自动合成官方 `dsh-mcp-client` 行(引擎单独部署,提供 13 个可用的 Community 工具)。手动 `cordis.patch.yml` 插入同样支持,详见 `docs/dsh-integration.md`。插件内置 `minta` 副本预设(每回合记忆协议),复制 `dsh-plugin/presets/minta` 到 `~/.dsh/.agent-presets/` 即可在会话选择器里选用。
 
 ## 构建与贡献
 
@@ -178,7 +178,7 @@ python -m pytest tests/                # 服务端测试
 
 ## 数据与隐私
 
-- 本地优先:数据库、向量、日志留在你的机器。匿名遥测(仅安装 ID、版本、系统、事件名,**不含任何记忆内容)****默认开启**;关闭:在 `.env` 设 `MINTA_TELEMETRY=0`,或将 `runtime/.telemetry_consent` 写为 `0`。
+- 本地优先:数据库、向量、日志留在你的机器。匿名遥测**默认关闭**;只有明确选择开启后才发送安装 ID、版本、系统和事件名,不发送记忆内容。
 - 数据导出/删除:`GET /api/user/export-data` · `DELETE /api/user/delete-data`(需认证)。
 - 密钥:首次运行生成(`.minta_api_key`,永不提交);特权 API 默认关闭,除非显式配置。
 - 披露策略见 `SECURITY.md`。

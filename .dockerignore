@@ -1,7 +1,9 @@
 # Build context hygiene — the eval image only needs server/ + run.py + scripts
 .git/
 .gitignore
-web/
+web/*
+!web/dist/
+!web/dist/**
 assets/
 skills/
 runtime/

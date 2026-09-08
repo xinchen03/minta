@@ -1,4 +1,4 @@
-"""Telemetry module tests: default-ON gating + metadata-only payload."""
+"""Telemetry module tests: explicit opt-in + metadata-only payload."""
 from __future__ import annotations
 
 import os
@@ -79,21 +79,18 @@ def test_file_optout_wins_no_send(monkeypatch, tmp_path):
     assert out == []  # user opt-out wins
 
 
-def test_missing_key_uses_default_project_key(monkeypatch):
-    """No env key → built-in default project key ships the heartbeat
-    (fallback added for fresh installs without .env setup)."""
+def test_missing_key_sends_nothing(monkeypatch):
     import requests as real_requests
     out: list = []
     monkeypatch.setattr(real_requests, "post", _fake_post(out))
     monkeypatch.setenv("MINTA_TELEMETRY", "1")
     monkeypatch.delenv("MINTA_TELEMETRY_POSTHOG_KEY", raising=False)
     telemetry.heartbeat()
-    assert len(out) == 1
-    assert out[0]["api_key"] == telemetry._DEFAULT_KEY
+    assert out == []
 
 
-def test_default_on_without_consent(monkeypatch, tmp_path):
-    """No consent file, no env var → default ON (opt-out telemetry)."""
+def test_default_off_without_consent(monkeypatch, tmp_path):
+    """No consent file and no env opt-in means no network request."""
     import requests as real_requests
     out: list = []
     monkeypatch.setattr(real_requests, "post", _fake_post(out))
@@ -101,7 +98,7 @@ def test_default_on_without_consent(monkeypatch, tmp_path):
     monkeypatch.setenv("MINTA_TELEMETRY_POSTHOG_KEY", "phc_test")
     monkeypatch.setattr(telemetry, "_CONSENT_FILE", tmp_path / ".telemetry_consent")  # absent
     telemetry.heartbeat({"source": "test"})
-    assert len(out) == 1
+    assert out == []
 
 
 def test_version_from_file(monkeypatch, tmp_path):
