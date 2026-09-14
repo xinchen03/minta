@@ -24,6 +24,7 @@ READ_TRIGGERS = [
     r"规则",
     r"约束",
     r"我的偏好",
+    r"我(?:的)?偏好",
     r"我的习惯",
     r"上下文",
 ]
@@ -33,6 +34,7 @@ WRITE_TRIGGERS = [
     r"以后",
     r"默认",
     r"我的偏好",
+    r"我(?:的)?偏好",
     r"这个项目用",
     r"这个项目不要",
     r"规则是",
@@ -127,17 +129,18 @@ def decide_post_turn(inp):
     # type: (PolicyInput) -> PolicyResult
     """Write/Counter/Update policy: should we capture after answering?"""
     user_text = inp.user_message or ""
-    assistant_text = inp.assistant_response or ""
-    combined = "%s\n%s" % (user_text, assistant_text)
 
-    write_matches = match_any(combined, WRITE_TRIGGERS)
-    counter_matches = match_any(combined, COUNTER_TRIGGERS)
-    update_matches = match_any(combined, UPDATE_TRIGGERS)
+    # Authority comes from the user turn. The assistant response may explain or
+    # paraphrase a preference, but it must not be able to manufacture a durable
+    # memory trigger by repeating language like "remember" or "going forward".
+    write_matches = match_any(user_text, WRITE_TRIGGERS)
+    counter_matches = match_any(user_text, COUNTER_TRIGGERS)
+    update_matches = match_any(user_text, UPDATE_TRIGGERS)
 
     should_write = bool(write_matches)
     should_counter = bool(counter_matches)
     should_update = bool(update_matches) or (
-        "不是全局" in combined and "项目" in combined
+        "不是全局" in user_text and "项目" in user_text
     )
 
     write_payload = None
@@ -148,9 +151,9 @@ def decide_post_turn(inp):
         write_payload = {
             "items": [
                 {
-                    "type": infer_memory_type(combined),
-                    "scope": infer_scope(combined, inp.project_id),
-                    "content": extract_candidate_memory(combined),
+                    "type": infer_memory_type(user_text),
+                    "scope": infer_scope(user_text, inp.project_id),
+                    "content": extract_candidate_memory(user_text),
                     "route": "inbox",
                 }
             ]
@@ -160,8 +163,8 @@ def decide_post_turn(inp):
         counter_payload = {
             "items": [
                 {
-                    "scope": infer_scope(combined, inp.project_id),
-                    "counterexample": extract_counterexample(combined),
+                    "scope": infer_scope(user_text, inp.project_id),
+                    "counterexample": extract_counterexample(user_text),
                     "route": "counter_inbox",
                 }
             ]
@@ -169,8 +172,8 @@ def decide_post_turn(inp):
 
     if should_update:
         update_payload = {
-            "operation": infer_update_operation(combined),
-            "scope": infer_scope(combined, inp.project_id),
+            "operation": infer_update_operation(user_text),
+            "scope": infer_scope(user_text, inp.project_id),
             "route": "review",
         }
 

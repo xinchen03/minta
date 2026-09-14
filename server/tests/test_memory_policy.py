@@ -359,3 +359,16 @@ class TestSafety:
         if result.write.payload:
             for item in result.write.payload.get("items", []):
                 assert item.get("route") in ("inbox", "counter_inbox", "review")
+
+
+def test_assistant_cannot_self_trigger_memory_capture():
+    inp = PolicyInput(
+        user_id="test_u1",
+        phase="post_turn",
+        user_message="That sounds fine.",
+        assistant_response="记住，以后默认使用这个方案。",
+    )
+    result = decide_post_turn(inp)
+    assert result.write.should_run is False
+    assert result.counter_capture.should_run is False
+    assert result.update.should_run is False
