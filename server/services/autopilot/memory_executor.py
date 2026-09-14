@@ -84,11 +84,52 @@ def _api_post(path, body, api_key_override=None, auth_headers=None):
 # ── Read execution ──
 
 
+def _context_result(entry):
+    # type: (Dict[str, Any]) -> Dict[str, Any]
+    """Normalize one search result into the compact autopilot context shape."""
+    return {
+        "id": entry.get("id"),
+        "title": entry.get("title"),
+        "summary": entry.get("summary", ""),
+        "body": entry.get("body", ""),
+        "score": entry.get("score"),
+        "type": entry.get("type"),
+    }
+
+
+def _search_context(query, obj_type=None, top_k=8, api_key_override=None, auth_headers=None):
+    # type: (str, Optional[str], int, Optional[str], Optional[Dict[str, str]]) -> List[Dict[str, Any]]
+    """Run the query the policy actually produced against Minta search."""
+    body = {
+        "query": query,
+        "top_k": top_k,
+        "layer": "pack",
+    }
+    if obj_type:
+        body["type"] = obj_type
+    response = _api_post(
+        "/api/search", body,
+        api_key_override=api_key_override,
+        auth_headers=auth_headers,
+    )
+    if not response or not isinstance(response, dict):
+        return []
+    return [
+        _context_result(item)
+        for item in response.get("results", [])
+        if isinstance(item, dict)
+    ]
+
+
 def execute_read(policy_result, user_id, api_key_override=None, auth_headers=None):
     # type: (PolicyResult, str, Optional[str]) -> Dict[str, Any]
-    """Execute read decisions from policy result.
-    Reads memory context from existing Minta APIs.
-    Returns structured memory_context dict."""
+    """Execute the policy's retrieval plan, not a generic memory shelf read.
+
+    The policy decides *what to ask*. This layer now preserves that intent and
+    sends each query through the existing semantic search API. The returned
+    shape stays backwards-compatible for callers that already consume
+    ``memory_context``.
+    """
     read_dec = policy_result.read
     if not read_dec.should_run:
         return {"read_performed": False, "memory_context": {}}
@@ -106,36 +147,54 @@ def execute_read(policy_result, user_id, api_key_override=None, auth_headers=Non
     }
 
     key = api_key_override
+    seen = {name: set() for name in memory_context}
 
-    # Read user preferences and project context from contextObjects
-    context_objects = _api_get("/api/contextObjects", key, auth_headers)
-    if context_objects and isinstance(context_objects, list):
-        for obj in context_objects:
-            obj_type = obj.get("type", "")
-            if obj_type in ("preference",) and len(memory_context["user_preferences"]) < 10:
-                memory_context["user_preferences"].append({
-                    "id": obj.get("id"),
-                    "title": obj.get("title"),
-                    "summary": obj.get("summary", ""),
-                })
-            elif obj_type in ("project_context", "decision_criteria") and len(memory_context["project_context"]) < 10:
-                memory_context["project_context"].append({
-                    "id": obj.get("id"),
-                    "title": obj.get("title"),
-                    "summary": obj.get("summary", ""),
-                })
+    for spec in queries:
+        if not isinstance(spec, dict):
+            continue
+        bucket = spec.get("type")
+        query = (spec.get("query") or "").strip()
+        if not query or bucket not in memory_context:
+            continue
 
-    # Read counterexamples from inbox
-    inbox = _api_get("/api/inbox", key, auth_headers)
-    if inbox and isinstance(inbox, dict):
-        archived = inbox.get("archived", [])
-        for item in archived[:10]:
-            memory_context["counterexamples"].append({
-                "title": item.get("title", ""),
-                "body": item.get("body", ""),
-            })
+        # Policy buckets are semantic concepts; context-object types are storage
+        # labels. Keep this mapping small and explicit.
+        storage_types = {
+            "user_preferences": ["preference"],
+            "project_context": ["project_context", "decision_criteria"],
+            "counterexamples": ["counterexample"],
+        }.get(bucket, [])
 
-    # Read skills
+        for storage_type in storage_types:
+            for item in _search_context(
+                query,
+                obj_type=storage_type,
+                top_k=8,
+                api_key_override=key,
+                auth_headers=auth_headers,
+            ):
+                item_id = item.get("id")
+                dedupe_key = item_id if item_id is not None else (item.get("title"), item.get("summary"))
+                if dedupe_key in seen[bucket]:
+                    continue
+                seen[bucket].add(dedupe_key)
+                memory_context[bucket].append(item)
+                if len(memory_context[bucket]) >= 10:
+                    break
+            if len(memory_context[bucket]) >= 10:
+                break
+
+    # Legacy counterexamples may still live only in archived inbox entries.
+    # Use them as a fallback, not as the primary retrieval path.
+    if not memory_context["counterexamples"]:
+        inbox = _api_get("/api/inbox", key, auth_headers)
+        if inbox and isinstance(inbox, dict):
+            archived = inbox.get("archived", [])
+            memory_context["counterexamples"] = [
+                {"title": item.get("title", ""), "body": item.get("body", "")}
+                for item in archived[:10]
+            ]
+
     skills = _api_get("/api/skills", key, auth_headers)
     if skills and isinstance(skills, list):
         memory_context["skills"] = [
