@@ -47,8 +47,6 @@ VOLUME /data
 ENV MINTA_DATABASE_URL=sqlite:////data/minta.db
 ENV MINTA_EVAL_DB=sqlite:////data/eval.db
 ENV MINTA_ENV=production
-ENV MINTA_EXPERT_ENABLED=true
-ENV MINTA_AUTOPILOT_ENABLED=true
 
 EXPOSE 8000
 
