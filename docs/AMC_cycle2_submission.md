@@ -6,7 +6,8 @@
 > 仓库:`github.com/xinchen03/minta`(公开,minta-open 线)
 > 赛道/组别:文本赛道 · 开源方法榜(学术·代码提交路线)
 > 报名:2026-09-20 00:00 起开放;内部目标冻结:2026-09-18
-> 候选比赛版本:`amc-2026-cycle2-v2`(最终 smoke/复现检查通过后创建不可变 tag)
+> 候选比赛版本:拟议 `amc-2026-cycle2-v3`(截至本文件更新时尚未创建 tag;
+> 验证记录见 `docs/AMC_cycle2_readiness_20260916.md`)
 
 `main` 是持续更新的公开产品线;比赛 tag 是 Full 评测绑定的固定快照。
 现有 `amc-2026-cycle2-v1` 保留为早期候选,不得移动或覆盖。
@@ -19,7 +20,7 @@
 - **方法来源**:原创系统。技术报告:论文《Minta: Lifecycle-Aware Memory
   Management for Personalized LLM Agents》(投稿审稿中);本仓库公开历史与
   本文档为方法依据。
-- **评测配置(第二届 v2 候选,零 LLM baseline)**:Add 按平台契约原文无损存储 +
+- **评测配置(第二届 v3 候选,零 LLM baseline)**:Add 按平台契约原文无损存储 +
   本地 mpnet 嵌入 + SQLite 原子落库;Search 按 `user_id` 严格隔离,dense
   检索 → 命中邻接轮次窗口(radius=1,同 Add chunk 内)→ 检索侧去重 →
   填满 `min(top_k,100)`;返回 `[UTC ts] role: 原文` 最小 provenance
@@ -60,7 +61,7 @@ curl -s localhost:8000/search -H 'Content-Type: application/json' -d '{
 |---|---|---|
 | `MINTA_EVAL_DB` | `sqlite:////data/eval.db` | 评测数据单库;`user_id` 即命名空间 |
 | `MINTA_EVAL_TTL_HOURS` | `720` | 过期清理(自托管路线 30 天删除义务;平台部署容器随任务销毁) |
-| `MINTA_EVAL_EMBED_MODEL` | 镜像内 `/models/...` | 本地嵌入权重(本地开发可指向 `D:/all-mpnet-base-v2`) |
+| `MINTA_EVAL_EMBED_MODEL` | 镜像内 `/models/...` | 本地嵌入权重(本地开发可指向 `<local-model-path>`) |
 | `MINTA_EVAL_RADIUS` | `1` | 邻接轮次窗口半径(0 关闭) |
 | `MINTA_EVAL_ENVELOPE` | `on` | role/timestamp envelope(off 返回裸原文) |
 | `MINTA_EVAL_EMBED` | `1` | 置 0 = 完全离线基线(不加载嵌入) |
@@ -89,7 +90,7 @@ TTL 兜底清理 ≤30 天。
 - [ ] `user_id` 严格隔离:测试 `test_search_strict_user_isolation` 等断言
 - [ ] 无硬编码、无基准泄漏、无提示注入、无人工实时作答
 - [ ] 官方书面确认第二届 Add/Search 的模型条款;冻结配置与披露保持一致
-- [ ] 公开仓库固定 commit(tag `amc-2026-cycle2-v2`);README/Docker/入口齐全
+- [ ] 公开仓库固定 commit(tag `amc-2026-cycle2-v3`);README/Docker/入口齐全
 - [ ] `pytest server/tests/`、公开边界检查与比赛 Docker 冒烟全绿
 
 ## 4. 本地调优工具(不影响提交物)

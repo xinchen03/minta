@@ -101,6 +101,12 @@ def main() -> None:
         api_key = os.environ["DEEPSEEK_API_KEY"]
         model = os.environ.get("PROXY_LLM_MODEL", "deepseek-chat")
     assert base_url and api_key, "no LLM credentials (PROXY_LLM_* or DEEPSEEK_API_KEY)"
+    # Optional second judge (judge-sensitivity check): same answers, another
+    # model re-judges the identical prompt; label agreement measures whether
+    # scores come from evidence quality rather than one judge's taste.
+    judge2 = (os.environ.get("JUDGE2_BASE") and os.environ.get("JUDGE2_KEY")) and {
+        "base": os.environ["JUDGE2_BASE"], "key": os.environ["JUDGE2_KEY"],
+        "model": os.environ.get("JUDGE2_MODEL", "gpt-5.5")}
 
     os.makedirs(args.outdir, exist_ok=True)
     stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -152,6 +158,8 @@ def main() -> None:
                     for j, m in enumerate(chunk):
                         dia_map[m["dia_id"]] = (f"prf:{sample}", req_id, j)
                     chunk_no += 1
+            print(f"  [ingest] {sample}: sessions done, {chunk_no} chunks "
+                  f"({time.time() - t0:.0f}s)", flush=True)
             for q in [q for q in qs if q["sample_id"] == sample]:
                 r = client.post("/search", json={
                     "query": q["question"], "user_id": f"prf:{sample}", "top_k": args.top_k})
@@ -179,10 +187,27 @@ def main() -> None:
         judge = llm_complete(client, base_url, api_key, model,
                              render_judge_prompt(item["question"], item["gold"], gen))
         label = parse_judge_label(judge)
-        results.append({**item, "label": label, "is_correct": label == "CORRECT"})
+        row = {**item, "label": label, "is_correct": label == "CORRECT"}
+        if judge2:
+            # Judge2 must NEVER silently fall back to judge1's label — a
+            # failed second judge is recorded as an error, not as agreement
+            # (silent fallback earlier faked a 100% agreement artifact).
+            try:
+                judge_b = llm_complete(client, judge2["base"], judge2["key"],
+                                       judge2["model"],
+                                       render_judge_prompt(item["question"], item["gold"], gen))
+                row["label2"] = parse_judge_label(judge_b)
+                row["is_correct2"] = row["label2"] == "CORRECT"
+                row["judge_agree"] = row["label"] == row["label2"]
+            except Exception as exc:
+                row["label2"] = None
+                row["is_correct2"] = None
+                row["judge_agree"] = None
+                row["judge2_error"] = str(exc)[:120]
+        results.append(row)
         if (i + 1) % 100 == 0:
-            print(f"  {i+1}/{len(items)} judged — "
-                  f"acc={sum(r['is_correct'] for r in results)/len(results):.3f}", flush=True)
+            acc = sum(r["is_correct"] for r in results) / len(results)
+            print(f"  {i+1}/{len(items)} judged — acc {acc:.3f}", flush=True)
     client.close()
 
     by_cat = defaultdict(list)
