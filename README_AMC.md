@@ -8,9 +8,12 @@ final smoke and reproducibility checks.
 ## System
 
 - **Name**: Minta — the context quality layer for AI agents
-- **Candidate version**: `amc-2026-cycle2-v3` (frozen tag points to commit
-  `2229bcd`; this branch may receive post-freeze documentation corrections;
-  v2 remains an earlier candidate and is never moved)
+- **Candidate version**: identified by the most recent immutable
+  `amc-2026-cycle2-*` tag in this repository (earlier candidates v1, v2 and v3
+  are never moved). This line intentionally names no fixed tag: a tag cannot
+  describe itself, so the rule is stated instead. This branch may receive
+  post-freeze documentation corrections — see
+  `docs/AMC_cycle2_readiness_20260916.md`.
 - **Repository**: https://github.com/xinchen03/minta
 - **Track / division**: Textual Memory / Academic Methods
 - **Submission type**: code submission (platform builds and deploys per the
