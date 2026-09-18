@@ -31,8 +31,8 @@ ENV MINTA_EVAL_EMBED_MODEL=/models/${MINTA_EVAL_MODEL_REPO}
 # Windows-path default that broke semantic search inside containers).
 ENV MINTA_EMBEDDING_MODEL=/models/${MINTA_EVAL_MODEL_REPO}
 # AMC cycle-2 default config (round-3/4 evidence, refined textual n=861):
-# 1) rerank ON — 88MB cross-encoder (ms-marco), zero-LLM; best single-channel
-#    proxy score 0.7422 over base 0.7329 / temporal-only 0.7375.
+# 1) rerank ON — 88MB cross-encoder (ms-marco), zero-LLM; full-split accuracy
+#    gain not claimed (the rerank run artifact was not archived).
 # 2) temporal boost ON — zero-LLM retrieval re-rank; temporal cat +2.8pt.
 # Both env-off-able for A/B or Full#2 fallback.
 ARG MINTA_EVAL_RERANK_REPO=cross-encoder/ms-marco-MiniLM-L-6-v2

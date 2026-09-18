@@ -8,7 +8,8 @@ fill stages, so evidence buried mid-list has a chance to surface near the top
 Model: MINTA_EVAL_RERANK_MODEL; the baked container default matches the
 Dockerfile (88MB ms-marco-MiniLM-L-6-v2) so a bare start never silently
 drops the rerank channel. Enabled via MINTA_EVAL_RERANK=1 (Dockerfile ships
-it ON — proxy 0.7422 over dense-only 0.7329, n=861).
+it ON). A previous 0.7422 full-split proxy figure was not archived with a
+reproducible summary artifact, so this module does not claim an accuracy gain.
 """
 from __future__ import annotations
 

@@ -8,9 +8,9 @@ final smoke and reproducibility checks.
 ## System
 
 - **Name**: Minta — the context quality layer for AI agents
-- **Candidate version**: proposed `amc-2026-cycle2-v3` (tag not yet created;
-  v2 remains an earlier candidate and is never moved; see
-  `docs/AMC_cycle2_readiness_20260916.md`)
+- **Candidate version**: `amc-2026-cycle2-v3` (frozen tag points to commit
+  `2229bcd`; this branch may receive post-freeze documentation corrections;
+  v2 remains an earlier candidate and is never moved)
 - **Repository**: https://github.com/xinchen03/minta
 - **Track / division**: Textual Memory / Academic Methods
 - **Submission type**: code submission (platform builds and deploys per the
@@ -47,12 +47,9 @@ Models are baked during build — no runtime network dependency.
   query-conditioned time-expression boost (`MINTA_EVAL_TEMPORAL=1`); both are
   env-off-able. Measured cost (2026-09-16, CPU): the cross-encoder pass
   dominates search latency — median 184.7 ms vs 47.1 ms at 200 memories and
-  221.2 ms vs 94.6 ms at 1000 memories — against a proxy gain of 0.7422 over
-  0.7329 (n=861, inside the ±3pt interval). It remains enabled because the
-  pass only changes evidence ordering (never content), the full-split point
-  estimate is positive with no category-level regression outside that
-  interval, and the channel is independently disable-able for a latency-
-  constrained run.
+  221.2 ms vs 94.6 ms at 1000 memories. A full 861-question rerank score was
+  not archived in the repository, so no rerank accuracy gain is claimed here;
+  the channel remains env-disable-able for a latency-constrained run.
 - **Zero-LLM**: no model-backed rewriting during Add/Search; all retrievable
   content is verbatim evidence.
 - **Third-party**: SQLAlchemy / FastAPI / sentence-transformers / apscheduler
