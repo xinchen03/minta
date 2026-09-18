@@ -48,8 +48,11 @@ Models are baked during build — no runtime network dependency.
   env-off-able. Measured cost (2026-09-16, CPU): the cross-encoder pass
   dominates search latency — median 184.7 ms vs 47.1 ms at 200 memories and
   221.2 ms vs 94.6 ms at 1000 memories. A full 861-question rerank score was
-  not archived in the repository, so no rerank accuracy gain is claimed here;
-  the channel remains env-disable-able for a latency-constrained run.
+  not archived in the repository, so no rerank accuracy gain is claimed here.
+  The pass stays on as part of the frozen candidate: neither enabling nor
+  disabling it has a full-split measurement here, so the configuration is
+  left unchanged rather than altered without evidence — it affects evidence
+  ordering only and never rewrites retrievable content.
 - **Zero-LLM**: no model-backed rewriting during Add/Search; all retrievable
   content is verbatim evidence.
 - **Third-party**: SQLAlchemy / FastAPI / sentence-transformers / apscheduler

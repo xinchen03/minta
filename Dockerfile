@@ -30,10 +30,13 @@ ENV MINTA_EVAL_EMBED_MODEL=/models/${MINTA_EVAL_MODEL_REPO}
 # Business app embedding uses the same baked weights (fixes the previous
 # Windows-path default that broke semantic search inside containers).
 ENV MINTA_EMBEDDING_MODEL=/models/${MINTA_EVAL_MODEL_REPO}
-# AMC cycle-2 default config (round-3/4 evidence, refined textual n=861):
-# 1) rerank ON — 88MB cross-encoder (ms-marco), zero-LLM; full-split accuracy
-#    gain not claimed (the rerank run artifact was not archived).
-# 2) temporal boost ON — zero-LLM retrieval re-rank; temporal cat +2.8pt.
+# AMC cycle-2 default config (round-3 evidence for temporal, refined textual
+# n=861; rerank carried as part of the frozen candidate):
+# 1) rerank ON — 88MB cross-encoder (ms-marco), zero-LLM; no full-split
+#    accuracy gain claimed (the rerank run artifact was not archived); kept
+#    because neither on nor off has a full-split measurement.
+# 2) temporal boost ON — zero-LLM retrieval re-rank; temporal cat +2.8pt
+#    (dense-only 0.7329 → temporal 0.7375, n=861).
 # Both env-off-able for A/B or Full#2 fallback.
 ARG MINTA_EVAL_RERANK_REPO=cross-encoder/ms-marco-MiniLM-L-6-v2
 RUN python scripts/fetch_eval_models.py \
