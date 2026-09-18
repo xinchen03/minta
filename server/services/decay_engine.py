@@ -108,6 +108,11 @@ def check_temporal_validity(
     """
     if now is None:
         now = datetime.now(timezone.utc)
+    elif now.tzinfo is None:
+        # Callers such as lifecycle_scanner.scan_staleness pass a naive
+        # datetime.utcnow(); treat it as UTC, matching compute_retention().
+        # Without this the aware/naive comparison below raises TypeError.
+        now = now.replace(tzinfo=timezone.utc)
 
     # 1. Foresight expiry (EverMemOS-style): temporary states
     if valid_until is not None:

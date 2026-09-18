@@ -6,6 +6,7 @@ Implements Eq.5 from the Minta paper:
 Four-gate filtering (negation-bypass + redundancy + probability + staleness) per Section 4.3.
 """
 from __future__ import annotations
+import difflib
 import json
 import logging
 import math
@@ -67,9 +68,46 @@ def sigmoid(x: float) -> float:
     return 1.0 / (1.0 + math.exp(-x))
 
 
+_NUMERIC = re.compile(r"\d+(?:[.,]\d+)?")
+_VALUE_DIFF_MAX = 6  # chars; a larger divergence is a paraphrase, not a value swap
+
+
+def check_value_divergence(text_i: str, text_j: str) -> bool:
+    """True when two near-identical texts disagree on one concrete value.
+
+    'pay yearly' vs 'pay monthly', '0.73' vs '0.92', 'on duty: Jia' vs 'Yi'
+    all clear THETA_R with no negation keyword, so the redundancy gate discards
+    them as duplicates — but the differing span is the update itself. Only
+    called for pairs already above THETA_R, so a small character-level
+    divergence is a value swap rather than ordinary paraphrase.
+    """
+    a, b = (text_i or "").strip(), (text_j or "").strip()
+    if not a or not b:
+        return False
+    na, nb = set(_NUMERIC.findall(a)), set(_NUMERIC.findall(b))
+    if (na or nb) and na != nb:
+        return True
+    sm = difflib.SequenceMatcher(None, a, b, autojunk=False)
+    changed = sum(max(i2 - i1, j2 - j1)
+                  for tag, i1, i2, j1, j2 in sm.get_opcodes() if tag != "equal")
+    return 0 < changed <= _VALUE_DIFF_MAX
+
+
 def cosine_similarity(emb_i: np.ndarray, emb_j: np.ndarray) -> float:
-    """Cosine similarity of two L2-normalized embedding vectors."""
-    return float(np.dot(emb_i, emb_j))
+    """Cosine similarity of two embedding vectors, normalized defensively.
+
+    Stored `embedding_384` values come from get_conflict_embedding(), whose
+    ChromaDB SentenceTransformerEmbeddingFunction returns *unnormalized*
+    vectors (L2 ~ 5). Reading them as a bare dot product made every similarity
+    10-30x the true cosine, so every pair cleared DUPLICATE_COS and the whole
+    detector short-circuited to zero findings. Normalizing here is a no-op for
+    callers that already pass unit vectors.
+    """
+    ni = float(np.linalg.norm(emb_i))
+    nj = float(np.linalg.norm(emb_j))
+    if ni == 0.0 or nj == 0.0:
+        return 0.0
+    return float(np.dot(emb_i, emb_j) / (ni * nj))
 
 
 def cosine_distance(emb_i: np.ndarray, emb_j: np.ndarray) -> float:
@@ -188,13 +226,15 @@ def detect_conflicts(
                 continue
 
             # Gate 0: Negation bypass (B_ij) — check before redundancy gate
-            b_ij = check_negation_bypass(
-                (pi.get("title") or "") + " " + (pi.get("body") or ""),
-                (pj.get("title") or "") + " " + (pj.get("body") or ""),
-            )
+            text_i = (pi.get("title") or "") + " " + (pi.get("body") or "")
+            text_j = (pj.get("title") or "") + " " + (pj.get("body") or "")
+            b_ij = check_negation_bypass(text_i, text_j)
 
-            # Gate 1: Redundancy — skip near-duplicates unless negation detected
-            if sim > THETA_R and not b_ij:
+            # Gate 1: Redundancy — skip near-duplicates unless the pair carries
+            # a polarity reversal (B_ij) or a value substitution. A swapped
+            # number or entity scores above THETA_R with no negation keyword,
+            # yet the differing token is exactly the evidence of an update.
+            if sim > THETA_R and not (b_ij or check_value_divergence(text_i, text_j)):
                 continue
 
             # Gate 2: Conflict probability (with optional neighbor consensus)
