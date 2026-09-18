@@ -8,12 +8,8 @@ final smoke and reproducibility checks.
 ## System
 
 - **Name**: Minta — the context quality layer for AI agents
-- **Candidate version**: identified by the most recent immutable
-  `amc-2026-cycle2-*` tag in this repository (earlier candidates v1, v2 and v3
-  are never moved). This line intentionally names no fixed tag: a tag cannot
-  describe itself, so the rule is stated instead. This branch may receive
-  post-freeze documentation corrections — see
-  `docs/AMC_cycle2_readiness_20260916.md`.
+- **Candidate version**: the latest immutable `amc-2026-cycle2-*` tag in this
+  repository. Earlier candidate tags are retained unchanged.
 - **Repository**: https://github.com/xinchen03/minta
 - **Track / division**: Textual Memory / Academic Methods
 - **Submission type**: code submission (platform builds and deploys per the
@@ -50,25 +46,20 @@ Models are baked during build — no runtime network dependency.
   query-conditioned time-expression boost (`MINTA_EVAL_TEMPORAL=1`); both are
   env-off-able. Measured cost (2026-09-16, CPU): the cross-encoder pass
   dominates search latency — median 184.7 ms vs 47.1 ms at 200 memories and
-  221.2 ms vs 94.6 ms at 1000 memories. A full 861-question rerank score was
-  not archived in the repository, so no rerank accuracy gain is claimed here.
-  The pass stays on as part of the frozen candidate: neither enabling nor
-  disabling it has a full-split measurement here, so the configuration is
-  left unchanged rather than altered without evidence — it affects evidence
-  ordering only and never rewrites retrievable content.
+  221.2 ms vs 94.6 ms at 1000 memories. The reranker changes evidence order
+  only; it does not rewrite stored content. Its full-split accuracy effect was
+  not measured in the archived proxy runs.
 - **Zero-LLM**: no model-backed rewriting during Add/Search; all retrievable
   content is verbatim evidence.
 - **Third-party**: SQLAlchemy / FastAPI / sentence-transformers / apscheduler
   (standard public libraries, used per their licenses).
 
-### Pre-submission rule confirmation
+### Evaluation scope
 
-The second-event notice states that participants implement memory Add/Search
-while the platform controls Answer and Eval, and does not prescribe the
-internal database, index, vector model, or architecture. The live Full
-checklist also contains a `gpt-4o-mini` item. This candidate therefore remains
-zero-LLM and **must not be submitted for Full until the organizer confirms in
-writing which requirement governs the second event**.
+The participant system implements Add/Search. The platform performs Answer and
+Eval. This candidate uses local embedding and reranking models and makes no
+external LLM calls during Add/Search; final submission requirements follow the
+official API guide and event notice.
 
 ## Known Boundaries
 

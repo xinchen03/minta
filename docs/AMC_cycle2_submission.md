@@ -6,10 +6,8 @@
 > 仓库:`github.com/xinchen03/minta`(公开,minta-open 线)
 > 赛道/组别:文本赛道 · 开源方法榜(学术·代码提交路线)
 > 报名:2026-09-20 00:00 起开放;内部目标冻结:2026-09-18
-> 候选比赛版本:由本仓库**最新的不可变 `amc-2026-cycle2-*` tag** 标识
-> (早期候选 v1/v2/v3 永不移位)。此处刻意不写死某个 tag——tag 无法描述自身,
-> 故只写规则。`main` 可有冻结后的文档勘误;验证记录见
-> `docs/AMC_cycle2_readiness_20260916.md`。
+> 候选比赛版本:由本仓库最新的不可变 `amc-2026-cycle2-*` tag 标识;
+> 早期候选 tag 保持不变。验证记录见 `docs/AMC_cycle2_readiness_20260916.md`。
 
 `main` 是持续更新的公开产品线;比赛 tag 是 Full 评测绑定的固定快照。
 现有 `amc-2026-cycle2-v1` 保留为早期候选,不得移动或覆盖。
@@ -22,14 +20,12 @@
 - **方法来源**:原创系统。技术报告:论文《Minta: Lifecycle-Aware Memory
   Management for Personalized LLM Agents》(投稿审稿中);本仓库公开历史与
   本文档为方法依据。
-- **评测配置(第二届 v3 候选,零 LLM baseline)**:Add 按平台契约原文无损存储 +
+- **评测配置(当前候选,零 LLM)**:Add 按平台契约原文无损存储 +
   本地 mpnet 嵌入 + SQLite 原子落库;Search 按 `user_id` 严格隔离,dense
   检索 → 命中邻接轮次窗口(radius=1,同 Add chunk 内)→ 检索侧去重 →
   填满 `min(top_k,100)`;返回 `[UTC ts] role: 原文` 最小 provenance
-  envelope。**Add/Search 全路径不调用任何外部 LLM/API**。第二届公告称内部
-  架构不受限定且 Answer/Eval 由平台统一执行,但当前 Full 页面仍保留
-  gpt-4o-mini 勾选项;提交 Full 前必须取得组委会书面澄清。若规则要求实际
-  调用,将另行实现、披露并重新冻结比赛 tag。
+  envelope。**Add/Search 全路径不调用任何外部 LLM/API**。平台统一完成
+  Answer/Eval;最终提交以当期 API 指南和赛事说明为准。
 - **参评实现边界**:平台只运行 `server.eval_app:create_eval_app`,参评路径由
   `server/eval_*` 模块、`scripts/fetch_eval_models.py`、Dockerfile、测试和
   本文档组成。公开产品业务路由与前端虽同仓维护,但不由比赛容器加载,
@@ -92,7 +88,7 @@ TTL 兜底清理 ≤30 天。
 - [ ] `user_id` 严格隔离:测试 `test_search_strict_user_isolation` 等断言
 - [ ] 无硬编码、无基准泄漏、无提示注入、无人工实时作答
 - [ ] 官方书面确认第二届 Add/Search 的模型条款;冻结配置与披露保持一致
-- [ ] 公开仓库固定 commit(tag `amc-2026-cycle2-v3`);README/Docker/入口齐全
+- [ ] 公开仓库固定 commit(不可变 `amc-2026-cycle2-*` tag);README/Docker/入口齐全
 - [ ] `pytest server/tests/`、公开边界检查与比赛 Docker 冒烟全绿
 
 ## 4. 本地调优工具(不影响提交物)
