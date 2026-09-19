@@ -4,7 +4,7 @@
 > 承办:南京大学、浙江大学、Datawhale、CSIG 企业联络与标准化工作委员会
 > 统一评测平台:Agent Memory Leaderboard(AML)
 > 仓库:`github.com/xinchen03/minta`(公开,minta-open 线)
-> 赛道/组别:文本赛道 · 开源方法榜(学术·代码提交路线)
+> 赛道/组别:文本赛道 · 开源方法榜(学术榜)
 > 报名:2026-09-20 00:00 起开放;内部目标冻结:2026-09-18
 > 候选比赛版本:由本仓库最新的不可变 `amc-2026-cycle2-*` tag 标识;
 > 早期候选 tag 保持不变。验证记录见 `docs/AMC_cycle2_readiness_20260916.md`。
@@ -34,7 +34,11 @@
   (Apache-2.0),镜像构建时下载 bake,不随源码分发;评测基准归属各上游
   (AML 套件:LocoMo/LongMemEval/BEAM/PersonaMem 等)。
 
-## 2. 运行说明(代码提交路线)
+## 2. 运行说明(自托管路线)
+
+> 第二期要求参赛方**自行部署公网可访问的 Add/Search API**;AML 不代为部署,
+> 不接受仅提交仓库、镜像或启动说明。以下为**我方部署**所用的构建与启动方式;
+> 公开仓库与固定 commit 作为开放性、署名与复现材料。
 
 ```bash
 # 构建(镜像内已 bake 嵌入模型;网络仅构建时需要,可 --build-arg 换镜像源)
@@ -58,7 +62,7 @@ curl -s localhost:8000/search -H 'Content-Type: application/json' -d '{
 | 变量 | 默认 | 说明 |
 |---|---|---|
 | `MINTA_EVAL_DB` | `sqlite:////data/eval.db` | 评测数据单库;`user_id` 即命名空间 |
-| `MINTA_EVAL_TTL_HOURS` | `720` | 过期清理(自托管路线 30 天删除义务;平台部署容器随任务销毁) |
+| `MINTA_EVAL_TTL_HOURS` | `720` | 过期清理;自托管容器长期运行,TTL 为兜底删除(≤30 天) |
 | `MINTA_EVAL_EMBED_MODEL` | 镜像内 `/models/...` | 本地嵌入权重(本地开发可指向 `<local-model-path>`) |
 | `MINTA_EVAL_RADIUS` | `1` | 邻接轮次窗口半径(0 关闭) |
 | `MINTA_EVAL_ENVELOPE` | `on` | role/timestamp envelope(off 返回裸原文) |

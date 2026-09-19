@@ -12,8 +12,11 @@ final smoke and reproducibility checks.
   repository. Earlier candidate tags are retained unchanged.
 - **Repository**: https://github.com/xinchen03/minta
 - **Track / division**: Textual Memory / Academic Methods
-- **Submission type**: code submission (platform builds and deploys per the
-  Docker instructions below)
+- **Submission type**: **self-hosted Add/Search API.** The second event requires
+  each participant to deploy their own publicly reachable endpoint — AML does
+  not build or host the submission, and a repository or image alone is not
+  accepted. The Docker instructions below describe how *we* run the service;
+  the open repository remains the disclosure and attribution material.
 
 ## Running
 
@@ -23,7 +26,9 @@ docker run --rm -p 8000:8000 -v minta-data:/data minta-eval
 ```
 
 The container runs only the evaluation adapter (Add/Search, port 8000).
-Models are baked during build — no runtime network dependency.
+Models are baked during build — no runtime network dependency. This is the
+endpoint we deploy and keep publicly reachable for the evaluation window; it is
+not built or hosted by the platform.
 
 ## API Contract
 
