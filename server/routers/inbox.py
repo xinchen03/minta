@@ -104,6 +104,17 @@ def archive_items(payload: dict, user: User = Depends(get_current_user), db: Ses
     for obj in created_objs:
         vector_ops.index_object(obj.id, vector_ops.compose_text(obj.title, obj.summary, obj.body),
                                 user.id, obj.type, obj.status)
+
+    # Propagate corrections found in the confirmed batch: knock down overlapping
+    # memories + surface them as lessons (best-effort, never blocks archiving).
+    if created_objs:
+        try:
+            from services.reflect import record_correction
+            batch_ids = {obj.id for obj in created_objs}
+            for obj in created_objs:
+                record_correction(db, user.id, obj.body or "", exclude_ids=batch_ids)
+        except Exception:
+            pass
     return {"success": True, "count": len(items), "createdObjects": created_objects}
 
 
@@ -145,6 +156,14 @@ def confirm_item(item_id: int, payload: dict, user: User = Depends(get_current_u
     from services import vector_ops
     vector_ops.index_object(obj.id, vector_ops.compose_text(obj.title, obj.summary, obj.body),
                             user.id, obj.type, obj.status)
+
+    # Propagate the correction: knock down overlapping memories + surface it as
+    # a lesson in the next Context Pack (best-effort, never blocks confirming).
+    try:
+        from services.reflect import record_correction
+        record_correction(db, user.id, text, exclude_ids={obj_id})
+    except Exception:
+        pass
     return {"success": True, "contextId": obj.id}
 
 

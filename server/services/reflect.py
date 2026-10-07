@@ -37,6 +37,20 @@ SIGNAL_PATTERNS = [
     # Knowledge signals → knowledge
     (r"(?:src/|lib/|api/|config|middleware|数据库|database|MySQL|Postgres|部署|deploy)",
      "knowledge", 0.05),
+    # ── English patterns (parity with the counter-capture signal table) ──
+    # Correction signals → counter_examples
+    (r"\b(?:wrong|incorrect|not right|mistake|no longer|not anymore|correction|that'?s not (?:right|correct))\b",
+     "correction", 0.1),
+    (r"\b(?:should be|i meant|we meant|changed to|changed from|switch(?:ed)? to|moved to|migrated to|renamed to|replaced by|deprecated|is now|are now)\b",
+     "correction", 0.1),
+    (r"\b(?:redo|rewrite|do it again|fix it|don'?t do that|do not do that|stop doing)\b",
+     "correction", 0.05),
+    # Preference signals → preferences
+    (r"\b(?:from now on|remember to|don'?t forget|i prefer|we prefer|always use|never use)\b",
+     "preference", 0.05),
+    # Pending signals → pending
+    (r"\b(?:to-?do|next step|still need|not done|remaining)\b",
+     "pending", 0.1),
 ]
 
 SLOT_FOR_SIGNAL = {
@@ -48,6 +62,19 @@ SLOT_FOR_SIGNAL = {
 
 # Max chars per slot entry (keep it tight)
 MAX_ENTRY_CHARS = 300
+
+# English function words excluded from correction-overlap matching: they carry
+# no topical signal and would create spurious hits between unrelated texts.
+_EN_STOPWORDS = {
+    "the", "and", "for", "are", "was", "were", "not", "but", "you", "all",
+    "with", "this", "that", "from", "they", "have", "has", "had", "will",
+    "would", "could", "should", "been", "its", "our", "their", "them",
+    "then", "than", "when", "what", "which", "while", "there", "here",
+    "where", "your", "does", "did", "doing", "done", "also", "too", "very",
+    "into", "over", "under", "about", "after", "before", "because", "just",
+    "dont", "doesnt", "didnt", "isnt", "arent", "wasnt", "werent", "cant",
+    "wont", "couldnt", "shouldnt", "wouldnt", "hasnt", "havent",
+}
 
 
 def detect_signals(text: str) -> List[dict]:
@@ -88,6 +115,53 @@ def detect_signals(text: str) -> List[dict]:
     return unique[:20]  # max 20 signals per scan
 
 
+def _append_to_slot(db: DBSession, user_id: int, slot_label: str, entry_text: str,
+                    signal_type: str,
+                    audit_action: str = "reflect.route_to_slot") -> Optional[str]:
+    """Append one entry to a slot (dedup + size limit + audit).
+
+    Returns the filtered entry text that was written, or None when nothing was
+    written (missing slot, sensitive-filtered, or near-duplicate).
+    """
+    slot = db.query(Slot).filter(
+        Slot.user_id == user_id,
+        Slot.label == slot_label,
+    ).first()
+
+    if not slot:
+        return None
+
+    entry = filter_sensitive(entry_text.strip())
+    if not entry:
+        return None
+
+    # Check if similar entry already exists (simple overlap check)
+    existing_lines = slot.content.lower()
+    if entry.lower()[:50] in existing_lines:
+        return None  # near-duplicate
+
+    # Append to slot
+    sep = "\n" if slot.content and not slot.content.endswith("\n") else ""
+    new_content = f"{slot.content}{sep}- {entry}"
+
+    # Apply size limit
+    if len(new_content) > slot.size_limit:
+        from services.retention import smart_trim
+        new_content, _ = smart_trim(new_content, slot.size_limit, db, user_id, slot_label)
+
+    slot.content = new_content
+    slot.auto_reflected = True
+    db.commit()
+
+    record_audit(db, user_id, "reflect", audit_action, "slot", [str(slot.id)], {
+        "slotLabel": slot_label,
+        "signalType": signal_type,
+        "entryLen": len(entry),
+    })
+
+    return entry
+
+
 def route_to_slot(
     db: DBSession,
     user_id: int,
@@ -106,41 +180,9 @@ def route_to_slot(
     if slot_label == "rules":
         return None, False
 
-    slot = db.query(Slot).filter(
-        Slot.user_id == user_id,
-        Slot.label == slot_label,
-    ).first()
-
-    if not slot:
+    entry = _append_to_slot(db, user_id, slot_label, entry_text, signal_type)
+    if entry is None:
         return slot_label, False
-
-    entry = filter_sensitive(entry_text.strip())
-    if not entry:
-        return slot_label, False
-
-    # Check if similar entry already exists (simple overlap check)
-    existing_lines = slot.content.lower()
-    if entry.lower()[:50] in existing_lines:
-        return slot_label, False  # near-duplicate
-
-    # Append to slot
-    sep = "\n" if slot.content and not slot.content.endswith("\n") else ""
-    new_content = f"{slot.content}{sep}- {entry}"
-
-    # Apply size limit
-    if len(new_content) > slot.size_limit:
-        from services.retention import smart_trim
-        new_content, _ = smart_trim(new_content, slot.size_limit, db, user_id, slot_label)
-
-    slot.content = new_content
-    slot.auto_reflected = True
-    db.commit()
-
-    record_audit(db, user_id, "reflect", "reflect.route_to_slot", "slot", [str(slot.id)], {
-        "slotLabel": slot_label,
-        "signalType": signal_type,
-        "entryLen": len(entry),
-    })
 
     # Also create inbox item so user can review in InboxPanel
     try:
@@ -164,17 +206,25 @@ def route_to_slot(
     return slot_label, True
 
 
-def _apply_counter_to_context(db: DBSession, user_id: int, counter_text: str) -> int:
+def _apply_counter_to_context(db: DBSession, user_id: int, counter_text: str,
+                              exclude_ids: Optional[set] = None) -> int:
     """When a correction signal is detected, search for context objects
     that may be contradicted and decrement their confidence.
 
-    Uses Chinese-aware keyword overlap to find potentially contradicted objects.
+    Uses bilingual keyword overlap (CJK runs + English words) to find
+    potentially contradicted objects. `exclude_ids` skips objects that are
+    themselves part of the correction (e.g. the just-confirmed inbox object).
     Returns number of objects affected.
     """
     from models.context_object import ContextObject
     import re, json
 
+    normalized = counter_text.lower().replace("'", "").replace("’", "")
     tokens = set(re.findall(r'[一-鿿]{2,}', counter_text))
+    tokens |= {
+        w for w in re.findall(r'[a-z0-9][a-z0-9_-]{2,}', normalized)
+        if w not in _EN_STOPWORDS
+    }
     if not tokens:
         return 0
 
@@ -186,6 +236,8 @@ def _apply_counter_to_context(db: DBSession, user_id: int, counter_text: str) ->
 
     affected = 0
     for obj in candidates:
+        if exclude_ids and obj.id in exclude_ids:
+            continue
         body = (obj.body or "") + " " + (obj.summary or "") + " " + (obj.title or "")
         if not body.strip():
             continue
@@ -212,6 +264,44 @@ def _apply_counter_to_context(db: DBSession, user_id: int, counter_text: str) ->
     if affected:
         db.commit()
     return affected
+
+
+def record_correction(db: DBSession, user_id: int, correction_text: str,
+                      exclude_ids: Optional[set] = None) -> dict:
+    """Record a confirmed correction and propagate it (best-effort).
+
+    Called from the inbox confirm/archive path — the reachable moment where a
+    user turns a pending item into memory. When the text carries a correction
+    signal:
+      1. overlapping active memories lose confidence and get tagged "countered"
+      2. the correction is appended to the counter_examples slot, so it shows
+         up under "Recent Lessons" in the next Context Pack
+
+    Never raises; returns a summary dict for logging/tests.
+    """
+    result = {"detected": False, "affected": 0, "slot_updated": False}
+    try:
+        signals = detect_signals(correction_text)
+        if not any(s["type"] == "correction" for s in signals):
+            return result
+        result["detected"] = True
+
+        result["affected"] = _apply_counter_to_context(
+            db, user_id, correction_text, exclude_ids=exclude_ids,
+        )
+
+        entry = f"[auto] {correction_text[:MAX_ENTRY_CHARS - 8]}"
+        result["slot_updated"] = _append_to_slot(
+            db, user_id, "counter_examples", entry, "correction",
+            audit_action="reflect.record_correction",
+        ) is not None
+    except Exception as e:
+        logger.warning(f"record_correction failed: {e}")
+        try:
+            db.rollback()
+        except Exception:
+            pass
+    return result
 
 
 def reflect_session(
